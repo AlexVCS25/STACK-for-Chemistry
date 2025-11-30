@@ -59,7 +59,7 @@ chem_units(dp) := assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS))$
 
 /****************************************************************/
 /*                                                              */
-/*  PSE Navigation Functions        a                             */
+/*  PSE Navigation Functions                                    */
 /*                                                              */
 /****************************************************************/
 
