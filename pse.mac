@@ -20,6 +20,12 @@
 /*                                                              */
 /****************************************************************/
 
+/****************************************************************/
+/*                                                              */
+/*  PSE Data Retrieving Functions                               */
+/*                                                              */
+/****************************************************************/
+
 chem_data_all(element) := block([cdat, cname, langpack],
     cdat:zip_with("[", %_CHEM_FIELDS, assoc(element, %_CHEM_ELEMENTS)),
     langpack:assoc(%_STACK_LANG, %_CHEM_LANG),
@@ -39,15 +45,6 @@ chem_element(atomic_num) := block([elem],
     if emptyp(elem) then false else first(first(elem))
 )$
 
-/* This function returns an array of all element symbols. */
-chem_element_array() := map(first, %_CHEM_ELEMENTS)$
-
-/* This function returns an array of main group element symbols (MainGroup > 0). */
-chem_element_array_maingroup() := block([filtered_elements],
-    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fourth(second(x)) > 0)),
-    map(first, filtered_elements)
-)$
-
 /* This function returns the data "dp" associated with "element", with units. */
 chem_data_units(element, dp) := block([cunit],
     cunit:assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)),
@@ -59,6 +56,39 @@ chem_data_units(element, dp) := block([cunit],
 
 /* This function returns the units addociated with field "dp". */
 chem_units(dp) := assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS))$
+
+/****************************************************************/
+/*                                                              */
+/*  PSE Navigation Functions                                    */
+/*                                                              */
+/****************************************************************/
+
+/* This function returns an array of all element symbols. */
+chem_element_array() := map(first, %_CHEM_ELEMENTS)$
+
+/* This function returns an array of main group element symbols (MainGroup > 0). */
+chem_element_array_maingroup() := block([filtered_elements],
+    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fourth(second(x)) > 0)),
+    map(first, filtered_elements)
+)$
+
+/* This function returns an array of element symbols for a given period. */
+chem_element_period(period_num) := block([filtered_elements],
+    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num)),
+    map(first, filtered_elements)
+)$
+
+/* This function returns an array of element symbols for a given group number (IUPAC). */
+chem_element_group(group_num) := block([filtered_elements],
+    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fifth(second(x)) = group_num)),
+    map(first, filtered_elements)
+)$
+
+/* This function returns an array of element symbols for a given main group number (1-8). */
+chem_element_maingroup(maingroup_num) := block([filtered_elements],
+    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], fourth(second(x)) = maingroup_num)),
+    map(first, filtered_elements)
+)$
 
 /* 
    This is the order of data below.  For efficiency, we don't store all the data as nested lists with repeaed fields.
