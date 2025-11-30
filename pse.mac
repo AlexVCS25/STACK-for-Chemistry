@@ -33,6 +33,12 @@ chem_data_all(element) := block([cdat, cname, langpack],
 /* This function returns the data "dp" associated with "element". */
 chem_data(element, dp) := assoc(dp, chem_data_all(element))$
 
+/* This function returns the element symbol for a given atomic number. */
+chem_element(atomic_num) := block([elem],
+    elem: sublist(%_CHEM_ELEMENTS, lambda([x], first(second(x)) = atomic_num)),
+    if emptyp(elem) then false else first(first(elem))
+)$
+
 /* This function returns the data "dp" associated with "element", with units. */
 chem_data_units(element, dp) := block([cunit],
     cunit:assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS)),
