@@ -270,6 +270,9 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
     return(stackunits(total_mass, g*mol^(-1)))
 )$
 
+/* Returns a chemical formula wrapped in \ce{...} for proper LaTeX rendering with mhchem */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
+
 /* 
    This is the order of data below.  For efficiency, we don't store all the data as nested lists with repeaed fields.
    The functions above return formatted data for use with "assoc".
