@@ -28,6 +28,7 @@ Functions for accessing periodic table data:
 ### Acid-Base Chemistry Module (`acidbase.mac`)
 
 Functions for acid-base chemistry:
+- `chem_display` - Automatically format chemical formulas for LaTeX rendering with `\ce{...}`
 - `chem_acidbase_data` - Retrieve pKa and pKb values
 - `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
 - `chem_acid_array` / `chem_base_array` - Get arrays of acids or bases
@@ -35,6 +36,39 @@ Functions for acid-base chemistry:
 - `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
 
 **Note:** Molecule parsing (`chem_parse_formula`, `chem_molar_mass`) and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion functions.
+
+### Using Chemical Formulas in Questions
+
+To properly display chemical formulas in your STACK questions, add the following line at the beginning of your **Question text**:
+
+```latex
+\(\require{mhchem}\)
+```
+
+This enables the `mhchem` LaTeX package for rendering chemical formulas with `\ce{...}` commands. 
+
+**Quick Display Method:**
+
+Use the `chem_display()` function to automatically wrap formulas:
+
+```maxima
+/* In Question Variables */
+acid: rand(chem_weak_acid_array());
+```
+
+```latex
+/* In Question Text */
+\(\require{mhchem}\)
+
+<p>What is the pKa value of {@chem_display(acid)@}?</p>
+```
+
+The formula will be automatically rendered with proper subscripts and superscripts. For example:
+- `chem_display("H2SO4")` → displays as H₂SO₄
+- `chem_display("NH4+")` → displays as NH₄⁺
+- `chem_display("HPO4^{2-}")` → displays as HPO₄²⁻
+
+See the [documentation](ChemLibraryDocumentation.md) for more details.
 
 ## Getting Started
 

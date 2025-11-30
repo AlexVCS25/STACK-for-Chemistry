@@ -15,6 +15,8 @@
 
 ## Installation
 
+### Loading the Library
+
 To use the chemistry library in your STACK question, include the following lines in the **Question variables** section:
 
 ```maxima
@@ -26,6 +28,25 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 ```
 
 You can load either module independently or both together as needed.
+
+### Enabling Chemical Formula Rendering
+
+To properly display chemical formulas in your STACK question, add the following line to the **Question text** (at the beginning, before any chemistry content):
+
+```latex
+\(\require{mhchem}\)
+```
+
+This enables the `mhchem` LaTeX package, which allows you to use `\ce{...}` commands for chemical formulas.
+
+**Example Question Text:**
+```latex
+\(\require{mhchem}\)
+
+<p>What is the pKa value of {@acid@} (\ce{ {@acid@} })?</p>
+```
+
+**Note:** Without `\(\require{mhchem}\)`, chemical formulas will not render correctly and may show LaTeX errors.
 
 ---
 
@@ -305,6 +326,37 @@ The acid-base module provides functions for working with acids and bases. **Note
 ---
 
 ### Acid-Base Data Retrieval Functions
+
+#### `chem_display(substance)`
+
+**Description:** Returns a chemical formula wrapped in `\ce{...}` for automatic LaTeX rendering with mhchem. This function is useful for displaying chemical formulas in question text.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** String formatted as `\ce{formula}` for LaTeX rendering
+
+**Example:**
+```maxima
+/* In Question Variables */
+acid: "NH3";
+acid_display: chem_display(acid);  /* Returns "\ce{NH3}" */
+
+/* In Question Text (with mhchem enabled) */
+/* The substance {@acid_display@} has a pKb of ... */
+/* This will render as: The substance NH₃ has a pKb of ... */
+```
+
+**Alternative usage directly in question text:**
+```latex
+\(\require{mhchem}\)
+
+<p>What is the pKa of {@chem_display(acid)@}?</p>
+```
+
+**Note:** This function requires `\(\require{mhchem}\)` to be included in your question text.
+
+---
 
 #### `chem_acidbase_data_all(substance)`
 
@@ -677,13 +729,38 @@ ka: chem_acidbase_Ka(acid);
 
 ## Installation
 
-Um die Chemie-Bibliothek in Ihrer STACK-Frage zu verwenden, fügen Sie folgende Zeile im Abschnitt **Fragenvariablen** ein:
+### Bibliothek laden
+
+Um die Chemie-Bibliothek in Ihrer STACK-Frage zu verwenden, fügen Sie folgende Zeilen im Abschnitt **Fragenvariablen** ein:
 
 ```maxima
+/* Periodensystem-Modul laden */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+
+/* Säure-Base-Chemie-Modul laden */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
 ```
 
-Dies lädt alle Periodensystemdaten und Funktionen in Ihre Frage.
+Sie können beide Module unabhängig voneinander oder zusammen laden.
+
+### Darstellung chemischer Formeln aktivieren
+
+Um chemische Formeln in Ihrer STACK-Frage korrekt darzustellen, fügen Sie folgende Zeile am Anfang des **Fragetexts** ein (vor jeglichem Chemie-Inhalt):
+
+```latex
+\(\require{mhchem}\)
+```
+
+Dies aktiviert das `mhchem` LaTeX-Paket, welches die Verwendung von `\ce{...}` Befehlen für chemische Formeln ermöglicht.
+
+**Beispiel Fragetext:**
+```latex
+\(\require{mhchem}\)
+
+<p>Was ist der pKa-Wert von {@saeure@} (\ce{ {@saeure@} })?</p>
+```
+
+**Hinweis:** Ohne `\(\require{mhchem}\)` werden chemische Formeln nicht korrekt dargestellt und es können LaTeX-Fehler auftreten.
 
 ---
 

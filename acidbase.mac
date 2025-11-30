@@ -48,8 +48,7 @@
     ["HCO3-", [10.40, 3.6]],
     ["H2S", [7.00, 7.00]],
     ["NH4+", [9.21, 4.79]],
-    ["OH-", [24, -10]],
-    ["NH3", [33, -19]]
+    ["OH-", [24, -10]]
 ]$
 
 /****************************************************************/
@@ -88,7 +87,7 @@ chem_acidbase_Kb(substance) := block([pKb_val],
         return(10^(-pKb_val))
 )$
 
-/* Helper function to format charge notation */
+/* Helper function to format charge notation NEEDS TO BE TESTED*/
 chem_format_charge(charge) := block([],
     if charge = 0 then return(""),
     if charge = 1 then return("+"),
@@ -97,23 +96,14 @@ chem_format_charge(charge) := block([],
     if charge < -1 then return(sconcat("^{", -charge, "-}"))
 )$
 
+/* Returns a chemical formula wrapped in \ce{...} for proper LaTeX rendering with mhchem */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
+
 /****************************************************************/
 /*                                                              */
 /*  Acid-Base Navigation Functions                              */
 /*                                                              */
 /****************************************************************/
-
-/* Returns an array of all acids (substances with pKa values) */
-chem_acid_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], not is(first(second(x)) = null))),
-    map(first, filtered)
-)$
-
-/* Returns an array of all bases (substances with pKb values) */
-chem_base_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], not is(second(second(x)) = null))),
-    map(first, filtered)
-)$
 
 /* Returns an array of all substances in the database */
 chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
@@ -132,7 +122,7 @@ chem_weak_base_array() := block([filtered],
     map(first, filtered)
 )$
 
-/* Returns an array of strong acids (pKa < 0) */
+/* Returns an array of strong acids (pKa = 0 or pKa < 0) */
 chem_strong_acid_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(first(second(x)) = null) and first(second(x)) < 0)),
