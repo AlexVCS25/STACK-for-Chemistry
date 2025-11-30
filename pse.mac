@@ -109,6 +109,74 @@ chem_element_period_maingroup(period_num, maingroup_num) := block([elem],
 
 /****************************************************************/
 /*                                                              */
+/*  Electron Configuration Formatting                           */
+/*                                                              */
+/****************************************************************/
+
+/* This function formats an electron configuration string for LaTeX display.
+   Converts format like "[Kr] 5s2 4d10 5p6" to "[\mathrm{Kr}] 5\mathrm{s}^2 4\mathrm{d}^{10} 5\mathrm{p}^{6}"
+   - Element symbols in brackets are wrapped in \mathrm{}
+   - Orbital letters (s, p, d, f) are wrapped in \mathrm{}
+   - Numbers after orbital letters become superscripts with ^{} */
+chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket, current_orbital],
+    if sequal(config_str, "") then return(""),
+    chars: charlist(config_str),
+    n: length(chars),
+    result: "",
+    i: 1,
+    in_bracket: false,
+    
+    while i <= n do (
+        /* Handle opening bracket [ */
+        if sequal(chars[i], "[") then (
+            result: sconcat(result, "[\\mathrm{"),
+            in_bracket: true,
+            i: i + 1
+        )
+        /* Handle closing bracket ] */
+        else if sequal(chars[i], "]") then (
+            result: sconcat(result, "}]"),
+            in_bracket: false,
+            i: i + 1
+        )
+        /* Handle space */
+        else if sequal(chars[i], " ") then (
+            result: sconcat(result, " "),
+            i: i + 1
+        )
+        /* Handle orbital letters (s, p, d, f) */
+        else if (sequal(chars[i], "s") or sequal(chars[i], "p") or 
+                 sequal(chars[i], "d") or sequal(chars[i], "f")) and not in_bracket then (
+            /* Add the orbital letter in \mathrm */
+            result: sconcat(result, "\\mathrm{", chars[i], "}"),
+            i: i + 1,
+            /* Check if there's a number following */
+            if i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
+                /* Collect all digits */
+                result: sconcat(result, "^{"),
+                while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
+                    result: sconcat(result, chars[i]),
+                    i: i + 1
+                ),
+                result: sconcat(result, "}")
+            )
+        )
+        /* Default: just copy the character (includes numbers before orbitals) */
+        else (
+            result: sconcat(result, chars[i]),
+            i: i + 1
+        )
+    ),
+    
+    return(result)
+)$
+
+/* This function returns the formatted electron configuration for an element.
+   Example: chem_electron_config("Xe") returns "[\mathrm{Kr}] 5\mathrm{s}^2 4\mathrm{d}^{10} 5\mathrm{p}^{6}" */
+chem_electron_config(element) := chem_electron_config_latex(chem_data(element, "ElectronConfiguration"))$
+
+/****************************************************************/
+/*                                                              */
 /*  Molecule Molar Mass Calculation Functions                   */
 /*                                                              */
 /****************************************************************/
@@ -283,7 +351,7 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
   ["Sm", [62, "Samarium", 6, 0, 3, 150.36, "[Xe] 6s2 4f6", 1.17, 229, 5.644, null, "+3, +2", "Solid", 1347, 2067, 7.52, "Lanthanide", 1879]],
   ["Eu", [63, "Europium", 6, 0, 3, 151.96, "[Xe] 6s2 4f7", null, 233, 5.670, null, "+3, +2", "Solid", 1095, 1802, 5.24, "Lanthanide", 1901]],
   ["Gd", [64, "Gadolinium", 6, 0, 3, 157.25, "[Xe] 6s2 4f7 5d1", 1.2, 237, 6.150, null, "+3", "Solid", 1586, 3546, 7.90, "Lanthanide", 1880]],
-  ["Tb", [65, "Terbium", 6, 0, 3, 158.93, "[Xe] 6s2 4f9", null, 221, 5.864, null, "+3", "Solid", 1629, 3503, 8.23, "Lanthanide", 1843]],
+  ["Tb", [65, "Terbium", 6, Molar Mass 0, 3, 158.93, "[Xe] 6s2 4f9", null, 221, 5.864, null, "+3", "Solid", 1629, 3503, 8.23, "Lanthanide", 1843]],
   ["Dy", [66, "Dysprosium", 6, 0, 3, 162.50, "[Xe] 6s2 4f10", 1.22, 229, 5.939, null, "+3", "Solid", 1685, 2840, 8.55, "Lanthanide", 1886]],
   ["Ho", [67, "Holmium", 6, 0, 3, 164.93, "[Xe] 6s2 4f11", 1.23, 216, 6.022, null, "+3", "Solid", 1747, 2973, 8.80, "Lanthanide", 1878]],
   ["Er", [68, "Erbium", 6, 0, 3, 167.26, "[Xe] 6s2 4f12", 1.24, 235, 6.108, null, "+3", "Solid", 1802, 3141, 9.07, "Lanthanide", 1843]],
