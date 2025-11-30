@@ -28,7 +28,7 @@
 
 /* This function parses a chemical formula string and returns a list of [element, count] pairs.
    Example: chem_parse_formula("H2SO4") returns [["H", 2], ["S", 1], ["O", 4]] */
-chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, next_char, clean_formula],
+chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, next_char, clean_formula, num_val],
     /* Remove charge indicators (+, -, ^, {, }) from formula */
     clean_formula: ssubst("", "}", ssubst("", "{", ssubst("", "^", ssubst("", "-", ssubst("", "+", formula))))),
     chars: charlist(clean_formula),
@@ -56,13 +56,15 @@ chem_parse_formula(formula) := block([chars, i, n, result, current_element, curr
             ),
             
             /* If no number found, count is 1 */
-            if sequal(current_count, "") then
-                current_count: 1
-            else
-                current_count: parse_string(current_count),
+            if sequal(current_count, "") then (
+                num_val: 1
+            ) else (
+                /* Convert string to number using ev */
+                num_val: ev(read(current_count), simp)
+            ),
             
             /* Add to result */
-            result: append(result, [[current_element, current_count]])
+            result: append(result, [[current_element, num_val]])
         ) else (
             i: i + 1
         )
@@ -80,7 +82,8 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
     for pair in parsed do (
         elem_data: chem_data(first(pair), "AtomicMass"),
         if is(elem_data = false) then (
-            error("Unknown element:", first(pair))
+            /* Return false if element not found instead of error */
+            return(false)
         ),
         total_mass: total_mass + elem_data * second(pair)
     ),
@@ -156,7 +159,7 @@ chem_acidbase_Kb(substance) := block([pKb_val],
 )$
 
 /* Helper function to parse and extract charge from formula */
-chem_parse_charge(formula) := block([chars, i, n, charge, charge_str],
+chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, charge_num],
     chars: charlist(formula),
     n: length(chars),
     charge: 0,
@@ -174,7 +177,7 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str],
                     charge_str: sconcat(chars[i], charge_str),
                     i: i - 1
                 ),
-                charge: parse_string(charge_str)
+                charge: ev(read(charge_str), simp)
             )
         ) else if sequal(chars[n], "-") then (
             charge: -1,
@@ -186,7 +189,7 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str],
                     charge_str: sconcat(chars[i], charge_str),
                     i: i - 1
                 ),
-                charge: -parse_string(charge_str)
+                charge: -ev(read(charge_str), simp)
             )
         ) else if n > 2 and sequal(chars[n-1], "^") and sequal(chars[n-2], "{") then (
             /* Handle format like ^{2-} or ^{3+} */
@@ -202,10 +205,16 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str],
                 if slength(charge_str) > 0 then (
                     if sequal(substring(charge_str, slength(charge_str)), "+") then (
                         if slength(charge_str) = 1 then charge: 1
-                        else charge: parse_string(substring(charge_str, 1, slength(charge_str)))
+                        else (
+                            charge_num: substring(charge_str, 1, slength(charge_str)),
+                            charge: ev(read(charge_num), simp)
+                        )
                     ) else if sequal(substring(charge_str, slength(charge_str)), "-") then (
                         if slength(charge_str) = 1 then charge: -1
-                        else charge: -parse_string(substring(charge_str, 1, slength(charge_str)))
+                        else (
+                            charge_num: substring(charge_str, 1, slength(charge_str)),
+                            charge: -ev(read(charge_num), simp)
+                        )
                     )
                 )
             )
