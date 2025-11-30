@@ -63,6 +63,8 @@ Functions for acid-base chemistry:
 - `chem_display` - Automatically format chemical formulas for LaTeX rendering with `\ce{...}`
 - `chem_acidbase_data` - Retrieve pKa and pKb values
 - `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
+- `chem_acid_array` - Get array of all acids (with pKa ≠ null)
+- `chem_base_array` - Get array of all bases (with pKb ≠ null)
 - `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
 - `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
 - `chem_count_H` - Count hydrogen atoms in a chemical formula
@@ -71,7 +73,9 @@ Functions for acid-base chemistry:
 - `chem_acidbase_conjugate_base` - Calculate conjugate base after deprotonation
 - `chem_acidbase_conjugate_acid` - Calculate conjugate acid after protonation
 
-**Note:** The `acidbase.mac` module requires `pse.mac` to be loaded first for formula parsing functions.
+**Note:** The `acidbase.mac` module requires `pse.mac` to be loaded first for formula parsing functions (`chem_count_H`, `chem_acidbase_conjugate_base`, `chem_acidbase_conjugate_acid`).
+
+**Important:** Strong acids (HCl, H₂SO₄, HNO₃) have `null` pKb values because they completely dissociate in water. Similarly, strong bases have `null` pKa values.
 
 ### Thermodynamic Tables Module (`thermodynamictables.mac`)
 

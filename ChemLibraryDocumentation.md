@@ -782,7 +782,7 @@ acid: chem_acidbase_conjugate_acid("CH3COO-");    /* Returns "CH3COOH" */
 
 #### `chem_acid_array()`
 
-**Description:** Returns an array of all acids in the database (substances with pKa values).
+**Description:** Returns an array of all acids in the database (substances with pKa values that are not null).
 
 **Parameters:** None
 
@@ -791,7 +791,7 @@ acid: chem_acidbase_conjugate_acid("CH3COO-");    /* Returns "CH3COOH" */
 **Example:**
 ```maxima
 acids: chem_acid_array();
-/* Returns ["H+", "H2O", "HCl", "H2SO4", ...] */
+/* Returns ["H+", "H2O", "HCl", "H2SO4", "HSO4-", ...] */
 
 /* Select a random acid */
 acid: rand(chem_acid_array());
@@ -801,7 +801,7 @@ acid: rand(chem_acid_array());
 
 #### `chem_base_array()`
 
-**Description:** Returns an array of all bases in the database (substances with pKb values).
+**Description:** Returns an array of all bases in the database (substances with pKb values that are not null).
 
 **Parameters:** None
 
@@ -810,7 +810,7 @@ acid: rand(chem_acid_array());
 **Example:**
 ```maxima
 bases: chem_base_array();
-/* Returns ["H+", "H2O", "HSO4-", ...] */
+/* Returns ["H2O", "HSO4-", "H3PO4", ...] */
 
 /* Select a random base */
 base: rand(chem_base_array());
@@ -914,12 +914,12 @@ The following substances are available in the acid-base database:
 
 | Formula | pKa | pKb | Type |
 |---------|-----|-----|------|
-| H+ | 0 | 14 | Very strong acid |
+| H+ | 0 | null | Very strong acid |
 | H2O | 14 | 0 | Amphoteric |
-| HCl | -7.0 | 21 | Strong acid |
-| H2SO4 | -2.0 | 16 | Strong acid |
+| HCl | -7.0 | null | Strong acid |
+| H2SO4 | -2.0 | null | Strong acid |
 | HSO4- | 1.92 | 12.08 | Weak acid |
-| HNO3 | -1 | 15 | Strong acid |
+| HNO3 | -1 | null | Strong acid |
 | H3PO4 | 1.96 | 12.04 | Weak acid |
 | H2PO4- | 7.21 | 6.79 | Weak acid |
 | HPO4^{2-} | 12.32 | 1.68 | Very weak acid |
@@ -929,8 +929,14 @@ The following substances are available in the acid-base database:
 | HCO3- | 10.40 | 3.6 | Very weak acid |
 | H2S | 7.00 | 7.00 | Weak acid |
 | NH4+ | 9.21 | 4.79 | Weak acid (ammonium) |
-| OH- | 24 | -10 | Strong base |
-| NH3 | 33 | -19 | Weak base (ammonia) |
+| OH- | null | -10 | Strong base |
+| NH3 | null | -19 | Weak base (ammonia) |
+
+**Notes:**
+- `null` values indicate that the property is not applicable or not measurable
+- Strong acids (pKa < 0) have `null` pKb values because they completely dissociate
+- Strong bases (pKb ≤ 0) have very negative pKb or `null` pKa values
+- Amphoteric substances like H₂O can act as both acids and bases
 
 ---
 
