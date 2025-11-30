@@ -140,7 +140,7 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
         total_mass: total_mass + elem_data * second(pair)
     ),
     
-    return(stackunits(total_mass, g/mol))
+    return(stackunits(total_mass, g*mol^(-1)))
 )$
 
 /****************************************************************/
