@@ -39,15 +39,12 @@ chem_element(atomic_num) := block([elem],
     if emptyp(elem) then false else first(first(elem))
 )$
 
-/* This function returns an array of all element symbols.
-   If maingroup is true, only main group elements (MainGroup > 0) are returned. */
-chem_element_array([maingroup]) := block([filtered_elements],
-    if emptyp(maingroup) then maingroup: [false],
-    maingroup: first(maingroup),
-    if maingroup then
-        filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) > 0))
-    else
-        filtered_elements: %_CHEM_ELEMENTS,
+/* This function returns an array of all element symbols. */
+chem_element_array() := map(first, %_CHEM_ELEMENTS)$
+
+/* This function returns an array of main group element symbols (MainGroup > 0). */
+chem_element_array_maingroup() := block([filtered_elements],
+    filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) > 0)),
     map(first, filtered_elements)
 )$
 
