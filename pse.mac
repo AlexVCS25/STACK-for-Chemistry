@@ -90,6 +90,20 @@ chem_element_maingroup(maingroup_num) := block([filtered_elements],
     map(first, filtered_elements)
 )$
 
+/* This function returns the element symbol for a given period and group number (IUPAC).
+   Returns false if no such element exists. */
+chem_element_period_group(period_num, group_num) := block([elem],
+    elem: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num and fifth(second(x)) = group_num)),
+    if emptyp(elem) then false else first(first(elem))
+)$
+
+/* This function returns the element symbol for a given period and main group number.
+   Returns false if no such element exists. */
+chem_element_period_maingroup(period_num, maingroup_num) := block([elem],
+    elem: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) = period_num and fourth(second(x)) = maingroup_num)),
+    if emptyp(elem) then false else first(first(elem))
+)$
+
 /* 
    This is the order of data below.  For efficiency, we don't store all the data as nested lists with repeaed fields.
    The functions above return formatted data for use with "assoc".

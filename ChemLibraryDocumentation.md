@@ -213,6 +213,44 @@ element_hal: rand(chem_element_maingroup(7));
 
 ---
 
+### `chem_element_period_group(period_number, group_number)`
+
+**Description:** Returns the element symbol at a specific period and IUPAC group position.
+
+**Parameters:**
+- `period_number` (integer): Period number (1-7)
+- `group_number` (integer): IUPAC group number (1-18)
+
+**Returns:** Element symbol or `false` if no such element exists
+
+**Example:**
+```maxima
+element: chem_element_period_group(3, 17);  /* Returns "Cl" */
+element: chem_element_period_group(2, 1);   /* Returns "Li" */
+element: chem_element_period_group(1, 5);   /* Returns false (no element at Period 1, Group 5) */
+```
+
+---
+
+### `chem_element_period_maingroup(period_number, maingroup_number)`
+
+**Description:** Returns the element symbol at a specific period and main group position.
+
+**Parameters:**
+- `period_number` (integer): Period number (1-7)
+- `maingroup_number` (integer): Main group number (1-8)
+
+**Returns:** Element symbol or `false` if no such element exists
+
+**Example:**
+```maxima
+element: chem_element_period_maingroup(3, 7);  /* Returns "Cl" */
+element: chem_element_period_maingroup(4, 1);  /* Returns "K" */
+element: chem_element_period_maingroup(1, 3);  /* Returns false (no element at Period 1, Main Group 3) */
+```
+
+---
+
 ## Available Data Fields
 
 The following data fields can be accessed using `chem_data()` or `chem_data_units()`:
@@ -525,6 +563,44 @@ halogene: chem_element_maingroup(7);
 
 /* Zufälliges Halogen auswählen */
 element_hal: rand(chem_element_maingroup(7));
+```
+
+---
+
+### `chem_element_period_group(periodennummer, gruppennummer)`
+
+**Beschreibung:** Gibt das Elementsymbol an einer bestimmten Periode und IUPAC-Gruppenposition zurück.
+
+**Parameter:**
+- `periodennummer` (Integer): Periodennummer (1-7)
+- `gruppennummer` (Integer): IUPAC-Gruppennummer (1-18)
+
+**Rückgabewert:** Elementsymbol oder `false` falls kein solches Element existiert
+
+**Beispiel:**
+```maxima
+element: chem_element_period_group(3, 17);  /* Gibt "Cl" zurück */
+element: chem_element_period_group(2, 1);   /* Gibt "Li" zurück */
+element: chem_element_period_group(1, 5);   /* Gibt false zurück (kein Element in Periode 1, Gruppe 5) */
+```
+
+---
+
+### `chem_element_period_maingroup(periodennummer, hauptgruppennummer)`
+
+**Beschreibung:** Gibt das Elementsymbol an einer bestimmten Periode und Hauptgruppenposition zurück.
+
+**Parameter:**
+- `periodennummer` (Integer): Periodennummer (1-7)
+- `hauptgruppennummer` (Integer): Hauptgruppennummer (1-8)
+
+**Rückgabewert:** Elementsymbol oder `false` falls kein solches Element existiert
+
+**Beispiel:**
+```maxima
+element: chem_element_period_maingroup(3, 7);  /* Gibt "Cl" zurück */
+element: chem_element_period_maingroup(4, 1);  /* Gibt "K" zurück */
+element: chem_element_period_maingroup(1, 3);  /* Gibt false zurück (kein Element in Periode 1, Hauptgruppe 3) */
 ```
 
 ---
