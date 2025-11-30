@@ -118,7 +118,7 @@ chem_element_period_maingroup(period_num, maingroup_num) := block([elem],
    - Element symbols in brackets are wrapped in \mathrm{}
    - Orbital letters (s, p, d, f) are wrapped in \mathrm{}
    - Numbers after orbital letters become superscripts with ^{} */
-chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket, current_orbital],
+chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket],
     if sequal(config_str, "") then return(""),
     chars: charlist(config_str),
     n: length(chars),
@@ -127,32 +127,21 @@ chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket
     in_bracket: false,
     
     while i <= n do (
-        /* Handle opening bracket [ */
         if sequal(chars[i], "[") then (
             result: sconcat(result, "[\\mathrm{"),
             in_bracket: true,
             i: i + 1
-        )
-        /* Handle closing bracket ] */
-        else if sequal(chars[i], "]") then (
+        ) else if sequal(chars[i], "]") then (
             result: sconcat(result, "}]"),
             in_bracket: false,
             i: i + 1
-        )
-        /* Handle space */
-        else if sequal(chars[i], " ") then (
+        ) else if sequal(chars[i], " ") then (
             result: sconcat(result, " "),
             i: i + 1
-        )
-        /* Handle orbital letters (s, p, d, f) */
-        else if (sequal(chars[i], "s") or sequal(chars[i], "p") or 
-                 sequal(chars[i], "d") or sequal(chars[i], "f")) and not in_bracket then (
-            /* Add the orbital letter in \mathrm */
+        ) else if (sequal(chars[i], "s") or sequal(chars[i], "p") or sequal(chars[i], "d") or sequal(chars[i], "f")) and not in_bracket then (
             result: sconcat(result, "\\mathrm{", chars[i], "}"),
             i: i + 1,
-            /* Check if there's a number following */
             if i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
-                /* Collect all digits */
                 result: sconcat(result, "^{"),
                 while i <= n and cgreaterp(chars[i], "/") and clessp(chars[i], ":") do (
                     result: sconcat(result, chars[i]),
@@ -160,9 +149,7 @@ chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket
                 ),
                 result: sconcat(result, "}")
             )
-        )
-        /* Default: just copy the character (includes numbers before orbitals) */
-        else (
+        ) else (
             result: sconcat(result, chars[i]),
             i: i + 1
         )
@@ -395,7 +382,7 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
   ["Sg", [106, "Seaborgium", 7, 0, 6, 266, "[Rn] 7s2 5f14 6d4", null, null, null, null, "6, 5, 4, 3, 0", "Solid", null, null, null, "Transition metal", 1974]],
   ["Bh", [107, "Bohrium", 7, 0, 7, 264, "[Rn] 7s2 5f14 6d5", null, null, null, null, "7, 5, 4, 3", "Solid", null, null, null, "Transition metal", 1976]],
   ["Hs", [108, "Hassium", 7, 0, 8, 277, "[Rn] 7s2 5f14 6d6", null, null, null, null, "8, 6, 5, 4, 3, 2", "Solid", null, null, null, "Transition metal", 1984]],
-  ["Mt", [109, "Meitnerium", 7, 0, 9, 268, "[Rn] 7s2 5f14 6d7 (calculated)", null, null, null, null, "9, 8, 6, 4, 3, 1", "Solid", null, null, null, "Transition metal", 1982]],
+  ["Mt", [109, "Meitnerium", 7, 0, 9, 268, "[Rn] 7s2 5f14 6d7", null, null, null, null, "9, 8, 6, 4, 3, 1", "Solid", null, null, null, "Transition metal", 1982]],
   ["Ds", [110, "Darmstadtium", 7, 0, 10, 281, "[Rn] 7s2 5f14 6d8", null, null, null, null, "8, 6, 4, 2, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
   ["Rg", [111, "Roentgenium", 7, 0, 11, 272, "[Rn] 7s2 5f14 6d9", null, null, null, null, "5, 3, 1, -1", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
   ["Cn", [112, "Copernicium", 7, 0, 12, 285, "[Rn] 7s2 5f14 6d10", null, null, null, null, "2, 1, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1996]],
