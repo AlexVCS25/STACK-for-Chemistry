@@ -118,7 +118,7 @@ chem_element_period_maingroup(period_num, maingroup_num) := block([elem],
    - Element symbols in brackets are wrapped in \mathrm{}
    - Orbital letters (s, p, d, f) are wrapped in \mathrm{}
    - Numbers after orbital letters become superscripts with ^{} */
-chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket, is_orbital],
+chem_electron_config_formatter(config_str) := block([chars, result, i, n, in_bracket, is_orbital],
     if sequal(config_str, "") then return(""),
     chars: charlist(config_str),
     n: length(chars),
@@ -173,7 +173,7 @@ chem_electron_config_latex(config_str) := block([chars, result, i, n, in_bracket
 chem_electron_config(element) := block([config_str],
     config_str: chem_data(element, "ElectronConfiguration"),
     if is(config_str = false) then return(false),
-    chem_electron_config_latex(config_str)
+    chem_electron_config_formatter(config_str)
 )$
 
 /****************************************************************/
