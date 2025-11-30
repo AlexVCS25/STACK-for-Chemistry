@@ -49,24 +49,27 @@ This enables the `mhchem` LaTeX package for rendering chemical formulas with `\c
 
 **Quick Display Method:**
 
-Use the `chem_display()` function to automatically wrap formulas:
+Use the `chem_display()` function to automatically wrap formulas for proper rendering. Call the function in **Question Variables** and store the result.
 
 ```maxima
 /* In Question Variables */
 acid: rand(chem_weak_acid_array());
+acid_display: chem_display(acid);  /* Wraps formula in \ce{...} */
+pka_value: chem_acidbase_data(acid, "pKa");
 ```
 
 ```latex
 /* In Question Text */
 \(\require{mhchem}\)
 
-<p>What is the pKa value of {@chem_display(acid)@}?</p>
+<p>Calculate the pH of a 0.1 M solution of {@acid_display@}.</p>
+<p>Given: pKa = {@pka_value@}</p>
 ```
 
-The formula will be automatically rendered with proper subscripts and superscripts. For example:
-- `chem_display("H2SO4")` → displays as H₂SO₄
-- `chem_display("NH4+")` → displays as NH₄⁺
-- `chem_display("HPO4^{2-}")` → displays as HPO₄²⁻
+The formulas will be automatically rendered with proper subscripts and superscripts:
+- `chem_display("H2SO4")` produces \ce{H2SO4} → displays as H₂SO₄
+- `chem_display("NH4+")` produces \ce{NH4+} → displays as NH₄⁺
+- `chem_display("HPO4^{2-}")` produces \ce{HPO4^{2-}} → displays as HPO₄²⁻
 
 See the [documentation](ChemLibraryDocumentation.md) for more details.
 

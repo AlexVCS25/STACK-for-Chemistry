@@ -336,22 +336,39 @@ The acid-base module provides functions for working with acids and bases. **Note
 
 **Returns:** String formatted as `\ce{formula}` for LaTeX rendering
 
+**Usage:** Call this function in the **Question Variables** section and store the result in a variable. Then use that variable in the question text.
+
 **Example:**
 ```maxima
 /* In Question Variables */
-acid: "NH3";
-acid_display: chem_display(acid);  /* Returns "\ce{NH3}" */
-
-/* In Question Text (with mhchem enabled) */
-/* The substance {@acid_display@} has a pKb of ... */
-/* This will render as: The substance NH₃ has a pKb of ... */
+acid: rand(chem_strong_acid_array());
+acid_display: chem_display(acid);  /* Store the formatted result */
+pka: chem_acidbase_data(acid, "pKa");
 ```
 
-**Alternative usage directly in question text:**
 ```latex
+/* In Question Text */
 \(\require{mhchem}\)
 
-<p>What is the pKa of {@chem_display(acid)@}?</p>
+<p>What is the pH of a 0.1 M solution of {@acid_display@}?</p>
+<p>The acid {@acid_display@} has a pKa = {@pka@}.</p>
+```
+
+**Complete Example:**
+```maxima
+/* Question Variables */
+strong_acid: rand(chem_strong_acid_array());
+strong_acid_display: chem_display(strong_acid);
+pka_value: chem_acidbase_data(strong_acid, "pKa");
+ka_value: chem_acidbase_Ka(strong_acid);
+```
+
+```latex
+/* Question Text */
+\(\require{mhchem}\)
+
+<p>Consider the strong acid {@strong_acid_display@}.</p>
+<p>Its pKa is {@pka_value@} and Ka is {@ka_value@}.</p>
 ```
 
 **Note:** This function requires `\(\require{mhchem}\)` to be included in your question text.
