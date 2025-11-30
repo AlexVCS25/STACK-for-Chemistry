@@ -21,20 +21,28 @@ The goal of this project is to develop new chemistry functions and comprehensive
 
 - **Independent Modules** (load in any order):
   - `pse.mac` - Periodic table data
-  - `acidbase.mac` - Acid-base chemistry
   - `reactions.mac` - Reaction database
 
-- **Dependent Module**:
-  - `thermodynamictables.mac` - Works standalone for basic thermodynamic data, but requires `reactions.mac` to be loaded first if using reaction-based calculations (`*_by_name` functions)
+- **Dependent Modules**:
+  - `acidbase.mac` - Works standalone for pKa/pKb data, but requires `pse.mac` for `chem_count_H()` function
+  - `thermodynamictables.mac` - Works standalone for basic thermodynamic data, but requires `reactions.mac` for reaction-based calculations (`*_by_name` functions)
 
 **Quick Start:**
 ```maxima
 /* For full functionality, load in this order: */
-stack_include("reactions.mac");           /* Load first if using thermodynamics */
-stack_include("thermodynamictables.mac"); /* Depends on reactions.mac for *_by_name functions */
-stack_include("pse.mac");                 /* Independent */
-stack_include("acidbase.mac");            /* Independent */
+stack_include("pse.mac");                     /* Load first - required by acidbase.mac */
+stack_include("acidbase.mac");                /* Requires pse.mac for chem_count_H() */
+stack_include("reactions.mac");               /* Load before thermodynamictables.mac */
+stack_include("thermodynamictables.mac");     /* Requires reactions.mac for *_by_name functions */
 ```
+
+**Important Note on Forbidden Functions:**
+Due to STACK restrictions, certain Maxima functions are not allowed:
+- `read()` - String parsing (replaced with ASCII arithmetic)
+- `print()` - Console output (errors return `false` instead)
+- `?fboundp()` - Function existence checks (replaced with documentation)
+
+See the [detailed documentation](ChemLibraryDocumentation.md#forbidden-maxima-functions) for complete information on forbidden functions and workarounds.
 
 See the [detailed documentation](ChemLibraryDocumentation.md#module-dependencies) for specific use cases and loading patterns.
 

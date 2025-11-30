@@ -3,21 +3,22 @@
 ## Table of Contents
 1. [Installation](#installation)
 2. [Module Dependencies](#module-dependencies)
-3. [Periodic Table Module](#periodic-table-module)
+3. [Forbidden Maxima Functions](#forbidden-maxima-functions)
+4. [Periodic Table Module](#periodic-table-module)
    - [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
    - [PSE Navigation Functions](#pse-navigation-functions)
    - [Available Data Fields](#available-data-fields)
-4. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
+5. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
-5. [Thermodynamic Tables Module](#thermodynamic-tables-module)
+6. [Thermodynamic Tables Module](#thermodynamic-tables-module)
    - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
    - [Thermodynamic Calculation Functions](#thermodynamic-calculation-functions)
    - [Available Substances](#available-substances)
-6. [Chemical Reactions Module](#chemical-reactions-module)
+7. [Chemical Reactions Module](#chemical-reactions-module)
    - [Reaction Data Retrieval Functions](#reaction-data-retrieval-functions)
    - [Available Reactions](#available-reactions)
-7. [Usage Examples](#usage-examples)
+8. [Usage Examples](#usage-examples)
 
 ---
 
@@ -77,12 +78,7 @@ These modules have **no dependencies** and can be loaded independently:
    - No dependencies on other modules
    - Can be used alone for periodic table data
 
-2. **Acid-Base Chemistry Module (`acidbase.mac`)**
-   - Completely standalone
-   - No dependencies on other modules
-   - Can be used alone for acid-base calculations
-
-3. **Reactions Module (`reactions.mac`)**
+2. **Reactions Module (`reactions.mac`)**
    - Completely standalone
    - No dependencies on other modules
    - Can be used alone for reaction stoichiometry data
@@ -90,6 +86,11 @@ These modules have **no dependencies** and can be loaded independently:
 ### Dependent Modules
 
 These modules have dependencies and require other modules to be loaded:
+
+3. **Acid-Base Chemistry Module (`acidbase.mac`)**
+   - **Standalone for basic functions**: Works independently for pKa/pKb data retrieval
+   - **Requires `pse.mac`**: For `chem_count_H()` function which uses `chem_parse_formula()`
+   - **Note**: If `pse.mac` is not loaded, `chem_count_H()` will return `0` or cause an error
 
 4. **Thermodynamic Tables Module (`thermodynamictables.mac`)**
    - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
@@ -99,17 +100,46 @@ These modules have dependencies and require other modules to be loaded:
 
 #### Option 1: Load All Modules (Recommended for Full Functionality)
 
-For complete chemistry functionality including reaction thermodynamics:
+For complete chemistry functionality including reaction thermodynamics and H-counting:
 
 ```maxima
-/* Load in any order - all modules are independent at the data level */
+/* Load in recommended order: */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");  /* Requires pse.mac for chem_count_H() */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");  /* Requires reactions.mac for *_by_name functions */
 ```
 
-#### Option 2: Thermodynamics with Reactions
+#### Option 2: Acid-Base with H-Counting
+
+To use acid-base functions including hydrogen counting:
+
+```maxima
+/* Load pse.mac first - acidbase.mac needs chem_parse_formula() */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* Now you can use: */
+h_count: chem_count_H("H2SO4");  /* Returns 2 */
+```
+
+#### Option 3: Acid-Base Without H-Counting
+
+For acid-base data without hydrogen counting:
+
+```maxima
+/* Only load acidbase.mac */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* These functions work without pse.mac: */
+pka: chem_acidbase_data("HCl", "pKa");
+ka: chem_acidbase_Ka("CH3COOH");
+
+/* This will fail without pse.mac: */
+h_count: chem_count_H("H2SO4");  /* Returns 0 or error */
+```
+
+#### Option 4: Thermodynamics with Reactions
 
 To calculate thermodynamic properties for named reactions:
 
@@ -123,35 +153,6 @@ delta_h: chem_reaction_enthalpy_by_name("CombustionMethane");
 delta_g: chem_reaction_gibbs_by_name("SynthesisAmmonia");
 ```
 
-#### Option 3: Thermodynamics Only
-
-For manual thermodynamic calculations without named reactions:
-
-```maxima
-/* Only load thermodynamictables.mac */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
-
-/* Manual calculations work without reactions.mac */
-reactants: [["CH4", "g", 1], ["O2", "g", 2]];
-products: [["CO2", "g", 1], ["H2O", "l", 2]];
-delta_h: chem_reaction_enthalpy(products, reactants);
-```
-
-#### Option 4: Single Module
-
-Any single module can be loaded alone:
-
-```maxima
-/* Just periodic table data */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
-
-/* OR just acid-base data */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
-
-/* OR just reactions data */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
-```
-
 ### Function Dependency Summary
 
 | Function | Required Modules | Notes |
@@ -159,8 +160,10 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 | `chem_data()`, `chem_element()` | `pse.mac` | Periodic table data |
 | `chem_electron_config()` | `pse.mac` | Electron configurations |
 | `chem_molar_mass()` | `pse.mac` | Molar mass calculations |
+| `chem_parse_formula()` | `pse.mac` | Formula parsing |
 | `chem_acidbase_data()`, `chem_acidbase_Ka()` | `acidbase.mac` | Acid-base data |
 | `chem_display()` | `acidbase.mac` | Formula formatting |
+| `chem_count_H()` | `acidbase.mac` + `pse.mac` | Hydrogen counting |
 | `chem_thermo_data()` | `thermodynamictables.mac` | Thermodynamic data |
 | `chem_reaction_enthalpy()` | `thermodynamictables.mac` | Manual thermo calculations |
 | `chem_reaction_data()`, `chem_reaction_equation()` | `reactions.mac` | Reaction data |
@@ -168,78 +171,109 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 | `chem_reaction_entropy_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
 | `chem_reaction_gibbs_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
 
-### Common Use Cases
-
-**Case 1: Periodic Table Questions**
-```maxima
-/* Load only pse.mac */
-stack_include("pse.mac");
-element: rand(chem_element_array());
-mass: chem_data_units(element, "AtomicMass");
-```
-
-**Case 2: Acid-Base Questions**
-```maxima
-/* Load only acidbase.mac */
-stack_include("acidbase.mac");
-acid: rand(chem_weak_acid_array());
-pka: chem_acidbase_data(acid, "pKa");
-```
-
-**Case 3: Reaction Stoichiometry**
-```maxima
-/* Load only reactions.mac */
-stack_include("reactions.mac");
-rxn: rand(chem_reaction_combustion_array());
-equation: chem_reaction_equation_latex(rxn);
-```
-
-**Case 4: Manual Thermodynamic Calculations**
-```maxima
-/* Load only thermodynamictables.mac */
-stack_include("thermodynamictables.mac");
-reactants: [["H2", "g", 2], ["O2", "g", 1]];
-products: [["H2O", "l", 2]];
-delta_h: chem_reaction_enthalpy(products, reactants);
-```
-
-**Case 5: Named Reaction Thermodynamics**
-```maxima
-/* Load both reactions.mac and thermodynamictables.mac */
-stack_include("reactions.mac");
-stack_include("thermodynamictables.mac");
-
-rxn: rand(chem_reaction_combustion_array());
-delta_h: chem_reaction_enthalpy_by_name(rxn);
-delta_g: chem_reaction_gibbs_by_name(rxn);
-```
-
-**Case 6: Comprehensive Chemistry Questions**
-```maxima
-/* Load all modules */
-stack_include("pse.mac");
-stack_include("acidbase.mac");
-stack_include("reactions.mac");
-stack_include("thermodynamictables.mac");
-
-/* Now use any combination of functions */
-element: rand(chem_element_array());
-acid: rand(chem_weak_acid_array());
-rxn: rand(chem_reaction_array());
-delta_h: chem_reaction_enthalpy_by_name(rxn);
-```
-
 ### Important Notes
 
-1. **Order matters only for dependent modules**: When using reaction-based thermodynamic functions, load `reactions.mac` before `thermodynamictables.mac`
+1. **Order matters for dependent modules**: 
+   - Load `pse.mac` before `acidbase.mac` if using `chem_count_H()`
+   - Load `reactions.mac` before `thermodynamictables.mac` if using `*_by_name` functions
 
-2. **Independent modules can be loaded in any order**: `pse.mac`, `acidbase.mac`, and `reactions.mac` have no dependencies
+2. **Independent modules can be loaded in any order**: `pse.mac` and `reactions.mac` have no dependencies
 
-3. **Missing dependencies will cause errors**: If you try to use `chem_reaction_enthalpy_by_name()` without loading `reactions.mac`, you'll get an error
+3. **Missing dependencies will cause errors**: 
+   - `chem_count_H()` without `pse.mac` will return `0` or cause an undefined function error
+   - `chem_reaction_enthalpy_by_name()` without `reactions.mac` will cause an error
 
 4. **Loading unnecessary modules is harmless**: It's safe to load all modules even if you only use some of them
 
-5. **Function name suffixes indicate dependencies**: Functions ending with `_by_name` require the `reactions.mac` module
+5. **Function name patterns indicate dependencies**: 
+   - Functions ending with `_by_name` require the `reactions.mac` module
+   - `chem_count_H()` requires `pse.mac` to be loaded
+
+---
+
+## Forbidden Maxima Functions
+
+STACK restricts certain Maxima functions for security and reliability reasons. The following functions are **not allowed** in STACK and will cause errors if used:
+
+### String-to-Number Conversion Functions
+
+These functions were originally used in the old acid-base module but had to be replaced:
+
+- **`read()`** - Parses and evaluates string input (security risk)
+  - *Replaced by:* `chem_string_to_number()` using ASCII arithmetic
+  - *Used in:* Formula parsing, charge parsing
+
+### Input/Output Functions
+
+These functions interact with the system and are forbidden:
+
+- **`print()`** - Prints output to console
+  - *Alternative:* Return values directly, use question feedback for displaying results
+  - *Note:* We removed `print()` from error messages in `chem_count_H()`
+
+### Function Testing Functions
+
+These functions check for function existence:
+
+- **`?fboundp()`** - Tests if a function is defined
+  - *Alternative:* Document dependencies clearly, let undefined function calls fail naturally
+  - *Note:* We removed `?fboundp()` check from `chem_count_H()`
+
+### Why These Functions Are Forbidden
+
+1. **Security**: Functions like `read()` could execute arbitrary code
+2. **Reliability**: I/O functions could interfere with STACK's execution environment
+3. **Determinism**: STACK requires predictable, reproducible results
+4. **Sandboxing**: STACK runs in a restricted environment for safety
+
+### Working Around Restrictions
+
+Instead of forbidden functions, we use:
+
+```maxima
+/* ❌ FORBIDDEN - Don't use read() */
+num: read("42");
+
+/* ✅ ALLOWED - Use manual ASCII conversion */
+chem_string_to_number(str) := block([chars, result, i, digit_val],
+    chars: charlist(str),
+    result: 0,
+    for i:1 thru length(chars) do (
+        digit_val: cint(chars[i]) - 48,  /* ASCII arithmetic */
+        result: result * 10 + digit_val
+    ),
+    return(result)
+)$
+
+/* ❌ FORBIDDEN - Don't use print() for errors */
+if error_condition then print("Error message");
+
+/* ✅ ALLOWED - Return false or let error occur naturally */
+if error_condition then return(false);
+
+/* ❌ FORBIDDEN - Don't check if function exists */
+if ?fboundp('some_function) then some_function();
+
+/* ✅ ALLOWED - Document dependencies, call directly */
+/* Requires pse.mac to be loaded */
+result: chem_parse_formula(formula);
+```
+
+### Summary of Workarounds
+
+| Forbidden Function | Purpose | Our Solution |
+|-------------------|---------|--------------|
+| `read()` | String to number | `chem_string_to_number()` with ASCII math |
+| `print()` | Error messages | Return `false`, document in comments |
+| `?fboundp()` | Check function exists | Clear documentation of dependencies |
+
+### Testing for Forbidden Functions
+
+When developing new functions, avoid:
+- Any function starting with `?` (query functions)
+- Functions that read/write files
+- Functions that execute external commands
+- Functions that evaluate arbitrary strings
 
 ---
 

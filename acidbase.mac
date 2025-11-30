@@ -16,9 +16,9 @@
 /****************************************************************/
 /*  Acid-Base Chemistry functions for STACK                     */
 /*                                                              */
-/*  V1.0 November 2025                                              */
+/*  V1.0 November 2025                                          */
 /*                                                              */
-/*  NOTE: Molecule parsing and conjugate acid/base functions   */
+/*  NOTE: Molecule parsing and conjugate acid/base functions    */
 /*  are currently disabled due to STACK restrictions on         */
 /*  string-to-number conversion functions.                      */
 /*                                                              */
@@ -95,6 +95,97 @@ chem_format_charge(charge) := block([],
     if charge > 1 then return(sconcat("^{", charge, "+")),
     if charge < -1 then return(sconcat("^{", -charge, "-}"))
 )$
+
+/* Helper function to count H atoms in a formula string.
+   Requires pse.mac to be loaded for chem_parse_formula() function.
+   Returns the count of hydrogen atoms, or 0 if formula cannot be parsed.
+   Note: If pse.mac is not loaded, this function will cause an error. */
+chem_count_H(formula) := block([parsed, h_count],
+    parsed: chem_parse_formula(formula),
+    if is(parsed = false) then return(0),
+    
+    h_count: 0,
+    for pair in parsed do (
+        if sequal(first(pair), "H") then h_count: second(pair)
+    ),
+    return(h_count)
+)$
+
+/* Helper function to parse and extract charge from chemical formula.
+   Supports formats: H+, Ca^{2+}, SO4^{2-}, NH4+, Cl-, HPO4^{2-}
+   Returns the charge as an integer (positive or negative), or 0 if no charge found.
+   Examples:
+     chem_parse_charge("H+") returns 1
+     chem_parse_charge("SO4^{2-}") returns -2
+     chem_parse_charge("Ca^{2+}") returns 2
+     chem_parse_charge("H2O") returns 0 */
+chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, in_brace, num_val],
+    if sequal(formula, "") then return(0),
+    
+    chars: charlist(formula),
+    n: length(chars),
+    charge: 0,
+    
+    /* Check last character for simple +/- notation */
+    if sequal(chars[n], "+") then (
+        /* Check if there's a number before the + */
+        if n > 1 and cgreaterp(chars[n-1], "/") and clessp(chars[n-1], ":") then (
+            /* Number before +, e.g., "NH4+" has implicit 1 */
+            charge: 1
+        ) else (
+            /* Just +, e.g., "H+" */
+            charge: 1
+        )
+    ) else if sequal(chars[n], "-") then (
+        /* Check if there's a number before the - */
+        if n > 1 and cgreaterp(chars[n-1], "/") and clessp(chars[n-1], ":") then (
+            /* Number before -, e.g., "Cl-" */
+            charge: -1
+        ) else (
+            /* Just -, e.g., "OH-" */
+            charge: -1
+        )
+    ) else if n > 2 and sequal(chars[n], "}") then (
+        /* Handle format like ^{2-} or ^{3+} or ^{2+} */
+        /* Find the opening brace */
+        i: n - 1,
+        charge_str: "",
+        in_brace: true,
+        
+        /* Collect characters inside braces (backwards) */
+        while i > 0 and not sequal(chars[i], "{") do (
+            charge_str: sconcat(chars[i], charge_str),
+            i: i - 1
+        ),
+        
+        /* Now parse the charge string */
+        if slength(charge_str) > 0 then (
+            /* Check if ends with + or - */
+            if sequal(substring(charge_str, slength(charge_str)), "+") then (
+                if slength(charge_str) = 1 then (
+                    charge: 1
+                ) else (
+                    /* Extract number before + */
+                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str))),
+                    charge: num_val
+                )
+            ) else if sequal(substring(charge_str, slength(charge_str)), "-") then (
+                if slength(charge_str) = 1 then (
+                    charge: -1
+                ) else (
+                    /* Extract number before - */
+                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str))),
+                    charge: -num_val
+                )
+            )
+        )
+    ),
+    
+    return(charge)
+)$
+
+/* Returns a chemical formula wrapped in \ce{...} for proper LaTeX rendering with mhchem */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
 
 /****************************************************************/
 /*                                                              */
