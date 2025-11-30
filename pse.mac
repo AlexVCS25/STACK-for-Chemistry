@@ -48,7 +48,7 @@ chem_rand_element([maingroup]) := block([filtered_elements, idx],
         filtered_elements: sublist(%_CHEM_ELEMENTS, lambda([x], third(second(x)) > 0))
     else
         filtered_elements: %_CHEM_ELEMENTS,
-    idx: random(length(filtered_elements)) + 1,
+    idx: rand(length(filtered_elements)) + 1,
     first(part(filtered_elements, idx))
 )$
 
