@@ -179,15 +179,15 @@ chem_units(dp) := assoc(dp, zip_with("[", %_CHEM_FIELDS, %_CHEM_UNITS))$
   ["Bh", [107, "Bohrium", 264, "E00038", "[Rn]7s2 5f14 6d5", null, null, null, null, "7, 5, 4, 3", "Solid", null, null, null, "Transition metal", 1976]],
   ["Hs", [108, "Hassium", 277, "E6002E", "[Rn]7s2 5f14 6d6", null, null, null, null, "8, 6, 5, 4, 3, 2", "Solid", null, null, null, "Transition metal", 1984]],
   ["Mt", [109, "Meitnerium", 268, "EB0026", "[Rn]7s2 5f14 6d7 (calculated)", null, null, null, null, "9, 8, 6, 4, 3, 1", "Solid", null, null, null, "Transition metal", 1982]],
-  ["Ds", [110, "Darmstadtium", 281, "", "[Rn]7s2 5f14 6d8 (predicted)", null, null, null, null, "8, 6, 4, 2, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
-  ["Rg", [111, "Roentgenium", 272, "", "[Rn]7s2 5f14 6d9 (predicted)", null, null, null, null, "5, 3, 1, -1", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
-  ["Cn", [112, "Copernicium", 285, "", "[Rn]7s2 5f14 6d10 (predicted)", null, null, null, null, "2, 1, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1996]],
-  ["Nh", [113, "Nihonium", 286, "", "[Rn]5f14 6d10 7s2 7p1 (predicted)", null, null, null, null, "", "Expected to be a Solid", null, null, null, "Post-transition metal", 2004]],
-  ["Fl", [114, "Flerovium", 289, "", "[Rn]7s2 7p2 5f14 6d10 (predicted)", null, null, null, null, "6, 4,2, 1, 0", "Expected to be a Solid", null, null, null, "Post-transition metal", 1998]],
-  ["Mc", [115, "Moscovium", 288, "", "[Rn]7s2 7p3 5f14 6d10 (predicted)", null, null, null, null, "3, 1", "Expected to be a Solid", null, null, null, "Post-transition metal", 2003]],
-  ["Lv", [116, "Livermorium", 292, "", "[Rn]7s2 7p4 5f14 6d10 (predicted)", null, null, null, null, "+4, +2, -2", "Expected to be a Solid", null, null, null, "Post-transition metal", 2000]],
-  ["Ts", [117, "Tennessine", 294, "", "[Rn]7s2 7p5 5f14 6d10 (predicted)", null, null, null, null, "+5, +3, +1, -1", "Expected to be a Solid", null, null, null, "Halogen", 2010]],
-  ["Og", [118, "Oganesson", 294, "", "[Rn]7s2 7p6 5f14 6d10 (predicted)", null, null, null, null, "+6, +4, +2, +1, 0, -1", "Expected to be a Gas", null, null, null, "Noble gas", 2006]]
+  ["Ds", [110, "Darmstadtium", 281, "", "[Rn]7s2 5f14 6d8", null, null, null, null, "8, 6, 4, 2, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
+  ["Rg", [111, "Roentgenium", 272, "", "[Rn]7s2 5f14 6d9", null, null, null, null, "5, 3, 1, -1", "Expected to be a Solid", null, null, null, "Transition metal", 1994]],
+  ["Cn", [112, "Copernicium", 285, "", "[Rn]7s2 5f14 6d10", null, null, null, null, "2, 1, 0", "Expected to be a Solid", null, null, null, "Transition metal", 1996]],
+  ["Nh", [113, "Nihonium", 286, "", "[Rn]5f14 6d10 7s2 7p1", null, null, null, null, "", "Expected to be a Solid", null, null, null, "Post-transition metal", 2004]],
+  ["Fl", [114, "Flerovium", 289, "", "[Rn]7s2 7p2 5f14 6d10", null, null, null, null, "6, 4,2, 1, 0", "Expected to be a Solid", null, null, null, "Post-transition metal", 1998]],
+  ["Mc", [115, "Moscovium", 288, "", "[Rn]7s2 7p3 5f14 6d10", null, null, null, null, "3, 1", "Expected to be a Solid", null, null, null, "Post-transition metal", 2003]],
+  ["Lv", [116, "Livermorium", 292, "", "[Rn]7s2 7p4 5f14 6d10", null, null, null, null, "+4, +2, -2", "Expected to be a Solid", null, null, null, "Post-transition metal", 2000]],
+  ["Ts", [117, "Tennessine", 294, "", "[Rn]7s2 7p5 5f14 6d10", null, null, null, null, "+5, +3, +1, -1", "Expected to be a Solid", null, null, null, "Halogen", 2010]],
+  ["Og", [118, "Oganesson", 294, "", "[Rn]7s2 7p6 5f14 6d10", null, null, null, null, "+6, +4, +2, +1, 0, -1", "Expected to be a Gas", null, null, null, "Noble gas", 2006]]
 ]$
 
 /*
