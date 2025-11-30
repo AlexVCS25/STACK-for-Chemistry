@@ -10,6 +10,8 @@
    - [Available Data Fields](#available-data-fields)
 5. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
+   - [Conjugate Acid-Base Functions](#conjugate-acid-base-functions)
+   - [Acid-Base Navigation Functions](#acid-base-navigation-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
 6. [Thermodynamic Tables Module](#thermodynamic-tables-module)
    - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
@@ -538,19 +540,9 @@ The following data fields can be accessed using `chem_data()` or `chem_data_unit
 
 ## Acid-Base Chemistry Module
 
-The acid-base module provides functions for working with acids and bases. **Note:** Molecule parsing and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion.
+The acid-base module provides comprehensive functions for working with acids and bases, including automatic calculation of conjugate acids and bases.
 
-### Molecule Parsing Functions
-
-**CURRENTLY DISABLED** - These functions require string-to-number conversion which is not allowed in STACK:
-
-- `chem_parse_formula(formula)` - Parse chemical formulas
-- `chem_molar_mass(formula)` - Calculate molar mass
-- `chem_molar_mass_units(formula)` - Calculate molar mass with units
-- `chem_acidbase_conjugate_base(substance)` - Calculate conjugate base
-- `chem_acidbase_conjugate_acid(substance)` - Calculate conjugate acid
-
----
+**Important:** This module requires `pse.mac` to be loaded first for formula parsing and hydrogen counting functions.
 
 ### Acid-Base Data Retrieval Functions
 
@@ -667,6 +659,121 @@ ka: chem_acidbase_Ka("HCl");        /* Returns 1.0e7 */
 ```maxima
 kb: chem_acidbase_Kb("NH3");    /* Returns 1.0e19 */
 kb: chem_acidbase_Kb("OH-");    /* Returns 1.0e10 */
+```
+
+---
+
+### Conjugate Acid-Base Functions
+
+#### `chem_count_H(formula)`
+
+**Description:** Counts the number of hydrogen atoms in a chemical formula. Requires `pse.mac` to be loaded.
+
+**Parameters:**
+- `formula` (string): Chemical formula
+
+**Returns:** Integer count of hydrogen atoms, or 0 if formula cannot be parsed
+
+**Example:**
+```maxima
+/* Count H atoms in various formulas */
+h_count: chem_count_H("H2SO4");      /* Returns 2 */
+h_count: chem_count_H("NH4+");       /* Returns 4 */
+h_count: chem_count_H("CH3COOH");    /* Returns 4 */
+h_count: chem_count_H("HPO4^{2-}");  /* Returns 1 */
+```
+
+---
+
+#### `chem_parse_charge(formula)`
+
+**Description:** Parses and extracts the charge from a chemical formula. Supports various charge notations.
+
+**Parameters:**
+- `formula` (string): Chemical formula with charge notation
+
+**Returns:** Integer charge (positive or negative), or 0 if no charge found
+
+**Supported Formats:**
+- Simple: `H+`, `OH-`, `Cl-`
+- With number: `NH4+`, `Ca^{2+}`, `SO4^{2-}`
+- Complex: `HPO4^{2-}`, `Fe^{3+}`
+
+**Example:**
+```maxima
+/* Parse charges from various formats */
+charge: chem_parse_charge("H+");          /* Returns 1 */
+charge: chem_parse_charge("SO4^{2-}");    /* Returns -2 */
+charge: chem_parse_charge("Ca^{2+}");     /* Returns 2 */
+charge: chem_parse_charge("OH-");         /* Returns -1 */
+charge: chem_parse_charge("NH4+");        /* Returns 1 */
+charge: chem_parse_charge("H2O");         /* Returns 0 */
+```
+
+---
+
+#### `chem_remove_charge(formula)`
+
+**Description:** Removes charge notation from a chemical formula, returning only the neutral formula.
+
+**Parameters:**
+- `formula` (string): Chemical formula with charge notation
+
+**Returns:** String with charge notation removed
+
+**Example:**
+```maxima
+/* Remove charge notation */
+neutral: chem_remove_charge("H+");          /* Returns "H" */
+neutral: chem_remove_charge("SO4^{2-}");    /* Returns "SO4" */
+neutral: chem_remove_charge("Ca^{2+}");     /* Returns "Ca" */
+neutral: chem_remove_charge("NH4+");        /* Returns "NH4" */
+neutral: chem_remove_charge("H2O");         /* Returns "H2O" */
+```
+
+---
+
+#### `chem_acidbase_conjugate_base(substance)`
+
+**Description:** Calculates the conjugate base by removing one H⁺ from the substance. Automatically adjusts the charge. Requires `pse.mac` to be loaded.
+
+**Parameters:**
+- `substance` (string): Chemical formula of the acid
+
+**Returns:** String formula of the conjugate base in mhchem LaTeX format, or empty string if deprotonation is not possible
+
+**Example:**
+```maxima
+/* Calculate conjugate bases */
+base: chem_acidbase_conjugate_base("H2SO4");      /* Returns "HSO4-" */
+base: chem_acidbase_conjugate_base("HSO4-");      /* Returns "SO4^{2-}" */
+base: chem_acidbase_conjugate_base("NH4+");       /* Returns "NH3" */
+base: chem_acidbase_conjugate_base("H3PO4");      /* Returns "H2PO4-" */
+base: chem_acidbase_conjugate_base("H2PO4-");     /* Returns "HPO4^{2-}" */
+base: chem_acidbase_conjugate_base("CH3COOH");    /* Returns "CH3COO-" */
+base: chem_acidbase_conjugate_base("H+");         /* Returns "" (cannot deprotonate further) */
+```
+
+---
+
+#### `chem_acidbase_conjugate_acid(substance)`
+
+**Description:** Calculates the conjugate acid by adding one H⁺ to the substance. Automatically adjusts the charge. Requires `pse.mac` to be loaded.
+
+**Parameters:**
+- `substance` (string): Chemical formula of the base
+
+**Returns:** String formula of the conjugate acid in mhchem LaTeX format
+
+**Example:**
+```maxima
+/* Calculate conjugate acids */
+acid: chem_acidbase_conjugate_acid("SO4^{2-}");   /* Returns "HSO4-" */
+acid: chem_acidbase_conjugate_acid("HSO4-");      /* Returns "H2SO4" */
+acid: chem_acidbase_conjugate_acid("NH3");        /* Returns "NH4+" */
+acid: chem_acidbase_conjugate_acid("H2O");        /* Returns "H3O+" */
+acid: chem_acidbase_conjugate_acid("HPO4^{2-}");  /* Returns "H2PO4-" */
+acid: chem_acidbase_conjugate_acid("CH3COO-");    /* Returns "CH3COOH" */
 ```
 
 ---
@@ -1371,78 +1478,174 @@ element: chem_element(26);  /* Returns "Fe" */
 name: chem_data(element, "Name");  /* Returns "Iron" */
 ```
 
-### Example 7: Random Weak Acid Problem
+### Example 7: Conjugate Acid-Base Pairs
+
 ```maxima
-/* Select a random weak acid */
-acid: rand(chem_weak_acid_array());
+/* Load both modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
 
-/* Get its pKa value */
-pka: chem_acidbase_data(acid, "pKa");
-
-/* Calculate Ka */
-ka: chem_acidbase_Ka(acid);
-
-/* NOTE: The following functions are currently disabled:
-   conj_base: chem_acidbase_conjugate_base(acid);
-   mass: chem_molar_mass(acid);
-*/
-```
-
-### Example 8: Conjugate Acid-Base Pairs (CURRENTLY DISABLED)
-```maxima
-/* CURRENTLY DISABLED - conjugate functions not available
 /* Select a random acid */
 acid: rand(chem_acid_array());
 
 /* Find its conjugate base */
 base: chem_acidbase_conjugate_base(acid);
 
+/* Display with proper formatting */
+acid_display: chem_display(acid);
+base_display: chem_display(base);
+
 /* Verify by calculating conjugate acid of the base */
 acid_check: chem_acidbase_conjugate_acid(base);
-*/
 ```
 
-### Example 9: Buffer Solution Problem (PARTIALLY AVAILABLE)
+```latex
+/* In Question Text */
+\(\require{mhchem}\)
+
+<p>The acid {@acid_display@} has conjugate base {@base_display@}.</p>
+```
+
+---
+
+### Example 8: Buffer Solution Problem
+
 ```maxima
+/* Load modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
+
 /* Select a weak acid for buffer */
 acid: rand(chem_weak_acid_array());
 
 /* Get pKa */
 pka: chem_acidbase_data(acid, "pKa");
 
-/* NOTE: The following functions are currently disabled:
-   base: chem_acidbase_conjugate_base(acid);
-   acid_mass: chem_molar_mass(acid);
-   base_mass: chem_molar_mass(base);
-*/
+/* Calculate conjugate base */
+base: chem_acidbase_conjugate_base(acid);
+
+/* Calculate molar masses */
+acid_mass: chem_molar_mass(acid);
+base_mass: chem_molar_mass(base);
+
+/* Display */
+acid_display: chem_display(acid);
+base_display: chem_display(base);
 ```
 
-### Example 10: Titration Problem (PARTIALLY AVAILABLE)
-```maxima
-/* Select a strong acid */
-acid: rand(chem_strong_acid_array());
+```latex
+/* In Question Text */
+\(\require{mhchem}\)
 
-/* Select a strong base */
-base: rand(chem_strong_base_array());
-
-/* NOTE: Molar mass calculation is currently disabled:
-   acid_mass: chem_molar_mass(acid);
-   base_mass: chem_molar_mass(base);
-*/
+<p>Prepare a buffer using {@acid_display@} (pKa = {@pka@}) and its conjugate base {@base_display@}.</p>
+<p>Molar mass of acid: {@acid_mass@}</p>
+<p>Molar mass of base: {@base_mass@}</p>
 ```
 
-### Example 11: pH Calculation
+---
+
+### Example 9: Polyprotic Acid Series
+
 ```maxima
+/* Load modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
+
+/* Start with phosphoric acid */
+h3po4: "H3PO4";
+h2po4: chem_acidbase_conjugate_base(h3po4);      /* "H2PO4-" */
+hpo4: chem_acidbase_conjugate_base(h2po4);       /* "HPO4^{2-}" */
+po4: chem_acidbase_conjugate_base(hpo4);         /* "PO4^{3-}" */
+
+/* Get pKa values */
+pka1: chem_acidbase_data(h3po4, "pKa");          /* 1.96 */
+pka2: chem_acidbase_data(h2po4, "pKa");          /* 7.21 */
+pka3: chem_acidbase_data(hpo4, "pKa");           /* 12.32 */
+
+/* Display all forms */
+form1: chem_display(h3po4);
+form2: chem_display(h2po4);
+form3: chem_display(hpo4);
+form4: chem_display(po4);
+```
+
+```latex
+/* In Question Text */
+\(\require{mhchem}\)
+
+<p>Phosphoric acid dissociation series:</p>
+<p>{@form1@} ⇌ {@form2@} + H⁺ (pKa₁ = {@pka1@})</p>
+<p>{@form2@} ⇌ {@form3@} + H⁺ (pKa₂ = {@pka2@})</p>
+<p>{@form3@} ⇌ {@form4@} + H⁺ (pKa₃ = {@pka3@})</p>
+```
+
+---
+
+### Example 10: Titration Problem
+
+```maxima
+/* Load modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
+
 /* Select a weak acid */
 acid: rand(chem_weak_acid_array());
 
-/* Get Ka */
+/* Get conjugate base and properties */
+base: chem_acidbase_conjugate_base(acid);
+pka: chem_acidbase_data(acid, "pKa");
 ka: chem_acidbase_Ka(acid);
 
-/* Student calculates pH from Ka and concentration */
+/* Calculate molar masses */
+acid_mass: chem_molar_mass(acid);
+base_mass: chem_molar_mass(base);
+
+/* Random titrant (strong base) */
+titrant: rand(chem_strong_base_array());
+titrant_mass: chem_molar_mass(titrant);
+
+/* Display */
+acid_display: chem_display(acid);
+base_display: chem_display(base);
+titrant_display: chem_display(titrant);
 ```
 
+---
+
+### Example 11: pH Calculation with Conjugate Pairs
+
+```maxima
+/* Load modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
+
+/* Select a weak acid */
+acid: rand(chem_weak_acid_array());
+base: chem_acidbase_conjugate_base(acid);
+
+/* Get Ka */
+pka: chem_acidbase_data(acid, "pKa");
+ka: chem_acidbase_Ka(acid);
+
+/* Calculate Kb of conjugate base using Kw = Ka × Kb */
+kw: 1.0e-14;
+kb: kw / ka;
+pkb: -log(kb) / log(10);
+```
+
+```latex
+/* In Question Text */
+\(\require{mhchem}\)
+
+<p>For the acid-base pair {@chem_display(acid)@} / {@chem_display(base)@}:</p>
+<p>Ka = {@ka@} (pKa = {@pka@})</p>
+<p>Kb = {@kb@} (pKb = {@pkb@})</p>
+```
+
+---
+
 ### Example 12: Thermodynamic Calculation for Random Combustion
+
 ```maxima
 /* Load both thermodynamics and reactions modules */
 stack_include("thermodynamictables.mac");
@@ -1465,6 +1668,7 @@ k_eq: chem_equilibrium_constant(delta_g, temp);
 ```
 
 ### Example 13: Manual Thermodynamic Calculation
+
 ```maxima
 /* Calculate ΔH° for: 2H2(g) + O2(g) → 2H2O(l) */
 reactants: [["H2", "g", 2], ["O2", "g", 1]];
@@ -1476,6 +1680,7 @@ delta_g: chem_reaction_gibbs(products, reactants);
 ```
 
 ### Example 14: Temperature-Dependent Gibbs Energy
+
 ```maxima
 /* Calculate ΔG at different temperatures */
 rxn: "SynthesisAmmonia";
@@ -1494,6 +1699,7 @@ k_500: chem_equilibrium_constant(delta_g_500, 500);
 ```
 
 ### Example 15: Multi-State Substance
+
 ```maxima
 /* Water exists in multiple states */
 states: chem_thermo_states("H2O");  /* Returns ["l", "g"] */

@@ -65,6 +65,13 @@ Functions for acid-base chemistry:
 - `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
 - `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
 - `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
+- `chem_count_H` - Count hydrogen atoms in a chemical formula
+- `chem_parse_charge` - Extract charge from chemical formulas
+- `chem_remove_charge` - Remove charge notation from formulas
+- `chem_acidbase_conjugate_base` - Calculate conjugate base after deprotonation
+- `chem_acidbase_conjugate_acid` - Calculate conjugate acid after protonation
+
+**Note:** The `acidbase.mac` module requires `pse.mac` to be loaded first for formula parsing functions.
 
 ### Thermodynamic Tables Module (`thermodynamictables.mac`)
 
@@ -94,8 +101,6 @@ Database of common chemical reactions with stoichiometry:
 - `chem_reaction_decomposition_array` - Get decomposition reactions
 
 **Note:** The thermodynamics module (`thermodynamictables.mac`) and reactions module (`reactions.mac`) work together. Load both modules to use reaction-based thermodynamic calculations.
-
-**Note:** Molecule parsing (`chem_parse_formula`, `chem_molar_mass`) and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion functions.
 
 ### Using Chemical Formulas in Questions
 
