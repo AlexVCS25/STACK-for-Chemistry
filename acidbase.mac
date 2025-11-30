@@ -98,15 +98,11 @@ chem_format_charge(charge) := block([],
 
 /* Helper function to count H atoms in a formula string.
    Requires pse.mac to be loaded for chem_parse_formula() function.
-   Returns the count of hydrogen atoms, or false if formula cannot be parsed or pse.mac is not loaded. */
+   Returns the count of hydrogen atoms, or 0 if formula cannot be parsed.
+   Note: If pse.mac is not loaded, this function will cause an error. */
 chem_count_H(formula) := block([parsed, h_count],
-    /* Check if chem_parse_formula is available (pse.mac loaded) */
-    if not ?fboundp('chem_parse_formula) then (
-        return(false)
-    ),
-    
     parsed: chem_parse_formula(formula),
-    if is(parsed = false) then return(false),
+    if is(parsed = false) then return(0),
     
     h_count: 0,
     for pair in parsed do (
