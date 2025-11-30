@@ -102,7 +102,6 @@ chem_format_charge(charge) := block([],
 chem_count_H(formula) := block([parsed, h_count],
     /* Check if chem_parse_formula is available (pse.mac loaded) */
     if not ?fboundp('chem_parse_formula) then (
-        print("Error: chem_count_H requires pse.mac to be loaded for chem_parse_formula function"),
         return(false)
     ),
     
