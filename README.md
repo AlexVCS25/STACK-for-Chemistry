@@ -28,14 +28,13 @@ Functions for accessing periodic table data:
 ### Acid-Base Chemistry Module (`acidbase.mac`)
 
 Functions for acid-base chemistry:
-- `chem_parse_formula` - Parse chemical formulas into elements and counts
-- `chem_molar_mass` - Calculate molar mass from chemical formula
 - `chem_acidbase_data` - Retrieve pKa and pKb values
 - `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
-- `chem_acidbase_conjugate_base` / `chem_acidbase_conjugate_acid` - Calculate conjugate acids and bases
 - `chem_acid_array` / `chem_base_array` - Get arrays of acids or bases
 - `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
 - `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
+
+**Note:** Molecule parsing (`chem_parse_formula`, `chem_molar_mass`) and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion functions.
 
 ## Getting Started
 

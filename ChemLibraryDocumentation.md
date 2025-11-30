@@ -7,9 +7,7 @@
    - [PSE Navigation Functions](#pse-navigation-functions)
    - [Available Data Fields](#available-data-fields)
 3. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
-   - [Molecule Parsing Functions](#molecule-parsing-functions)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
-   - [Acid-Base Navigation Functions](#acid-base-navigation-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
 4. [Usage Examples](#usage-examples)
 
@@ -292,65 +290,17 @@ The following data fields can be accessed using `chem_data()` or `chem_data_unit
 
 ## Acid-Base Chemistry Module
 
-The acid-base module provides functions for working with acids, bases, and chemical formulas.
+The acid-base module provides functions for working with acids and bases. **Note:** Molecule parsing and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion.
 
 ### Molecule Parsing Functions
 
-#### `chem_parse_formula(formula)`
+**CURRENTLY DISABLED** - These functions require string-to-number conversion which is not allowed in STACK:
 
-**Description:** Parses a chemical formula string and returns a list of [element, count] pairs. Automatically removes charge indicators (+, -, ^, {, }).
-
-**Parameters:**
-- `formula` (string): Chemical formula (e.g., "H2SO4", "NH4+", "HPO4^{2-}")
-
-**Returns:** List of [element, count] pairs
-
-**Example:**
-```maxima
-parsed: chem_parse_formula("H2SO4");
-/* Returns [["H", 2], ["S", 1], ["O", 4]] */
-
-parsed: chem_parse_formula("NH4+");
-/* Returns [["N", 1], ["H", 4]] */
-
-parsed: chem_parse_formula("HPO4^{2-}");
-/* Returns [["H", 1], ["P", 1], ["O", 4]] */
-```
-
----
-
-#### `chem_molar_mass(formula)`
-
-**Description:** Calculates the molar mass of a molecule from its formula string.
-
-**Parameters:**
-- `formula` (string): Chemical formula
-
-**Returns:** Molar mass in g/mol (numeric value)
-
-**Example:**
-```maxima
-mass: chem_molar_mass("H2SO4");     /* Returns 98.08 */
-mass: chem_molar_mass("NH4+");      /* Returns 18.04 */
-mass: chem_molar_mass("CH3COOH");   /* Returns 60.05 */
-```
-
----
-
-#### `chem_molar_mass_units(formula)`
-
-**Description:** Calculates the molar mass with units.
-
-**Parameters:**
-- `formula` (string): Chemical formula
-
-**Returns:** Molar mass with units (using STACK's stackunits)
-
-**Example:**
-```maxima
-mass: chem_molar_mass_units("H2O");    /* Returns 18.02*g/mol */
-mass: chem_molar_mass_units("NaCl");   /* Returns 58.44*g/mol */
-```
+- `chem_parse_formula(formula)` - Parse chemical formulas
+- `chem_molar_mass(formula)` - Calculate molar mass
+- `chem_molar_mass_units(formula)` - Calculate molar mass with units
+- `chem_acidbase_conjugate_base(substance)` - Calculate conjugate base
+- `chem_acidbase_conjugate_acid(substance)` - Calculate conjugate acid
 
 ---
 
@@ -421,44 +371,6 @@ ka: chem_acidbase_Ka("HCl");        /* Returns 1.0e7 */
 ```maxima
 kb: chem_acidbase_Kb("NH3");    /* Returns 1.0e19 */
 kb: chem_acidbase_Kb("OH-");    /* Returns 1.0e10 */
-```
-
----
-
-#### `chem_acidbase_conjugate_base(substance)`
-
-**Description:** Calculates and returns the conjugate base after deprotonation. Automatically decreases H count by 1 and charge by 1.
-
-**Parameters:**
-- `substance` (string): Chemical formula
-
-**Returns:** Conjugate base formula in mhchem LaTeX format
-
-**Example:**
-```maxima
-base: chem_acidbase_conjugate_base("H2SO4");      /* Returns "HSO4-" */
-base: chem_acidbase_conjugate_base("HPO4^{2-}"); /* Returns "PO4^{3-}" */
-base: chem_acidbase_conjugate_base("NH4+");       /* Returns "NH3" */
-base: chem_acidbase_conjugate_base("H2O");        /* Returns "OH-" */
-```
-
----
-
-#### `chem_acidbase_conjugate_acid(substance)`
-
-**Description:** Calculates and returns the conjugate acid after protonation. Automatically increases H count by 1 and charge by 1.
-
-**Parameters:**
-- `substance` (string): Chemical formula
-
-**Returns:** Conjugate acid formula in mhchem LaTeX format
-
-**Example:**
-```maxima
-acid: chem_acidbase_conjugate_acid("NH3");        /* Returns "NH4+" */
-acid: chem_acidbase_conjugate_acid("OH-");        /* Returns "H2O" */
-acid: chem_acidbase_conjugate_acid("HSO4-");      /* Returns "H2SO4" */
-acid: chem_acidbase_conjugate_acid("PO4^{3-}");  /* Returns "HPO4^{2-}" */
 ```
 
 ---
@@ -690,15 +602,15 @@ pka: chem_acidbase_data(acid, "pKa");
 /* Calculate Ka */
 ka: chem_acidbase_Ka(acid);
 
-/* Get conjugate base */
-conj_base: chem_acidbase_conjugate_base(acid);
-
-/* Calculate molar mass */
-mass: chem_molar_mass(acid);
+/* NOTE: The following functions are currently disabled:
+   conj_base: chem_acidbase_conjugate_base(acid);
+   mass: chem_molar_mass(acid);
+*/
 ```
 
-### Example 8: Conjugate Acid-Base Pairs
+### Example 8: Conjugate Acid-Base Pairs (CURRENTLY DISABLED)
 ```maxima
+/* CURRENTLY DISABLED - conjugate functions not available
 /* Select a random acid */
 acid: rand(chem_acid_array());
 
@@ -707,26 +619,25 @@ base: chem_acidbase_conjugate_base(acid);
 
 /* Verify by calculating conjugate acid of the base */
 acid_check: chem_acidbase_conjugate_acid(base);
-/* acid_check should equal acid */
+*/
 ```
 
-### Example 9: Buffer Solution Problem
+### Example 9: Buffer Solution Problem (PARTIALLY AVAILABLE)
 ```maxima
 /* Select a weak acid for buffer */
 acid: rand(chem_weak_acid_array());
 
-/* Get conjugate base */
-base: chem_acidbase_conjugate_base(acid);
-
 /* Get pKa */
 pka: chem_acidbase_data(acid, "pKa");
 
-/* Calculate molar masses */
-acid_mass: chem_molar_mass(acid);
-base_mass: chem_molar_mass(base);
+/* NOTE: The following functions are currently disabled:
+   base: chem_acidbase_conjugate_base(acid);
+   acid_mass: chem_molar_mass(acid);
+   base_mass: chem_molar_mass(base);
+*/
 ```
 
-### Example 10: Titration Problem
+### Example 10: Titration Problem (PARTIALLY AVAILABLE)
 ```maxima
 /* Select a strong acid */
 acid: rand(chem_strong_acid_array());
@@ -734,9 +645,10 @@ acid: rand(chem_strong_acid_array());
 /* Select a strong base */
 base: rand(chem_strong_base_array());
 
-/* Get their molar masses */
-acid_mass: chem_molar_mass(acid);
-base_mass: chem_molar_mass(base);
+/* NOTE: Molar mass calculation is currently disabled:
+   acid_mass: chem_molar_mass(acid);
+   base_mass: chem_molar_mass(base);
+*/
 ```
 
 ### Example 11: pH Calculation
