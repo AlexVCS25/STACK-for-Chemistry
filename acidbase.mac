@@ -26,8 +26,10 @@
 /*                                                              */
 /****************************************************************/
 
+/* TEMPORARILY DISABLED: Uses forbidden function read()
 /* This function parses a chemical formula string and returns a list of [element, count] pairs.
    Example: chem_parse_formula("H2SO4") returns [["H", 2], ["S", 1], ["O", 4]] */
+/*
 chem_parse_formula(formula) := block([chars, i, n, result, current_element, current_count, next_char, clean_formula, num_val],
     /* Remove charge indicators (+, -, ^, {, }) from formula */
     clean_formula: ssubst("", "}", ssubst("", "{", ssubst("", "^", ssubst("", "-", ssubst("", "+", formula))))),
@@ -72,9 +74,12 @@ chem_parse_formula(formula) := block([chars, i, n, result, current_element, curr
     
     return(result)
 )$
+*/
 
+/* TEMPORARILY DISABLED: Depends on chem_parse_formula()
 /* This function calculates the molar mass of a molecule from its formula string.
    Example: chem_molar_mass("H2SO4") returns the molar mass in g/mol */
+/*
 chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
     parsed: chem_parse_formula(formula),
     total_mass: 0,
@@ -90,9 +95,13 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
     
     return(total_mass)
 )$
+*/
 
+/* TEMPORARILY DISABLED: Depends on chem_molar_mass()
 /* This function calculates the molar mass with units */
+/*
 chem_molar_mass_units(formula) := stackunits(chem_molar_mass(formula), g/mol)$
+*/
 
 /****************************************************************/
 /*                                                              */
@@ -158,7 +167,9 @@ chem_acidbase_Kb(substance) := block([pKb_val],
         return(10^(-pKb_val))
 )$
 
+/* TEMPORARILY DISABLED: Uses forbidden function read()
 /* Helper function to parse and extract charge from formula */
+/*
 chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, charge_num],
     chars: charlist(formula),
     n: length(chars),
@@ -223,8 +234,11 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, charge_num
     
     return(charge)
 )$
+*/
 
+/* TEMPORARILY DISABLED: Depends on other disabled functions
 /* Helper function to remove charge notation from formula */
+/*
 chem_remove_charge(formula) := block([chars, i, n, result, in_brace],
     chars: charlist(formula),
     n: length(chars),
@@ -262,8 +276,11 @@ chem_remove_charge(formula) := block([chars, i, n, result, in_brace],
     
     return(result)
 )$
+*/
 
+/* TEMPORARILY DISABLED: Depends on chem_parse_formula()
 /* Helper function to count H atoms in formula */
+/*
 chem_count_H(formula) := block([parsed, h_count],
     parsed: chem_parse_formula(formula),
     h_count: 0,
@@ -272,6 +289,7 @@ chem_count_H(formula) := block([parsed, h_count],
     ),
     return(h_count)
 )$
+*/
 
 /* Helper function to format charge notation */
 chem_format_charge(charge) := block([],
@@ -282,7 +300,9 @@ chem_format_charge(charge) := block([],
     if charge < -1 then return(sconcat("^{", -charge, "-}"))
 )$
 
+/* TEMPORARILY DISABLED: Depends on other disabled functions
 /* Returns the conjugate base after deprotonation (mhchem LaTeX format) */
+/*
 chem_acidbase_conjugate_base(substance) := block([base_formula, charge, h_count, new_h_count, new_charge, parsed, result],
     /* Get current charge */
     charge: chem_parse_charge(substance),
@@ -316,8 +336,11 @@ chem_acidbase_conjugate_base(substance) := block([base_formula, charge, h_count,
     
     return(result)
 )$
+*/
 
+/* TEMPORARILY DISABLED: Depends on other disabled functions
 /* Returns the conjugate acid after protonation (mhchem LaTeX format) */
+/*
 chem_acidbase_conjugate_acid(substance) := block([acid_formula, charge, h_count, new_h_count, new_charge, parsed, result],
     /* Get current charge */
     charge: chem_parse_charge(substance),
@@ -359,6 +382,7 @@ chem_acidbase_conjugate_acid(substance) := block([acid_formula, charge, h_count,
     
     return(result)
 )$
+*/
 
 /****************************************************************/
 /*                                                              */
