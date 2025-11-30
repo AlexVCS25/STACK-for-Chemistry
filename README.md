@@ -7,15 +7,35 @@ This repository contains chemistry functions and databases for the STACK questio
 The goal of this project is to develop new chemistry functions and comprehensive databases for STACK in Moodle. This includes:
 
 - **Periodic table data**: Complete element information including atomic numbers, masses, electron configurations, and physical properties
+- **Acid-base chemistry**: Comprehensive database of acids and bases with pKa/pKb values, automatic conjugate acid/base calculation
+- **Molecule parsing**: Parse chemical formulas and calculate molar masses
 - **Multi-language support**: Element names in multiple languages (currently English, German, and Finnish)
 - **Unit support**: Integration with STACK's units system for physical quantities
 - **Extensible framework**: Easy-to-maintain structure for adding new chemical data and languages
 
-The main file `chemistry.mac` provides functions like:
+## Modules
+
+### Periodic Table Module (`pse.mac`)
+
+Functions for accessing periodic table data:
 - `chem_data` - Retrieve specific chemical properties
 - `chem_data_units` - Get data with appropriate units
 - `chem_data_all` - Access complete element information
+- `chem_element` - Get element symbol by atomic number
+- `chem_element_array` - Get arrays of elements by various criteria
 - `chem_units` - Get units for specific properties
+
+### Acid-Base Chemistry Module (`acidbase.mac`)
+
+Functions for acid-base chemistry:
+- `chem_parse_formula` - Parse chemical formulas into elements and counts
+- `chem_molar_mass` - Calculate molar mass from chemical formula
+- `chem_acidbase_data` - Retrieve pKa and pKb values
+- `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
+- `chem_acidbase_conjugate_base` / `chem_acidbase_conjugate_acid` - Calculate conjugate acids and bases
+- `chem_acid_array` / `chem_base_array` - Get arrays of acids or bases
+- `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
+- `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
 
 ## Getting Started
 
@@ -172,8 +192,10 @@ We welcome contributions from developers of all skill levels! Here are ways you 
 
 ## File Structure
 
-- `chemistry.mac` - Main chemistry functions and periodic table data
+- `pse.mac` - Periodic table functions and element data
+- `acidbase.mac` - Acid-base chemistry functions and molecular data
 - `README.md` - This documentation file
+- `ChemLibraryDocumentation.md` - Detailed function documentation
 
 ## License
 

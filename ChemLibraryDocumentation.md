@@ -2,26 +2,38 @@
 
 ## Table of Contents
 1. [Installation](#installation)
-2. [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
-3. [PSE Navigation Functions](#pse-navigation-functions)
-4. [Available Data Fields](#available-data-fields)
-5. [Usage Examples](#usage-examples)
+2. [Periodic Table Module](#periodic-table-module)
+   - [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
+   - [PSE Navigation Functions](#pse-navigation-functions)
+   - [Available Data Fields](#available-data-fields)
+3. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
+   - [Molecule Parsing Functions](#molecule-parsing-functions)
+   - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
+   - [Acid-Base Navigation Functions](#acid-base-navigation-functions)
+   - [Available Acids and Bases](#available-acids-and-bases)
+4. [Usage Examples](#usage-examples)
 
 ---
 
 ## Installation
 
-To use the chemistry library in your STACK question, include the following line in the **Question variables** section:
+To use the chemistry library in your STACK question, include the following lines in the **Question variables** section:
 
 ```maxima
+/* Load periodic table module */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+
+/* Load acid-base chemistry module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
 ```
 
-This loads all periodic table data and functions into your question.
+You can load either module independently or both together as needed.
 
 ---
 
-## PSE Data Retrieving Functions
+## Periodic Table Module
+
+### PSE Data Retrieving Functions
 
 ### `chem_data(element, field)`
 
@@ -278,6 +290,335 @@ The following data fields can be accessed using `chem_data()` or `chem_data_unit
 
 ---
 
+## Acid-Base Chemistry Module
+
+The acid-base module provides functions for working with acids, bases, and chemical formulas.
+
+### Molecule Parsing Functions
+
+#### `chem_parse_formula(formula)`
+
+**Description:** Parses a chemical formula string and returns a list of [element, count] pairs. Automatically removes charge indicators (+, -, ^, {, }).
+
+**Parameters:**
+- `formula` (string): Chemical formula (e.g., "H2SO4", "NH4+", "HPO4^{2-}")
+
+**Returns:** List of [element, count] pairs
+
+**Example:**
+```maxima
+parsed: chem_parse_formula("H2SO4");
+/* Returns [["H", 2], ["S", 1], ["O", 4]] */
+
+parsed: chem_parse_formula("NH4+");
+/* Returns [["N", 1], ["H", 4]] */
+
+parsed: chem_parse_formula("HPO4^{2-}");
+/* Returns [["H", 1], ["P", 1], ["O", 4]] */
+```
+
+---
+
+#### `chem_molar_mass(formula)`
+
+**Description:** Calculates the molar mass of a molecule from its formula string.
+
+**Parameters:**
+- `formula` (string): Chemical formula
+
+**Returns:** Molar mass in g/mol (numeric value)
+
+**Example:**
+```maxima
+mass: chem_molar_mass("H2SO4");     /* Returns 98.08 */
+mass: chem_molar_mass("NH4+");      /* Returns 18.04 */
+mass: chem_molar_mass("CH3COOH");   /* Returns 60.05 */
+```
+
+---
+
+#### `chem_molar_mass_units(formula)`
+
+**Description:** Calculates the molar mass with units.
+
+**Parameters:**
+- `formula` (string): Chemical formula
+
+**Returns:** Molar mass with units (using STACK's stackunits)
+
+**Example:**
+```maxima
+mass: chem_molar_mass_units("H2O");    /* Returns 18.02*g/mol */
+mass: chem_molar_mass_units("NaCl");   /* Returns 58.44*g/mol */
+```
+
+---
+
+### Acid-Base Data Retrieval Functions
+
+#### `chem_acidbase_data_all(substance)`
+
+**Description:** Returns all available acid-base data for a substance.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** List of [property, value] pairs or `false` if not found
+
+**Example:**
+```maxima
+data: chem_acidbase_data_all("CH3COOH");
+/* Returns [["pKa", 4.74], ["pKb", 9.26]] */
+```
+
+---
+
+#### `chem_acidbase_data(substance, property)`
+
+**Description:** Returns a specific acid-base property (pKa or pKb).
+
+**Parameters:**
+- `substance` (string): Chemical formula
+- `property` (string): "pKa" or "pKb"
+
+**Returns:** Property value or `false` if not found
+
+**Example:**
+```maxima
+pka: chem_acidbase_data("HF", "pKa");        /* Returns 3.45 */
+pkb: chem_acidbase_data("NH3", "pKb");       /* Returns -19 */
+```
+
+---
+
+#### `chem_acidbase_Ka(substance)`
+
+**Description:** Calculates Ka from pKa for a given substance.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** Ka value (10^(-pKa)) or `null` if pKa not available
+
+**Example:**
+```maxima
+ka: chem_acidbase_Ka("CH3COOH");    /* Returns 1.82e-5 */
+ka: chem_acidbase_Ka("HCl");        /* Returns 1.0e7 */
+```
+
+---
+
+#### `chem_acidbase_Kb(substance)`
+
+**Description:** Calculates Kb from pKb for a given substance.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** Kb value (10^(-pKb)) or `null` if pKb not available
+
+**Example:**
+```maxima
+kb: chem_acidbase_Kb("NH3");    /* Returns 1.0e19 */
+kb: chem_acidbase_Kb("OH-");    /* Returns 1.0e10 */
+```
+
+---
+
+#### `chem_acidbase_conjugate_base(substance)`
+
+**Description:** Calculates and returns the conjugate base after deprotonation. Automatically decreases H count by 1 and charge by 1.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** Conjugate base formula in mhchem LaTeX format
+
+**Example:**
+```maxima
+base: chem_acidbase_conjugate_base("H2SO4");      /* Returns "HSO4-" */
+base: chem_acidbase_conjugate_base("HPO4^{2-}"); /* Returns "PO4^{3-}" */
+base: chem_acidbase_conjugate_base("NH4+");       /* Returns "NH3" */
+base: chem_acidbase_conjugate_base("H2O");        /* Returns "OH-" */
+```
+
+---
+
+#### `chem_acidbase_conjugate_acid(substance)`
+
+**Description:** Calculates and returns the conjugate acid after protonation. Automatically increases H count by 1 and charge by 1.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** Conjugate acid formula in mhchem LaTeX format
+
+**Example:**
+```maxima
+acid: chem_acidbase_conjugate_acid("NH3");        /* Returns "NH4+" */
+acid: chem_acidbase_conjugate_acid("OH-");        /* Returns "H2O" */
+acid: chem_acidbase_conjugate_acid("HSO4-");      /* Returns "H2SO4" */
+acid: chem_acidbase_conjugate_acid("PO4^{3-}");  /* Returns "HPO4^{2-}" */
+```
+
+---
+
+### Acid-Base Navigation Functions
+
+#### `chem_acid_array()`
+
+**Description:** Returns an array of all acids in the database (substances with pKa values).
+
+**Parameters:** None
+
+**Returns:** List of acid formulas
+
+**Example:**
+```maxima
+acids: chem_acid_array();
+/* Returns ["H+", "H2O", "HCl", "H2SO4", ...] */
+
+/* Select a random acid */
+acid: rand(chem_acid_array());
+```
+
+---
+
+#### `chem_base_array()`
+
+**Description:** Returns an array of all bases in the database (substances with pKb values).
+
+**Parameters:** None
+
+**Returns:** List of base formulas
+
+**Example:**
+```maxima
+bases: chem_base_array();
+/* Returns ["H+", "H2O", "HSO4-", ...] */
+
+/* Select a random base */
+base: rand(chem_base_array());
+```
+
+---
+
+#### `chem_acidbase_array()`
+
+**Description:** Returns an array of all substances in the acid-base database.
+
+**Parameters:** None
+
+**Returns:** List of all substance formulas
+
+**Example:**
+```maxima
+all_substances: chem_acidbase_array();
+```
+
+---
+
+#### `chem_weak_acid_array()`
+
+**Description:** Returns an array of weak acids (pKa > 0).
+
+**Parameters:** None
+
+**Returns:** List of weak acid formulas
+
+**Example:**
+```maxima
+weak_acids: chem_weak_acid_array();
+/* Returns ["HSO4-", "H3PO4", "H2PO4-", ...] */
+
+/* Select a random weak acid */
+weak_acid: rand(chem_weak_acid_array());
+```
+
+---
+
+#### `chem_weak_base_array()`
+
+**Description:** Returns an array of weak bases (0 < pKb < 14).
+
+**Parameters:** None
+
+**Returns:** List of weak base formulas
+
+**Example:**
+```maxima
+weak_bases: chem_weak_base_array();
+
+/* Select a random weak base */
+weak_base: rand(chem_weak_base_array());
+```
+
+---
+
+#### `chem_strong_acid_array()`
+
+**Description:** Returns an array of strong acids (pKa < 0).
+
+**Parameters:** None
+
+**Returns:** List of strong acid formulas
+
+**Example:**
+```maxima
+strong_acids: chem_strong_acid_array();
+/* Returns ["HCl", "H2SO4", "HNO3"] */
+
+/* Select a random strong acid */
+strong_acid: rand(chem_strong_acid_array());
+```
+
+---
+
+#### `chem_strong_base_array()`
+
+**Description:** Returns an array of strong bases (pKb ≤ 0).
+
+**Parameters:** None
+
+**Returns:** List of strong base formulas
+
+**Example:**
+```maxima
+strong_bases: chem_strong_base_array();
+/* Returns ["H2O", "OH-"] */
+
+/* Select a random strong base */
+strong_base: rand(chem_strong_base_array());
+```
+
+---
+
+### Available Acids and Bases
+
+The following substances are available in the acid-base database:
+
+| Formula | pKa | pKb | Type |
+|---------|-----|-----|------|
+| H+ | 0 | 14 | Very strong acid |
+| H2O | 14 | 0 | Amphoteric |
+| HCl | -7.0 | 21 | Strong acid |
+| H2SO4 | -2.0 | 16 | Strong acid |
+| HSO4- | 1.92 | 12.08 | Weak acid |
+| HNO3 | -1 | 15 | Strong acid |
+| H3PO4 | 1.96 | 12.04 | Weak acid |
+| H2PO4- | 7.21 | 6.79 | Weak acid |
+| HPO4^{2-} | 12.32 | 1.68 | Very weak acid |
+| HF | 3.45 | 10.55 | Weak acid |
+| CH3COOH | 4.74 | 9.26 | Weak acid (acetic acid) |
+| H2CO3 | 6.46 | 7.54 | Weak acid (carbonic acid) |
+| HCO3- | 10.40 | 3.6 | Very weak acid |
+| H2S | 7.00 | 7.00 | Weak acid |
+| NH4+ | 9.21 | 4.79 | Weak acid (ammonium) |
+| OH- | 24 | -10 | Strong base |
+| NH3 | 33 | -19 | Weak base (ammonia) |
+
+---
+
 ## Usage Examples
 
 ### Example 1: Random Element Properties
@@ -338,17 +679,76 @@ element: chem_element(26);  /* Returns "Fe" */
 name: chem_data(element, "Name");  /* Returns "Iron" */
 ```
 
----
+### Example 7: Random Weak Acid Problem
+```maxima
+/* Select a random weak acid */
+acid: rand(chem_weak_acid_array());
 
-## Language Support
+/* Get its pKa value */
+pka: chem_acidbase_data(acid, "pKa");
 
-The library supports multiple languages for element names. The language is determined by the `%_STACK_LANG` variable:
+/* Calculate Ka */
+ka: chem_acidbase_Ka(acid);
 
-- English (default)
-- German (`de`)
-- Finnish (`fi`)
+/* Get conjugate base */
+conj_base: chem_acidbase_conjugate_base(acid);
 
-Element names are automatically translated when using `chem_data(element, "Name")`.
+/* Calculate molar mass */
+mass: chem_molar_mass(acid);
+```
+
+### Example 8: Conjugate Acid-Base Pairs
+```maxima
+/* Select a random acid */
+acid: rand(chem_acid_array());
+
+/* Find its conjugate base */
+base: chem_acidbase_conjugate_base(acid);
+
+/* Verify by calculating conjugate acid of the base */
+acid_check: chem_acidbase_conjugate_acid(base);
+/* acid_check should equal acid */
+```
+
+### Example 9: Buffer Solution Problem
+```maxima
+/* Select a weak acid for buffer */
+acid: rand(chem_weak_acid_array());
+
+/* Get conjugate base */
+base: chem_acidbase_conjugate_base(acid);
+
+/* Get pKa */
+pka: chem_acidbase_data(acid, "pKa");
+
+/* Calculate molar masses */
+acid_mass: chem_molar_mass(acid);
+base_mass: chem_molar_mass(base);
+```
+
+### Example 10: Titration Problem
+```maxima
+/* Select a strong acid */
+acid: rand(chem_strong_acid_array());
+
+/* Select a strong base */
+base: rand(chem_strong_base_array());
+
+/* Get their molar masses */
+acid_mass: chem_molar_mass(acid);
+base_mass: chem_molar_mass(base);
+```
+
+### Example 11: pH Calculation
+```maxima
+/* Select a weak acid */
+acid: rand(chem_weak_acid_array());
+
+/* Get Ka */
+ka: chem_acidbase_Ka(acid);
+
+/* Student calculates pH from Ka and concentration */
+```
 
 ---
 
