@@ -125,24 +125,6 @@ chem_parse_formula(formula) := block([chars, i, n, result, current_element, curr
     return(result)
 )$
 
-/* This function calculates the molar mass of a molecule from its formula string with units.
-   Example: chem_molar_mass("H2SO4") returns the molar mass with g/mol units */
-chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
-    parsed: chem_parse_formula(formula),
-    total_mass: 0,
-    
-    for pair in parsed do (
-        elem_data: chem_data(first(pair), "AtomicMass"),
-        if is(elem_data = false) then (
-            /* Return false if element not found */
-            return(false)
-        ),
-        total_mass: total_mass + elem_data * second(pair)
-    ),
-    
-    return(stackunits(total_mass, g*mol^(-1)))
-)$
-
 /****************************************************************/
 /*                                                              */
 /*  Acid-Base Data Retrieval Functions                          */
