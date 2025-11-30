@@ -16,7 +16,7 @@
 /****************************************************************/
 /*  Acid-Base Chemistry functions for STACK                     */
 /*                                                              */
-/*  V1.0 November 2025                                              */
+/*  V1.0  2025                                              */
 /*                                                              */
 /*  NOTE: Molecule parsing and conjugate acid/base functions   */
 /*  are currently disabled due to STACK restrictions on         */
