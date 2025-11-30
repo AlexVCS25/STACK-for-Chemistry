@@ -15,6 +15,29 @@ The goal of this project is to develop new chemistry functions and comprehensive
 
 ## Modules
 
+### Module Loading and Dependencies
+
+**Important:** Most modules are independent, but some combinations require specific loading order:
+
+- **Independent Modules** (load in any order):
+  - `pse.mac` - Periodic table data
+  - `acidbase.mac` - Acid-base chemistry
+  - `reactions.mac` - Reaction database
+
+- **Dependent Module**:
+  - `thermodynamictables.mac` - Works standalone for basic thermodynamic data, but requires `reactions.mac` to be loaded first if using reaction-based calculations (`*_by_name` functions)
+
+**Quick Start:**
+```maxima
+/* For full functionality, load in this order: */
+stack_include("reactions.mac");           /* Load first if using thermodynamics */
+stack_include("thermodynamictables.mac"); /* Depends on reactions.mac for *_by_name functions */
+stack_include("pse.mac");                 /* Independent */
+stack_include("acidbase.mac");            /* Independent */
+```
+
+See the [detailed documentation](ChemLibraryDocumentation.md#module-dependencies) for specific use cases and loading patterns.
+
 ### Periodic Table Module (`pse.mac`)
 
 Functions for accessing periodic table data:
@@ -23,6 +46,7 @@ Functions for accessing periodic table data:
 - `chem_data_all` - Access complete element information
 - `chem_element` - Get element symbol by atomic number
 - `chem_element_array` - Get arrays of elements by various criteria
+- `chem_electron_config` - Get formatted electron configurations
 - `chem_units` - Get units for specific properties
 
 ### Acid-Base Chemistry Module (`acidbase.mac`)
@@ -31,9 +55,37 @@ Functions for acid-base chemistry:
 - `chem_display` - Automatically format chemical formulas for LaTeX rendering with `\ce{...}`
 - `chem_acidbase_data` - Retrieve pKa and pKb values
 - `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
-- `chem_acid_array` / `chem_base_array` - Get arrays of acids or bases
 - `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
 - `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
+
+### Thermodynamic Tables Module (`thermodynamictables.mac`)
+
+Functions for thermodynamic calculations:
+- `chem_thermo_data` - Retrieve standard formation enthalpies (ΔHf°), entropies (S°), and Gibbs free energies (ΔGf°)
+- `chem_thermo_data_units` - Get thermodynamic data with appropriate units
+- `chem_reaction_enthalpy` - Calculate reaction enthalpy from stoichiometry
+- `chem_reaction_entropy` - Calculate reaction entropy from stoichiometry
+- `chem_reaction_gibbs` - Calculate reaction Gibbs free energy from stoichiometry
+- `chem_reaction_enthalpy_by_name` - Calculate ΔH° for named reactions
+- `chem_reaction_entropy_by_name` - Calculate ΔS° for named reactions
+- `chem_reaction_gibbs_by_name` - Calculate ΔG° for named reactions
+- `chem_equilibrium_constant` - Calculate K from ΔG°
+- `chem_thermo_substance_array` - Get arrays of substances by state
+
+### Chemical Reactions Module (`reactions.mac`)
+
+Database of common chemical reactions with stoichiometry:
+- `chem_reaction_data` - Retrieve complete reaction information
+- `chem_reaction_reactants` / `chem_reaction_products` - Get reactants or products
+- `chem_reaction_equation` - Generate text equation
+- `chem_reaction_equation_latex` - Generate LaTeX formatted equation with `\ce{...}`
+- `chem_reaction_array` - Get all reaction names
+- `chem_reaction_combustion_array` - Get combustion reactions
+- `chem_reaction_formation_array` - Get formation reactions
+- `chem_reaction_synthesis_array` - Get synthesis reactions
+- `chem_reaction_decomposition_array` - Get decomposition reactions
+
+**Note:** The thermodynamics module (`thermodynamictables.mac`) and reactions module (`reactions.mac`) work together. Load both modules to use reaction-based thermodynamic calculations.
 
 **Note:** Molecule parsing (`chem_parse_formula`, `chem_molar_mass`) and conjugate acid/base calculation functions are currently disabled due to STACK restrictions on string-to-number conversion functions.
 
@@ -230,6 +282,8 @@ We welcome contributions from developers of all skill levels! Here are ways you 
 
 - `pse.mac` - Periodic table functions and element data
 - `acidbase.mac` - Acid-base chemistry functions and molecular data
+- `thermodynamictables.mac` - Thermodynamic data and calculation functions
+- `reactions.mac` - Chemical reactions database with stoichiometry
 - `README.md` - This documentation file
 - `ChemLibraryDocumentation.md` - Detailed function documentation
 

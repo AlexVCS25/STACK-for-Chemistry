@@ -2,14 +2,22 @@
 
 ## Table of Contents
 1. [Installation](#installation)
-2. [Periodic Table Module](#periodic-table-module)
+2. [Module Dependencies](#module-dependencies)
+3. [Periodic Table Module](#periodic-table-module)
    - [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
    - [PSE Navigation Functions](#pse-navigation-functions)
    - [Available Data Fields](#available-data-fields)
-3. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
+4. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
-4. [Usage Examples](#usage-examples)
+5. [Thermodynamic Tables Module](#thermodynamic-tables-module)
+   - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
+   - [Thermodynamic Calculation Functions](#thermodynamic-calculation-functions)
+   - [Available Substances](#available-substances)
+6. [Chemical Reactions Module](#chemical-reactions-module)
+   - [Reaction Data Retrieval Functions](#reaction-data-retrieval-functions)
+   - [Available Reactions](#available-reactions)
+7. [Usage Examples](#usage-examples)
 
 ---
 
@@ -25,9 +33,15 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 
 /* Load acid-base chemistry module */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* Load thermodynamic tables module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+
+/* Load reactions module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
 ```
 
-You can load either module independently or both together as needed.
+You can load modules independently or together as needed. See [Module Dependencies](#module-dependencies) below for information on which modules depend on others.
 
 ### Enabling Chemical Formula Rendering
 
@@ -47,6 +61,185 @@ This enables the `mhchem` LaTeX package, which allows you to use `\ce{...}` comm
 ```
 
 **Note:** Without `\(\require{mhchem}\)`, chemical formulas will not render correctly and may show LaTeX errors.
+
+---
+
+## Module Dependencies
+
+Understanding the dependencies between modules is crucial for correct functionality. Here's a breakdown of how the modules relate to each other:
+
+### Independent Modules
+
+These modules have **no dependencies** and can be loaded independently:
+
+1. **Periodic Table Module (`pse.mac`)**
+   - Completely standalone
+   - No dependencies on other modules
+   - Can be used alone for periodic table data
+
+2. **Acid-Base Chemistry Module (`acidbase.mac`)**
+   - Completely standalone
+   - No dependencies on other modules
+   - Can be used alone for acid-base calculations
+
+3. **Reactions Module (`reactions.mac`)**
+   - Completely standalone
+   - No dependencies on other modules
+   - Can be used alone for reaction stoichiometry data
+
+### Dependent Modules
+
+These modules have dependencies and require other modules to be loaded:
+
+4. **Thermodynamic Tables Module (`thermodynamictables.mac`)**
+   - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
+   - **Requires `reactions.mac`**: For reaction-based thermodynamic calculations (functions with `_by_name` suffix)
+
+### Loading Order Guidelines
+
+#### Option 1: Load All Modules (Recommended for Full Functionality)
+
+For complete chemistry functionality including reaction thermodynamics:
+
+```maxima
+/* Load in any order - all modules are independent at the data level */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+```
+
+#### Option 2: Thermodynamics with Reactions
+
+To calculate thermodynamic properties for named reactions:
+
+```maxima
+/* Load reactions.mac first - thermodynamictables.mac calls its functions */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+
+/* Now you can use functions like: */
+delta_h: chem_reaction_enthalpy_by_name("CombustionMethane");
+delta_g: chem_reaction_gibbs_by_name("SynthesisAmmonia");
+```
+
+#### Option 3: Thermodynamics Only
+
+For manual thermodynamic calculations without named reactions:
+
+```maxima
+/* Only load thermodynamictables.mac */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+
+/* Manual calculations work without reactions.mac */
+reactants: [["CH4", "g", 1], ["O2", "g", 2]];
+products: [["CO2", "g", 1], ["H2O", "l", 2]];
+delta_h: chem_reaction_enthalpy(products, reactants);
+```
+
+#### Option 4: Single Module
+
+Any single module can be loaded alone:
+
+```maxima
+/* Just periodic table data */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+
+/* OR just acid-base data */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* OR just reactions data */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+```
+
+### Function Dependency Summary
+
+| Function | Required Modules | Notes |
+|----------|------------------|-------|
+| `chem_data()`, `chem_element()` | `pse.mac` | Periodic table data |
+| `chem_electron_config()` | `pse.mac` | Electron configurations |
+| `chem_molar_mass()` | `pse.mac` | Molar mass calculations |
+| `chem_acidbase_data()`, `chem_acidbase_Ka()` | `acidbase.mac` | Acid-base data |
+| `chem_display()` | `acidbase.mac` | Formula formatting |
+| `chem_thermo_data()` | `thermodynamictables.mac` | Thermodynamic data |
+| `chem_reaction_enthalpy()` | `thermodynamictables.mac` | Manual thermo calculations |
+| `chem_reaction_data()`, `chem_reaction_equation()` | `reactions.mac` | Reaction data |
+| `chem_reaction_enthalpy_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
+| `chem_reaction_entropy_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
+| `chem_reaction_gibbs_by_name()` | `thermodynamictables.mac` + `reactions.mac` | Named reaction thermodynamics |
+
+### Common Use Cases
+
+**Case 1: Periodic Table Questions**
+```maxima
+/* Load only pse.mac */
+stack_include("pse.mac");
+element: rand(chem_element_array());
+mass: chem_data_units(element, "AtomicMass");
+```
+
+**Case 2: Acid-Base Questions**
+```maxima
+/* Load only acidbase.mac */
+stack_include("acidbase.mac");
+acid: rand(chem_weak_acid_array());
+pka: chem_acidbase_data(acid, "pKa");
+```
+
+**Case 3: Reaction Stoichiometry**
+```maxima
+/* Load only reactions.mac */
+stack_include("reactions.mac");
+rxn: rand(chem_reaction_combustion_array());
+equation: chem_reaction_equation_latex(rxn);
+```
+
+**Case 4: Manual Thermodynamic Calculations**
+```maxima
+/* Load only thermodynamictables.mac */
+stack_include("thermodynamictables.mac");
+reactants: [["H2", "g", 2], ["O2", "g", 1]];
+products: [["H2O", "l", 2]];
+delta_h: chem_reaction_enthalpy(products, reactants);
+```
+
+**Case 5: Named Reaction Thermodynamics**
+```maxima
+/* Load both reactions.mac and thermodynamictables.mac */
+stack_include("reactions.mac");
+stack_include("thermodynamictables.mac");
+
+rxn: rand(chem_reaction_combustion_array());
+delta_h: chem_reaction_enthalpy_by_name(rxn);
+delta_g: chem_reaction_gibbs_by_name(rxn);
+```
+
+**Case 6: Comprehensive Chemistry Questions**
+```maxima
+/* Load all modules */
+stack_include("pse.mac");
+stack_include("acidbase.mac");
+stack_include("reactions.mac");
+stack_include("thermodynamictables.mac");
+
+/* Now use any combination of functions */
+element: rand(chem_element_array());
+acid: rand(chem_weak_acid_array());
+rxn: rand(chem_reaction_array());
+delta_h: chem_reaction_enthalpy_by_name(rxn);
+```
+
+### Important Notes
+
+1. **Order matters only for dependent modules**: When using reaction-based thermodynamic functions, load `reactions.mac` before `thermodynamictables.mac`
+
+2. **Independent modules can be loaded in any order**: `pse.mac`, `acidbase.mac`, and `reactions.mac` have no dependencies
+
+3. **Missing dependencies will cause errors**: If you try to use `chem_reaction_enthalpy_by_name()` without loading `reactions.mac`, you'll get an error
+
+4. **Loading unnecessary modules is harmless**: It's safe to load all modules even if you only use some of them
+
+5. **Function name suffixes indicate dependencies**: Functions ending with `_by_name` require the `reactions.mac` module
 
 ---
 
@@ -600,6 +793,490 @@ The following substances are available in the acid-base database:
 
 ---
 
+## Thermodynamic Tables Module
+
+The thermodynamic tables module provides access to standard thermodynamic data and functions for calculating reaction thermodynamics.
+
+### Thermodynamic Data Retrieval Functions
+
+#### `chem_thermo_data(substance, property, state)`
+
+**Description:** Returns a specific thermodynamic property for a substance in a given state.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+- `property` (string): "DeltaHf" (ΔHf°), "S" (S°), "DeltaGf" (ΔGf°), or "State"
+- `state` (string): "g" (gas), "l" (liquid), "s" (solid), or "aq" (aqueous)
+
+**Returns:** Property value or `false` if not found
+
+**Example:**
+```maxima
+/* Get enthalpy of formation for liquid water */
+delta_hf: chem_thermo_data("H2O", "DeltaHf", "l");  /* Returns -285.8 kJ/mol */
+
+/* Get entropy for gaseous CO2 */
+entropy: chem_thermo_data("CO2", "S", "g");  /* Returns 213.8 J/(mol·K) */
+
+/* Get Gibbs free energy for solid NaCl */
+delta_gf: chem_thermo_data("NaCl", "DeltaGf", "s");  /* Returns -384.1 kJ/mol */
+```
+
+---
+
+#### `chem_thermo_data_units(substance, property, state)`
+
+**Description:** Returns a thermodynamic property with appropriate units.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+- `property` (string): "DeltaHf", "S", "DeltaGf", or "State"
+- `state` (string): "g", "l", "s", or "aq"
+
+**Returns:** Property value with units using `stackunits()`
+
+**Example:**
+```maxima
+/* Get enthalpy with units */
+delta_hf: chem_thermo_data_units("CH4", "DeltaHf", "g");
+/* Returns -74.6*kJ/mol */
+
+/* Get entropy with units */
+entropy: chem_thermo_data_units("H2O", "S", "l");
+/* Returns 69.9*J/(mol*K) */
+```
+
+---
+
+#### `chem_thermo_data_all(substance, state)`
+
+**Description:** Returns all thermodynamic data for a substance in a specific state.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+- `state` (string): "g", "l", "s", or "aq"
+
+**Returns:** List of [property, value] pairs
+
+**Example:**
+```maxima
+data: chem_thermo_data_all("H2O", "l");
+/* Returns [["DeltaHf", -285.8], ["S", 69.9], ["DeltaGf", -237.1], ["State", "l"]] */
+```
+
+---
+
+#### `chem_thermo_states(substance)`
+
+**Description:** Returns available states for a given substance.
+
+**Parameters:**
+- `substance` (string): Chemical formula
+
+**Returns:** List of available states
+
+**Example:**
+```maxima
+states: chem_thermo_states("H2O");
+/* Returns ["l", "g"] - water exists in liquid and gas states in database */
+```
+
+---
+
+### Thermodynamic Calculation Functions
+
+#### `chem_reaction_enthalpy(products_list, reactants_list)`
+
+**Description:** Calculates standard reaction enthalpy: ΔH° = Σ(ΔHf°products) - Σ(ΔHf°reactants)
+
+**Parameters:**
+- `products_list` (list): List of [["substance", "state", coefficient], ...]
+- `reactants_list` (list): List of [["substance", "state", coefficient], ...]
+
+**Returns:** Reaction enthalpy in kJ/mol (without units)
+
+**Example:**
+```maxima
+/* Calculate ΔH° for: CH4(g) + 2O2(g) → CO2(g) + 2H2O(l) */
+reactants: [["CH4", "g", 1], ["O2", "g", 2]];
+products: [["CO2", "g", 1], ["H2O", "l", 2]];
+delta_h: chem_reaction_enthalpy(products, reactants);
+/* Returns -890.4 kJ/mol */
+```
+
+---
+
+#### `chem_reaction_entropy(products_list, reactants_list)`
+
+**Description:** Calculates standard reaction entropy: ΔS° = Σ(S°products) - Σ(S°reactants)
+
+**Parameters:**
+- `products_list` (list): List of [["substance", "state", coefficient], ...]
+- `reactants_list` (list): List of [["substance", "state", coefficient], ...]
+
+**Returns:** Reaction entropy in J/(mol·K) (without units)
+
+**Example:**
+```maxima
+/* Calculate ΔS° for: N2(g) + 3H2(g) → 2NH3(g) */
+reactants: [["N2", "g", 1], ["H2", "g", 3]];
+products: [["NH3", "g", 2]];
+delta_s: chem_reaction_entropy(products, reactants);
+/* Returns -198.3 J/(mol·K) */
+```
+
+---
+
+#### `chem_reaction_gibbs(products_list, reactants_list)`
+
+**Description:** Calculates standard reaction Gibbs free energy: ΔG° = Σ(ΔGf°products) - Σ(ΔGf°reactants)
+
+**Parameters:**
+- `products_list` (list): List of [["substance", "state", coefficient], ...]
+- `reactants_list` (list): List of [["substance", "state", coefficient], ...]
+
+**Returns:** Reaction Gibbs free energy with units (kJ/mol)
+
+**Example:**
+```maxima
+/* Calculate ΔG° for: C(s) + O2(g) → CO2(g) */
+reactants: [["C", "s", 1], ["O2", "g", 1]];
+products: [["CO2", "g", 1]];
+delta_g: chem_reaction_gibbs(products, reactants);
+/* Returns -394.4*kJ/mol with units */
+```
+
+---
+
+#### `chem_reaction_enthalpy_by_name(reaction_name)`
+
+**Description:** Calculates ΔH° for a reaction by name (requires `reactions.mac` to be loaded).
+
+**Parameters:**
+- `reaction_name` (string): Name of reaction from reactions database
+
+**Returns:** Reaction enthalpy in kJ/mol
+
+**Example:**
+```maxima
+/* Load both modules */
+stack_include("thermodynamictables.mac");
+stack_include("reactions.mac");
+
+/* Calculate ΔH° for methane combustion */
+delta_h: chem_reaction_enthalpy_by_name("CombustionMethane");
+/* Returns -890.4 kJ/mol */
+```
+
+---
+
+#### `chem_reaction_entropy_by_name(reaction_name)`
+
+**Description:** Calculates ΔS° for a reaction by name (requires `reactions.mac` to be loaded).
+
+**Parameters:**
+- `reaction_name` (string): Name of reaction from reactions database
+
+**Returns:** Reaction entropy in J/(mol·K)
+
+**Example:**
+```maxima
+delta_s: chem_reaction_entropy_by_name("SynthesisAmmonia");
+```
+
+---
+
+#### `chem_reaction_gibbs_by_name(reaction_name)`
+
+**Description:** Calculates ΔG° for a reaction by name (requires `reactions.mac` to be loaded).
+
+**Parameters:**
+- `reaction_name` (string): Name of reaction from reactions database
+
+**Returns:** Reaction Gibbs free energy with units (kJ/mol)
+
+**Example:**
+```maxima
+delta_g: chem_reaction_gibbs_by_name("FormationCO2");
+/* Returns -394.4*kJ/mol with units */
+```
+
+---
+
+#### `chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, temp)`
+
+**Description:** Calculates ΔG from ΔH and ΔS: ΔG = ΔH - TΔS
+
+**Parameters:**
+- `delta_h` (number): Enthalpy in kJ/mol
+- `delta_s` (number): Entropy in J/(mol·K)
+- `temp` (number): Temperature in K
+
+**Returns:** Gibbs free energy with units (kJ/mol)
+
+**Example:**
+```maxima
+/* Calculate ΔG at 500 K given ΔH = -100 kJ/mol and ΔS = -200 J/(mol·K) */
+delta_g: chem_gibbs_from_enthalpy_entropy(-100, -200, 500);
+/* Returns 0*kJ/mol with units */
+```
+
+---
+
+#### `chem_equilibrium_constant(delta_g, temp)`
+
+**Description:** Calculates equilibrium constant from ΔG°: K = exp(-ΔG°/RT)
+
+**Parameters:**
+- `delta_g` (number): Gibbs free energy in kJ/mol
+- `temp` (number): Temperature in K
+
+**Returns:** Equilibrium constant K
+
+**Example:**
+```maxima
+/* Calculate K at 298.15 K for ΔG° = -32.8 kJ/mol */
+k: chem_equilibrium_constant(-32.8, 298.15);
+/* Returns approximately 5.7×10^5 */
+```
+
+---
+
+### Available Substances
+
+The thermodynamic database includes:
+- **Elements**: H2, O2, N2, Cl2, Br2, I2, C (graphite), S (rhombic)
+- **Simple Inorganics**: H2O (l, g), CO2, CO, NH3, NO, NO2, N2O, SO2, SO3, H2S
+- **Acids**: HCl, HBr, HI, HNO3, H2SO4, CH3COOH
+- **Aqueous Ions**: H+, OH-, Cl-, Br-, I-, Na+, K+, Ca²⁺, Mg²⁺, Fe²⁺, Fe³⁺, Cu²⁺, Ag+, SO₄²⁻, NO₃⁻, CO₃²⁻, HCO₃⁻, NH₄⁺
+- **Salts**: NaCl, KCl, CaCl2, MgCl2, AgCl, NaBr, KBr, NaI, CaCO3, MgCO3, Na2SO4, CaSO4
+- **Oxides**: CaO, MgO, Al2O3, Fe2O3, FeO, CuO, ZnO
+- **Hydroxides**: NaOH, KOH, Ca(OH)2, Mg(OH)2
+- **Organics**: CH4, C2H6, C3H8, C2H4, C2H2, C6H6, CH3OH, C2H5OH, CH2O, CH3CHO, C6H12O6
+
+---
+
+## Chemical Reactions Module
+
+The reactions module provides a database of common chemical reactions with complete stoichiometry.
+
+### Reaction Data Retrieval Functions
+
+#### `chem_reaction_data(reaction_name)`
+
+**Description:** Returns complete reaction data for a given reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** [reactants_list, products_list] or `false` if not found
+
+**Example:**
+```maxima
+rxn: chem_reaction_data("CombustionMethane");
+/* Returns [[["CH4", "g", 1], ["O2", "g", 2]], [["CO2", "g", 1], ["H2O", "l", 2]]] */
+```
+
+---
+
+#### `chem_reaction_reactants(reaction_name)`
+
+**Description:** Returns the reactants for a given reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** List of [["substance", "state", coefficient], ...] or `false`
+
+**Example:**
+```maxima
+reactants: chem_reaction_reactants("SynthesisAmmonia");
+/* Returns [["N2", "g", 1], ["H2", "g", 3]] */
+```
+
+---
+
+#### `chem_reaction_products(reaction_name)`
+
+**Description:** Returns the products for a given reaction.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** List of [["substance", "state", coefficient], ...] or `false`
+
+**Example:**
+```maxima
+products: chem_reaction_products("SynthesisAmmonia");
+/* Returns [["NH3", "g", 2]] */
+```
+
+---
+
+#### `chem_reaction_equation(reaction_name)`
+
+**Description:** Returns a text representation of the balanced equation.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** String representation of the equation
+
+**Example:**
+```maxima
+eqn: chem_reaction_equation("CombustionMethane");
+/* Returns "CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)" */
+```
+
+---
+
+#### `chem_reaction_equation_latex(reaction_name)`
+
+**Description:** Returns a LaTeX-formatted equation using `\ce{...}` for proper rendering.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** LaTeX string with `\ce{...}` formatting
+
+**Example:**
+```maxima
+/* Question Variables */
+rxn: rand(chem_reaction_combustion_array());
+eqn_latex: chem_reaction_equation_latex(rxn);
+```
+
+```latex
+/* Question Text */
+\(\require{mhchem}\)
+
+<p>Consider the reaction: {@eqn_latex@}</p>
+```
+
+---
+
+#### `chem_reaction_array()`
+
+**Description:** Returns an array of all reaction names in the database.
+
+**Parameters:** None
+
+**Returns:** List of all reaction names
+
+**Example:**
+```maxima
+all_reactions: chem_reaction_array();
+random_rxn: rand(all_reactions);
+```
+
+---
+
+#### `chem_reaction_combustion_array()`
+
+**Description:** Returns an array of combustion reaction names.
+
+**Parameters:** None
+
+**Returns:** List of combustion reaction names
+
+**Example:**
+```maxima
+combustion_rxns: chem_reaction_combustion_array();
+/* Returns ["CombustionMethane", "CombustionEthane", "CombustionPropane", ...] */
+
+rxn: rand(combustion_rxns);
+```
+
+---
+
+#### `chem_reaction_formation_array()`
+
+**Description:** Returns an array of formation reaction names.
+
+**Parameters:** None
+
+**Returns:** List of formation reaction names
+
+**Example:**
+```maxima
+formation_rxns: chem_reaction_formation_array();
+/* Returns ["FormationCO2", "FormationH2O_l", "FormationH2O_g", ...] */
+```
+
+---
+
+#### `chem_reaction_synthesis_array()`
+
+**Description:** Returns an array of synthesis reaction names.
+
+**Parameters:** None
+
+**Returns:** List of synthesis reaction names
+
+**Example:**
+```maxima
+synthesis_rxns: chem_reaction_synthesis_array();
+/* Returns ["SynthesisAmmonia", "SynthesisWater", "SynthesisSO3"] */
+```
+
+---
+
+#### `chem_reaction_decomposition_array()`
+
+**Description:** Returns an array of decomposition reaction names.
+
+**Parameters:** None
+
+**Returns:** List of decomposition reaction names
+
+**Example:**
+```maxima
+decomp_rxns: chem_reaction_decomposition_array();
+/* Returns ["DecompositionCaCO3", "DecompositionH2O"] */
+```
+
+---
+
+### Available Reactions
+
+The reactions database includes:
+
+**Combustion Reactions:**
+- CombustionMethane
+- CombustionEthane
+- CombustionPropane
+- CombustionGlucose
+- CombustionEthanol
+
+**Synthesis Reactions:**
+- SynthesisAmmonia
+- SynthesisWater
+- SynthesisSO3
+
+**Decomposition Reactions:**
+- DecompositionCaCO3
+- DecompositionH2O
+
+**Formation Reactions:**
+- FormationCO2
+- FormationH2O_l
+- FormationH2O_g
+- FormationNH3
+- FormationCH4
+
+**Neutralization Reactions:**
+- NeutralizationHClNaOH
+- NeutralizationH2SO4NaOH
+
+**Other Reactions:**
+- PrecipitationAgCl
+- OxidationIron
+- VaporizationWater
+- FermentationGlucose
+- PhotosynthesisSimplified
+
+---
+
 ## Usage Examples
 
 ### Example 1: Random Element Properties
@@ -729,6 +1406,70 @@ acid: rand(chem_weak_acid_array());
 ka: chem_acidbase_Ka(acid);
 
 /* Student calculates pH from Ka and concentration */
+```
+
+### Example 12: Thermodynamic Calculation for Random Combustion
+```maxima
+/* Load both thermodynamics and reactions modules */
+stack_include("thermodynamictables.mac");
+stack_include("reactions.mac");
+
+/* Select a random combustion reaction */
+rxn: rand(chem_reaction_combustion_array());
+
+/* Get equation for display */
+equation: chem_reaction_equation_latex(rxn);
+
+/* Calculate thermodynamic properties */
+delta_h: chem_reaction_enthalpy_by_name(rxn);
+delta_s: chem_reaction_entropy_by_name(rxn);
+delta_g: chem_reaction_gibbs_by_name(rxn);
+
+/* Calculate equilibrium constant at 298.15 K */
+temp: 298.15;
+k_eq: chem_equilibrium_constant(delta_g, temp);
+```
+
+### Example 13: Manual Thermodynamic Calculation
+```maxima
+/* Calculate ΔH° for: 2H2(g) + O2(g) → 2H2O(l) */
+reactants: [["H2", "g", 2], ["O2", "g", 1]];
+products: [["H2O", "l", 2]];
+
+delta_h: chem_reaction_enthalpy(products, reactants);
+delta_s: chem_reaction_entropy(products, reactants);
+delta_g: chem_reaction_gibbs(products, reactants);
+```
+
+### Example 14: Temperature-Dependent Gibbs Energy
+```maxima
+/* Calculate ΔG at different temperatures */
+rxn: "SynthesisAmmonia";
+delta_h: chem_reaction_enthalpy_by_name(rxn);
+delta_s: chem_reaction_entropy_by_name(rxn);
+
+/* At 298 K */
+delta_g_298: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 298);
+
+/* At 500 K */
+delta_g_500: chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, 500);
+
+/* Calculate equilibrium constants */
+k_298: chem_equilibrium_constant(delta_g_298, 298);
+k_500: chem_equilibrium_constant(delta_g_500, 500);
+```
+
+### Example 15: Multi-State Substance
+```maxima
+/* Water exists in multiple states */
+states: chem_thermo_states("H2O");  /* Returns ["l", "g"] */
+
+/* Get properties for each state */
+delta_hf_liquid: chem_thermo_data("H2O", "DeltaHf", "l");  /* -285.8 */
+delta_hf_gas: chem_thermo_data("H2O", "DeltaHf", "g");     /* -241.8 */
+
+/* Calculate enthalpy of vaporization */
+delta_h_vap: delta_hf_gas - delta_hf_liquid;  /* 44.0 kJ/mol */
 ```
 
 ---

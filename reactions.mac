@@ -1,0 +1,284 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Chemical Reactions Database for STACK                       */
+/*                                                              */
+/*  V1.0 November 2025                                          */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Reactions Database                                          */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["ReactionName", [
+     [["Reactant1", "state", coeff], ["Reactant2", "state", coeff], ...],
+     [["Product1", "state", coeff], ["Product2", "state", coeff], ...]
+   ]]
+   
+   Convention: 
+   - Reactants are listed first (negative in thermodynamic calculations)
+   - Products are listed second (positive in thermodynamic calculations)
+   - All coefficients are positive integers
+   - State: "g" (gas), "l" (liquid), "s" (solid), "aq" (aqueous)
+*/
+
+%_REACTIONS_DATA: [
+    /* Combustion reactions */
+    ["CombustionMethane", [
+        [["CH4", "g", 1], ["O2", "g", 2]],
+        [["CO2", "g", 1], ["H2O", "l", 2]]
+    ]],
+    
+    ["CombustionEthane", [
+        [["C2H6", "g", 1], ["O2", "g", 7]],
+        [["CO2", "g", 4], ["H2O", "l", 6]]
+    ]],
+    
+    ["CombustionPropane", [
+        [["C3H8", "g", 1], ["O2", "g", 5]],
+        [["CO2", "g", 3], ["H2O", "l", 4]]
+    ]],
+    
+    ["CombustionGlucose", [
+        [["C6H12O6", "s", 1], ["O2", "g", 6]],
+        [["CO2", "g", 6], ["H2O", "l", 6]]
+    ]],
+    
+    ["CombustionEthanol", [
+        [["C2H5OH", "l", 1], ["O2", "g", 3]],
+        [["CO2", "g", 2], ["H2O", "l", 3]]
+    ]],
+    
+    /* Synthesis reactions */
+    ["SynthesisAmmonia", [
+        [["N2", "g", 1], ["H2", "g", 3]],
+        [["NH3", "g", 2]]
+    ]],
+    
+    ["SynthesisWater", [
+        [["H2", "g", 2], ["O2", "g", 1]],
+        [["H2O", "l", 2]]
+    ]],
+    
+    ["SynthesisSO3", [
+        [["SO2", "g", 2], ["O2", "g", 1]],
+        [["SO3", "g", 2]]
+    ]],
+    
+    /* Decomposition reactions */
+    ["DecompositionCaCO3", [
+        [["CaCO3", "s", 1]],
+        [["CaO", "s", 1], ["CO2", "g", 1]]
+    ]],
+    
+    ["DecompositionH2O", [
+        [["H2O", "l", 2]],
+        [["H2", "g", 2], ["O2", "g", 1]]
+    ]],
+    
+    /* Acid-base neutralization */
+    ["NeutralizationHClNaOH", [
+        [["HCl", "aq", 1], ["NaOH", "aq", 1]],
+        [["NaCl", "aq", 1], ["H2O", "l", 1]]
+    ]],
+    
+    ["NeutralizationH2SO4NaOH", [
+        [["H2SO4", "aq", 1], ["NaOH", "aq", 2]],
+        [["Na2SO4", "aq", 1], ["H2O", "l", 2]]
+    ]],
+    
+    /* Precipitation reactions */
+    ["PrecipitationAgCl", [
+        [["Ag+", "aq", 1], ["Cl-", "aq", 1]],
+        [["AgCl", "s", 1]]
+    ]],
+    
+    /* Redox reactions */
+    ["OxidationIron", [
+        [["Fe", "s", 4], ["O2", "g", 3]],
+        [["Fe2O3", "s", 2]]
+    ]],
+    
+    /* Formation reactions (from elements) */
+    ["FormationCO2", [
+        [["C", "s", 1], ["O2", "g", 1]],
+        [["CO2", "g", 1]]
+    ]],
+    
+    ["FormationH2O_l", [
+        [["H2", "g", 1], ["O2", "g", 1]],
+        [["H2O", "l", 2]]
+    ]],
+    
+    ["FormationH2O_g", [
+        [["H2", "g", 1], ["O2", "g", 1]],
+        [["H2O", "g", 2]]
+    ]],
+    
+    ["FormationNH3", [
+        [["N2", "g", 1], ["H2", "g", 3]],
+        [["NH3", "g", 2]]
+    ]],
+    
+    ["FormationCH4", [
+        [["C", "s", 1], ["H2", "g", 2]],
+        [["CH4", "g", 1]]
+    ]],
+    
+    /* Phase transitions */
+    ["VaporizationWater", [
+        [["H2O", "l", 1]],
+        [["H2O", "g", 1]]
+    ]],
+    
+    /* Organic chemistry reactions */
+    ["FermentationGlucose", [
+        [["C6H12O6", "s", 1]],
+        [["C2H5OH", "l", 2], ["CO2", "g", 2]]
+    ]],
+    
+    ["PhotosynthesisSimplified", [
+        [["CO2", "g", 6], ["H2O", "l", 6]],
+        [["C6H12O6", "s", 1], ["O2", "g", 6]]
+    ]]
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Reaction Data Retrieval Functions                           */
+/*                                                              */
+/****************************************************************/
+
+/* Returns the complete reaction data for a given reaction name */
+chem_reaction_data(reaction_name) := assoc(reaction_name, %_REACTIONS_DATA)$
+
+/* Returns the reactants list for a given reaction */
+chem_reaction_reactants(reaction_name) := block([rxn],
+    rxn: chem_reaction_data(reaction_name),
+    if is(rxn = false) then return(false),
+    return(first(rxn))
+)$
+
+/* Returns the products list for a given reaction */
+chem_reaction_products(reaction_name) := block([rxn],
+    rxn: chem_reaction_data(reaction_name),
+    if is(rxn = false) then return(false),
+    return(second(rxn))
+)$
+
+/* Returns a balanced equation string for a reaction */
+chem_reaction_equation(reaction_name) := block([reactants, products, rxn_str],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    /* Build reactants string */
+    rxn_str: "",
+    for i:1 thru length(reactants) do (
+        if third(reactants[i]) > 1 then
+            rxn_str: sconcat(rxn_str, third(reactants[i]), " "),
+        rxn_str: sconcat(rxn_str, first(reactants[i]), "(", second(reactants[i]), ")"),
+        if i < length(reactants) then
+            rxn_str: sconcat(rxn_str, " + ")
+    ),
+    
+    rxn_str: sconcat(rxn_str, " -> "),
+    
+    /* Build products string */
+    for i:1 thru length(products) do (
+        if third(products[i]) > 1 then
+            rxn_str: sconcat(rxn_str, third(products[i]), " "),
+        rxn_str: sconcat(rxn_str, first(products[i]), "(", second(products[i]), ")"),
+        if i < length(products) then
+            rxn_str: sconcat(rxn_str, " + ")
+    ),
+    
+    return(rxn_str)
+)$
+
+/* Returns a LaTeX-formatted balanced equation using \ce{} */
+chem_reaction_equation_latex(reaction_name) := block([reactants, products, rxn_str],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    rxn_str: "\\ce{",
+    
+    /* Build reactants string */
+    for i:1 thru length(reactants) do (
+        if third(reactants[i]) > 1 then
+            rxn_str: sconcat(rxn_str, third(reactants[i]), " "),
+        rxn_str: sconcat(rxn_str, first(reactants[i]), "(", second(reactants[i]), ")"),
+        if i < length(reactants) then
+            rxn_str: sconcat(rxn_str, " + ")
+    ),
+    
+    rxn_str: sconcat(rxn_str, " -> "),
+    
+    /* Build products string */
+    for i:1 thru length(products) do (
+        if third(products[i]) > 1 then
+            rxn_str: sconcat(rxn_str, third(products[i]), " "),
+        rxn_str: sconcat(rxn_str, first(products[i]), "(", second(products[i]), ")"),
+        if i < length(products) then
+            rxn_str: sconcat(rxn_str, " + ")
+    ),
+    
+    rxn_str: sconcat(rxn_str, "}"),
+    return(rxn_str)
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Reaction Navigation Functions                               */
+/*                                                              */
+/****************************************************************/
+
+/* Returns an array of all reaction names in the database */
+chem_reaction_array() := map(first, %_REACTIONS_DATA)$
+
+/* Returns an array of combustion reactions */
+chem_reaction_combustion_array() := block([filtered],
+    filtered: sublist(%_REACTIONS_DATA, lambda([x], 
+        not is(ssearch("Combustion", first(x)) = false))),
+    return(map(first, filtered))
+)$
+
+/* Returns an array of formation reactions */
+chem_reaction_formation_array() := block([filtered],
+    filtered: sublist(%_REACTIONS_DATA, lambda([x], 
+        not is(ssearch("Formation", first(x)) = false))),
+    return(map(first, filtered))
+)$
+
+/* Returns an array of synthesis reactions */
+chem_reaction_synthesis_array() := block([filtered],
+    filtered: sublist(%_REACTIONS_DATA, lambda([x], 
+        not is(ssearch("Synthesis", first(x)) = false))),
+    return(map(first, filtered))
+)$
+
+/* Returns an array of decomposition reactions */
+chem_reaction_decomposition_array() := block([filtered],
+    filtered: sublist(%_REACTIONS_DATA, lambda([x], 
+        not is(ssearch("Decomposition", first(x)) = false))),
+    return(map(first, filtered))
+)$

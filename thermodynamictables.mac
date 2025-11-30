@@ -1,0 +1,302 @@
+/*  Author Alexander Pitzer
+    ETH Zurich
+    Copyright (C) 2025 Alexander Pitzer
+
+    This program is free software: you can redistribute it or modify
+    it under the terms of the GNU General Public License version two.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
+/****************************************************************/
+/*  Thermodynamic Tables for STACK                              */
+/*                                                              */
+/*  V1.0 November 2025                                           */
+/*                                                              */
+/****************************************************************/
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Database                                      */
+/*                                                              */
+/****************************************************************/
+
+/* Database structure: ["Formula", [ΔHf°, S°, ΔGf°, State]]
+   ΔHf° = Standard enthalpy of formation (kJ/mol)
+   S° = Standard molar entropy (J/(mol·K))
+   ΔGf° = Standard Gibbs free energy of formation (kJ/mol)
+   State = Physical state (g, l, s, aq)
+   null indicates the value is not available
+   All values at 298.15 K (25°C) and 1 bar */
+
+%_THERMO_DATA: [
+    /* Elements in standard state */
+    ["H2", [0, 130.7, 0, "g"]],
+    ["O2", [0, 205.2, 0, "g"]],
+    ["N2", [0, 191.6, 0, "g"]],
+    ["Cl2", [0, 223.1, 0, "g"]],
+    ["Br2", [0, 152.2, 0, "l"]],
+    ["I2", [0, 116.1, 0, "s"]],
+    ["C", [0, 5.7, 0, "s"]],  /* graphite */
+    ["S", [0, 32.1, 0, "s"]],  /* rhombic */
+    
+    /* Simple inorganic compounds */
+    ["H2O", [-285.8, 69.9, -237.1, "l"]],
+    ["H2O", [-241.8, 188.8, -228.6, "g"]],
+    ["CO2", [-393.5, 213.8, -394.4, "g"]],
+    ["CO", [-110.5, 197.7, -137.2, "g"]],
+    ["NH3", [-45.9, 192.8, -16.4, "g"]],
+    ["NO", [91.3, 210.8, 87.6, "g"]],
+    ["NO2", [33.2, 240.1, 51.3, "g"]],
+    ["N2O", [81.6, 220.0, 103.7, "g"]],
+    ["SO2", [-296.8, 248.2, -300.1, "g"]],
+    ["SO3", [-395.7, 256.8, -371.1, "g"]],
+    ["H2S", [-20.6, 205.8, -33.4, "g"]],
+    
+    /* Acids */
+    ["HCl", [-92.3, 186.9, -95.3, "g"]],
+    ["HBr", [-36.3, 198.7, -53.4, "g"]],
+    ["HI", [26.5, 206.6, 1.7, "g"]],
+    ["HNO3", [-174.1, 155.6, -80.7, "l"]],
+    ["H2SO4", [-814.0, 156.9, -690.0, "l"]],
+    ["CH3COOH", [-484.5, 159.8, -389.9, "l"]],  /* acetic acid */
+    
+    /* Aqueous ions */
+    ["H+", [0, 0, 0, "aq"]],
+    ["OH-", [-230.0, -10.9, -157.2, "aq"]],
+    ["Cl-", [-167.2, 56.5, -131.2, "aq"]],
+    ["Br-", [-121.6, 82.4, -104.0, "aq"]],
+    ["I-", [-55.2, 111.3, -51.6, "aq"]],
+    ["Na+", [-240.1, 59.0, -261.9, "aq"]],
+    ["K+", [-252.4, 102.5, -283.3, "aq"]],
+    ["Ca^{2+}", [-542.8, -53.1, -553.6, "aq"]],
+    ["Mg^{2+}", [-466.9, -138.1, -454.8, "aq"]],
+    ["Fe^{2+}", [-89.1, -137.7, -78.9, "aq"]],
+    ["Fe^{3+}", [-48.5, -315.9, -4.7, "aq"]],
+    ["Cu^{2+}", [64.8, -99.6, 65.5, "aq"]],
+    ["Ag+", [105.6, 72.7, 77.1, "aq"]],
+    ["SO4^{2-}", [-909.3, 20.1, -744.5, "aq"]],
+    ["NO3-", [-207.4, 146.4, -111.3, "aq"]],
+    ["CO3^{2-}", [-677.1, -56.9, -527.8, "aq"]],
+    ["HCO3-", [-692.0, 91.2, -586.8, "aq"]],
+    ["NH4+", [-132.5, 113.4, -79.3, "aq"]],
+    
+    /* Salts */
+    ["NaCl", [-411.2, 72.1, -384.1, "s"]],
+    ["KCl", [-436.5, 82.6, -408.5, "s"]],
+    ["CaCl2", [-795.8, 104.6, -748.1, "s"]],
+    ["MgCl2", [-641.3, 89.6, -591.8, "s"]],
+    ["AgCl", [-127.0, 96.3, -109.8, "s"]],
+    ["NaBr", [-361.1, 86.8, -349.0, "s"]],
+    ["KBr", [-393.8, 95.9, -380.7, "s"]],
+    ["NaI", [-287.8, 98.5, -286.1, "s"]],
+    ["CaCO3", [-1206.9, 92.9, -1128.8, "s"]],  /* calcite */
+    ["MgCO3", [-1095.8, 65.7, -1012.1, "s"]],
+    ["Na2SO4", [-1387.1, 149.6, -1270.2, "s"]],
+    ["CaSO4", [-1434.5, 106.5, -1322.0, "s"]],
+    
+    /* Oxides */
+    ["CaO", [-635.1, 38.1, -603.3, "s"]],
+    ["MgO", [-601.6, 27.0, -569.3, "s"]],
+    ["Al2O3", [-1675.7, 50.9, -1582.3, "s"]],
+    ["Fe2O3", [-824.2, 87.4, -742.2, "s"]],
+    ["FeO", [-272.0, 60.8, -251.4, "s"]],
+    ["CuO", [-157.3, 42.6, -129.7, "s"]],
+    ["ZnO", [-350.5, 43.7, -320.5, "s"]],
+    
+    /* Hydroxides */
+    ["NaOH", [-425.8, 64.4, -379.7, "s"]],
+    ["KOH", [-424.6, 78.9, -378.9, "s"]],
+    ["Ca(OH)2", [-985.2, 83.4, -897.5, "s"]],
+    ["Mg(OH)2", [-924.5, 63.2, -833.5, "s"]],
+    
+    /* Organic compounds */
+    ["CH4", [-74.6, 186.3, -50.5, "g"]],  /* methane */
+    ["C2H6", [-84.0, 229.2, -32.0, "g"]],  /* ethane */
+    ["C3H8", [-104.7, 270.3, -24.4, "g"]],  /* propane */
+    ["C2H4", [52.4, 219.3, 68.4, "g"]],  /* ethene */
+    ["C2H2", [227.4, 200.9, 209.9, "g"]],  /* ethyne */
+    ["C6H6", [49.1, 173.4, 124.5, "l"]],  /* benzene */
+    ["CH3OH", [-239.2, 126.8, -166.6, "l"]],  /* methanol */
+    ["C2H5OH", [-277.6, 160.7, -174.8, "l"]],  /* ethanol */
+    ["CH2O", [-108.6, 218.8, -102.5, "g"]],  /* formaldehyde */
+    ["CH3CHO", [-166.2, 250.3, -133.0, "g"]],  /* acetaldehyde */
+    ["C6H12O6", [-1273.3, 212.1, -910.4, "s"]]  /* glucose */
+]$
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Data Retrieval Functions                      */
+/*                                                              */
+/****************************************************************/
+
+/* Field names for thermodynamic data */
+%_THERMO_FIELDS: ["DeltaHf", "S", "DeltaGf", "State"]$
+
+/* Units for thermodynamic data */
+%_THERMO_UNITS: [kJ*mol^(-1), J*mol^(-1)*K^(-1), kJ*mol^(-1), null]$
+
+/* Returns all thermodynamic data for a substance in a specific state */
+chem_thermo_data_all(substance, state) := block([data, matches],
+    matches: sublist(%_THERMO_DATA, lambda([x], 
+        sequal(first(x), substance) and sequal(fourth(second(x)), state))),
+    if emptyp(matches) then
+        return(false)
+    else (
+        data: second(first(matches)),
+        return(zip_with("[", %_THERMO_FIELDS, data))
+    )
+)$
+
+/* Returns all thermodynamic data for a substance (first match if multiple states exist) */
+chem_thermo_data_all_any(substance) := block([data, match],
+    match: assoc(substance, %_THERMO_DATA),
+    if is(match = false) then
+        return(false)
+    else
+        return(zip_with("[", %_THERMO_FIELDS, match))
+)$
+
+/* Returns a specific thermodynamic property for a substance in a specific state */
+chem_thermo_data(substance, property, state) := 
+    assoc(property, chem_thermo_data_all(substance, state))$
+
+/* Returns a specific thermodynamic property with units */
+chem_thermo_data_units(substance, property, state) := block([value, unit],
+    value: chem_thermo_data(substance, property, state),
+    if is(value = false) or is(value = null) then
+        return(false),
+    unit: assoc(property, zip_with("[", %_THERMO_FIELDS, %_THERMO_UNITS)),
+    if is(unit = null) then
+        return(value)
+    else
+        return(stackunits(value, unit))
+)$
+
+/* Calculate reaction enthalpy: ΔH° = Σ(ΔHf°products) - Σ(ΔHf°reactants) */
+chem_reaction_enthalpy(products_list, reactants_list) := block([sum_prod, sum_react],
+    /* products_list and reactants_list are lists of [[substance, state, stoich_coeff], ...] */
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaHf", second(item))
+    ),
+    
+    return(sum_prod - sum_react)
+)$
+
+/* Calculate reaction entropy: ΔS° = Σ(S°products) - Σ(S°reactants) */
+chem_reaction_entropy(products_list, reactants_list) := block([sum_prod, sum_react],
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "S", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "S", second(item))
+    ),
+    
+    return(sum_prod - sum_react)
+)$
+
+/* Calculate reaction Gibbs free energy: ΔG° = Σ(ΔGf°products) - Σ(ΔGf°reactants) with units */
+chem_reaction_gibbs(products_list, reactants_list) := block([sum_prod, sum_react, delta_g],
+    sum_prod: 0,
+    sum_react: 0,
+    
+    for item in products_list do (
+        sum_prod: sum_prod + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+    ),
+    
+    for item in reactants_list do (
+        sum_react: sum_react + third(item) * chem_thermo_data(first(item), "DeltaGf", second(item))
+    ),
+    
+    delta_g: sum_prod - sum_react,
+    return(stackunits(delta_g, kJ*mol^(-1)))
+)$
+
+/* Calculate ΔG from ΔH and ΔS: ΔG = ΔH - TΔS with units */
+chem_gibbs_from_enthalpy_entropy(delta_h, delta_s, temp) := block([delta_g],
+    delta_g: delta_h - temp * delta_s / 1000,  /* Convert J to kJ */
+    return(stackunits(delta_g, kJ*mol^(-1)))
+)$
+
+/* Calculate equilibrium constant from ΔG°: K = exp(-ΔG°/RT) */
+chem_equilibrium_constant(delta_g, temp) := block([R],
+    R: 8.314,  /* J/(mol·K) */
+    return(%e^(-delta_g * 1000 / (R * temp)))  /* Convert kJ to J */
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Reaction-Based Thermodynamic Calculations                   */
+/*  (Requires reactions.mac to be loaded)                       */
+/*                                                              */
+/****************************************************************/
+
+/* Calculate ΔH° for a reaction by name */
+chem_reaction_enthalpy_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_enthalpy(products, reactants))
+)$
+
+/* Calculate ΔS° for a reaction by name */
+chem_reaction_entropy_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_entropy(products, reactants))
+)$
+
+/* Calculate ΔG° for a reaction by name */
+chem_reaction_gibbs_by_name(reaction_name) := block([reactants, products],
+    reactants: chem_reaction_reactants(reaction_name),
+    products: chem_reaction_products(reaction_name),
+    
+    if is(reactants = false) or is(products = false) then return(false),
+    
+    return(chem_reaction_gibbs(products, reactants))
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  Thermodynamic Navigation Functions                          */
+/*                                                              */
+/****************************************************************/
+
+/* Returns an array of all substances in the database */
+chem_thermo_substance_array() := block([unique_substances],
+    unique_substances: unique(map(first, %_THERMO_DATA)),
+    return(unique_substances)
+)$
+
+/* Returns an array of all substances in a specific state */
+chem_thermo_substance_state_array(state) := block([filtered],
+    filtered: sublist(%_THERMO_DATA, lambda([x], sequal(fourth(second(x)), state))),
+    return(unique(map(first, filtered)))
+)$
+
+/* Returns an array of available states for a substance */
+chem_thermo_states(substance) := block([matches],
+    matches: sublist(%_THERMO_DATA, lambda([x], sequal(first(x), substance))),
+    return(map(lambda([x], fourth(second(x))), matches))
+)$
