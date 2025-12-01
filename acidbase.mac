@@ -373,18 +373,23 @@ chem_acid_array() := block([filtered],
 
 /* Returns an array of all bases (conjugate bases of substances with pKb values that are not null).
    Note: This returns the conjugate base formulas, not the acid formulas.
-   Example: If "H2SO4" has pKb = null, it is excluded because we cannot calculate its conjugate base properties. */
-chem_base_array() := block([filtered, bases, conj_base],
+   Requires pse.mac to be loaded for chem_acidbase_conjugate_base().
+   Example: If "H2SO4" has pKb = null, it is excluded. */
+chem_base_array() := block([filtered, bases, conj_base, acid],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null))),
     bases: [],
+    
+    /* Build the list of conjugate bases */
     for item in filtered do (
-        conj_base: chem_acidbase_conjugate_base(first(item)),
+        acid: first(item),
+        conj_base: chem_acidbase_conjugate_base(acid),
         /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or sequal(conj_base, "")) then (
+        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
             bases: append(bases, [conj_base])
         )
     ),
+    
     return(bases)
 )$
 
@@ -396,20 +401,25 @@ chem_weak_acid_array() := block([filtered],
 )$
 
 /* Returns an array of weak bases (0 < pKb < 14 and not null).
-   Note: This returns the conjugate base formulas, not the acid formulas. */
-chem_weak_base_array() := block([filtered, bases, conj_base],
+   Note: This returns the conjugate base formulas, not the acid formulas.
+   Requires pse.mac to be loaded for chem_acidbase_conjugate_base(). */
+chem_weak_base_array() := block([filtered, bases, conj_base, acid],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null) and 
         second(second(x)) > 0 and 
         second(second(x)) < 14)),
     bases: [],
+    
+    /* Build the list of conjugate bases */
     for item in filtered do (
-        conj_base: chem_acidbase_conjugate_base(first(item)),
+        acid: first(item),
+        conj_base: chem_acidbase_conjugate_base(acid),
         /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or sequal(conj_base, "")) then (
+        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
             bases: append(bases, [conj_base])
         )
     ),
+    
     return(bases)
 )$
 
@@ -421,17 +431,22 @@ chem_strong_acid_array() := block([filtered],
 )$
 
 /* Returns an array of strong bases (pKb <= 0 and not null).
-   Note: This returns the conjugate base formulas, not the acid formulas. */
-chem_strong_base_array() := block([filtered, bases, conj_base],
+   Note: This returns the conjugate base formulas, not the acid formulas.
+   Requires pse.mac to be loaded for chem_acidbase_conjugate_base(). */
+chem_strong_base_array() := block([filtered, bases, conj_base, acid],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null) and second(second(x)) <= 0)),
     bases: [],
+    
+    /* Build the list of conjugate bases */
     for item in filtered do (
-        conj_base: chem_acidbase_conjugate_base(first(item)),
+        acid: first(item),
+        conj_base: chem_acidbase_conjugate_base(acid),
         /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or sequal(conj_base, "")) then (
+        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
             bases: append(bases, [conj_base])
         )
     ),
+    
     return(bases)
 )$
