@@ -32,12 +32,12 @@
 /* Database structure: ["Formula", [pKa, pKb]]
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
-    ["H+", [0, 100]],
+    ["H+", [0, null]],
     ["H2O", [14, 0]],
-    ["HCl", [-7.0, 100]],
-    ["H2SO4", [-2.0, 100]],
+    ["HCl", [-7.0, null]],
+    ["H2SO4", [-2.0, null]],
     ["HSO4-", [1.92, 12.08]],
-    ["HNO3", [-1, 100]],
+    ["HNO3", [-1, null]],
     ["H3PO4", [1.96, 12.04]],
     ["H2PO4-", [7.21, 6.79]],
     ["HPO4^{2-}", [12.32, 1.68]],
@@ -47,8 +47,8 @@
     ["HCO3-", [10.40, 3.6]],
     ["H2S", [7.00, 7.00]],
     ["NH4+", [9.21, 4.79]],
-    ["OH-", [100, -10]],
-    ["NH3", [100, -19]]
+    ["OH-", [null, -10]],
+    ["NH3", [null, -19]]
 ]$
 
 /****************************************************************/
@@ -227,7 +227,7 @@ chem_remove_charge(formula) := block([chars, i, n, result, in_brace, skip_next],
                 /* We need to remove the digit(s) before the +/- as well */
                 /* Back up and remove digits */
                 result: substring(result, 1, slength(result)),  /* Remove last char */
-                /* Keep removing digits from the end of result */H2O"
+                /* Keep removing digits from the end of result */
                 while slength(result) > 0 and 
                       cgreaterp(substring(result, slength(result)), "/") and 
                       clessp(substring(result, slength(result)), ":") do (
@@ -323,7 +323,7 @@ chem_acidbase_conjugate_acid(substance) := block([charge, acid_formula, h_count,
     parsed: chem_parse_formula(substance),
     if is(parsed = false) then return(false),
     
-    /* Reconstruct formula with new H count */H2O"
+    /* Reconstruct formula with new H count */
     result: "",
     has_h: false,
     
