@@ -32,12 +32,12 @@
 /* Database structure: ["Formula", [pKa, pKb]]
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
-    ["H+", [-1.7, 15.7]],
+    ["H+", [0, null]],
     ["H2O", [14, 0]],
     ["HCl", [-7.0, 21]],
-    ["H2SO4", [-3.0, 17]],
-    ["HSO4-", [1.99, 12.01]],
-    ["HNO3", [-1.4, 15.4]],
+    ["H2SO4", [-2.0, 16]],
+    ["HSO4-", [1.92, 12.08]],
+    ["HNO3", [-1, 15]],
     ["H3PO4", [1.96, 12.04]],
     ["H2PO4-", [7.21, 6.79]],
     ["HPO4^{2-}", [12.32, 1.68]],
@@ -47,8 +47,7 @@
     ["HCO3-", [10.40, 3.6]],
     ["H2S", [7.00, 7.00]],
     ["NH4+", [9.21, 4.79]],
-    ["OH-", [35, -21]],
-    ["NH3", [38, -24]]
+    ["OH-", [24, -10]]
 ]$
 
 /****************************************************************/
@@ -186,22 +185,28 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, in_brace, 
 
 /* Helper function to remove charge notation from chemical formula.
    Removes +, -, and ^{...} charge indicators from formulas.
+   Requires pse.mac to be loaded for chem_string_to_number() function.
    Examples:
      chem_remove_charge("H+") returns "H"
      chem_remove_charge("SO4^{2-}") returns "SO4"
      chem_remove_charge("Ca^{2+}") returns "Ca"
      chem_remove_charge("NH4+") returns "NH4"
      chem_remove_charge("H2O") returns "H2O" */
-chem_remove_charge(formula) := block([chars, i, n, result],
+chem_remove_charge(formula) := block([chars, i, n, result, in_brace, skip_next],
     if sequal(formula, "") then return(""),
     
     chars: charlist(formula),
     n: length(chars),
     result: "",
-    i: 1,
+    in_brace: false,
+    skip_next: false,
     
+    i: 1,
     while i <= n do (
-        if sequal(chars[i], "^") then (
+        if skip_next then (
+            skip_next: false,
+            i: i + 1
+        ) else if sequal(chars[i], "^") then (
             /* Start of charge notation with ^, skip it and everything until } */
             i: i + 1,
             if i <= n and sequal(chars[i], "{") then (
@@ -218,9 +223,10 @@ chem_remove_charge(formula) := block([chars, i, n, result],
             /* Could be a charge with number before it, check previous character */
             if i > 1 and cgreaterp(chars[i-1], "/") and clessp(chars[i-1], ":") then (
                 /* Previous char is a digit, this is likely part of charge notation */
+                /* We need to remove the digit(s) before the +/- as well */
                 /* Back up and remove digits */
                 result: substring(result, 1, slength(result)),  /* Remove last char */
-                /* Keep removing digits from the end of result */
+                /* Keep removing digits from the end of result */H2O"
                 while slength(result) > 0 and 
                       cgreaterp(substring(result, slength(result)), "/") and 
                       clessp(substring(result, slength(result)), ":") do (
@@ -316,7 +322,7 @@ chem_acidbase_conjugate_acid(substance) := block([charge, acid_formula, h_count,
     parsed: chem_parse_formula(substance),
     if is(parsed = false) then return(false),
     
-    /* Reconstruct formula with new H count */
+    /* Reconstruct formula with new H count */H2O"
     result: "",
     has_h: false,
     
@@ -364,26 +370,11 @@ chem_acid_array() := block([filtered],
     map(first, filtered)
 )$
 
-/* Returns an array of all bases (conjugate bases of substances with pKb values that are not null).
-   Note: This returns the conjugate base formulas, not the acid formulas.
-   Requires pse.mac to be loaded for chem_acidbase_conjugate_base().
-   Example: If "H2SO4" has pKb = null, it is excluded. */
-chem_base_array() := block([filtered, bases, conj_base, acid],
+/* Returns an array of all bases (substances with pKb values that are not null) */
+chem_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null))),
-    bases: [],
-    
-    /* Build the list of conjugate bases */
-    for item in filtered do (
-        acid: first(item),
-        conj_base: chem_acidbase_conjugate_base(acid),
-        /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
-            bases: append(bases, [conj_base])
-        )
-    ),
-    
-    return(bases)
+    map(first, filtered)
 )$
 
 /* Returns an array of weak acids (pKa > 0 and not null) */
@@ -393,27 +384,13 @@ chem_weak_acid_array() := block([filtered],
     map(first, filtered)
 )$
 
-/* Returns an array of weak bases (0 < pKb < 14 and not null).
-   Note: This returns the conjugate base formulas, not the acid formulas.
-   Requires pse.mac to be loaded for chem_acidbase_conjugate_base(). */
-chem_weak_base_array() := block([filtered, bases, conj_base, acid],
+/* Returns an array of weak bases (0 < pKb < 14 and not null) */
+chem_weak_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null) and 
         second(second(x)) > 0 and 
         second(second(x)) < 14)),
-    bases: [],
-    
-    /* Build the list of conjugate bases */
-    for item in filtered do (
-        acid: first(item),
-        conj_base: chem_acidbase_conjugate_base(acid),
-        /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
-            bases: append(bases, [conj_base])
-        )
-    ),
-    
-    return(bases)
+    map(first, filtered)
 )$
 
 /* Returns an array of strong acids (pKa < 0 and not null) */
@@ -423,23 +400,9 @@ chem_strong_acid_array() := block([filtered],
     map(first, filtered)
 )$
 
-/* Returns an array of strong bases (pKb <= 0 and not null).
-   Note: This returns the conjugate base formulas, not the acid formulas.
-   Requires pse.mac to be loaded for chem_acidbase_conjugate_base(). */
-chem_strong_base_array() := block([filtered, bases, conj_base, acid],
+/* Returns an array of strong bases (pKb <= 0 and not null) */
+chem_strong_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null) and second(second(x)) <= 0)),
-    bases: [],
-    
-    /* Build the list of conjugate bases */
-    for item in filtered do (
-        acid: first(item),
-        conj_base: chem_acidbase_conjugate_base(acid),
-        /* Only add if conjugate base calculation succeeded */
-        if not (is(conj_base = false) or is(conj_base = "") or sequal(conj_base, "")) then (
-            bases: append(bases, [conj_base])
-        )
-    ),
-    
-    return(bases)
+    map(first, filtered)
 )$
