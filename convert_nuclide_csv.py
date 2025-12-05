@@ -9,6 +9,7 @@ ETH Zurich
 
 import csv
 from collections import defaultdict
+import re
 
 # Fixed file paths
 INPUT_FILE = "/home/alexander/eth_it/STACK-for-Chemistry/nndc_nudat_data_export(1).csv"
@@ -31,9 +32,17 @@ ELEMENT_NAMES = {
 }
 
 def parse_csv_value(value):
-    """Convert CSV value to appropriate format"""
+    """Convert CSV value to appropriate format, ignoring uncertainties"""
     if value == '' or value is None:
         return 'null'
+    
+    # Remove uncertainty information (anything in parentheses)
+    if isinstance(value, str) and '(' in value:
+        value = value.split('(')[0].strip()
+    
+    # Special handling for decay modes
+    if isinstance(value, str) and value == "EC+B+":
+        value = "B+"
     
     # Try to parse as number
     try:
@@ -51,6 +60,8 @@ def format_value(val):
     if val == 'null':
         return 'null'
     elif isinstance(val, str):
+        # Format isotope names with TeX notation
+        val = format_isotope_name(val)
         return f'"{val}"'
     elif isinstance(val, float):
         return str(val)
@@ -58,6 +69,17 @@ def format_value(val):
         return str(val)
     else:
         return 'null'
+
+def format_isotope_name(name):
+    """Convert isotope name from '129In' to '^{129}In' format"""
+    if isinstance(name, str):
+        # Match pattern like '129In' and convert to '^{129}In'
+        match = re.match(r'^(\d+)([A-Z][a-z]?)$', name)
+        if match:
+            mass_number = match.group(1)
+            element = match.group(2)
+            return f"^{{{mass_number}}}{element}"
+    return name
 
 def format_array(arr):
     """Format array for Maxima output"""
@@ -189,7 +211,37 @@ def format_nuclide_entry_combined(nuclide_id, data):
     decay_modes_formatted = '[' + ', '.join(format_array(modes) for modes in data['decayModes']) + ']'
     branching_formatted = '[' + ', '.join(format_array(ratios) for ratios in data['branchingRatios']) + ']'
     
-    return f'    ["{nuclide_id}", [{z}, {n}, {name}, {level_energies}, {halflives}, {halflife_units}, {decay_modes_formatted}, {branching_formatted}]]'
+    # Format the nuclide_id with TeX notation
+    formatted_nuclide_id = format_isotope_name(nuclide_id)
+    
+    return f'    ["{formatted_nuclide_id}", [{z}, {n}, {level_energies}, {halflives}, {halflife_units}, {decay_modes_formatted}, {branching_formatted}]]'
+
+def should_exclude_nuclide(data):
+    """
+    Check if nuclide should be excluded based on half-life criteria
+    Exclude if: 1) no half-life or 2) half-life units are energy units (keV, MeV, eV)
+    """
+    halflives = data['halflives']
+    halflife_units = data['halflifeUnits']
+    
+    # Check each level
+    for i, (halflife, unit) in enumerate(zip(halflives, halflife_units)):
+        # If any level has no half-life, exclude the entire nuclide
+        if halflife == 'null' or halflife is None or halflife == '' or halflife == 0:
+            return True
+        
+        # Additional check for string 'null'
+        if isinstance(halflife, str) and halflife.strip().lower() == 'null':
+            return True
+            
+        # If any level has energy units instead of time units, exclude
+        if unit != 'null' and unit is not None:
+            unit_str = str(unit).strip()
+            energy_units = ['keV', 'MeV', 'eV', 'kev', 'mev', 'ev']
+            if any(energy_unit in unit_str for energy_unit in energy_units):
+                return True
+    
+    return False
 
 def main():
     input_file = INPUT_FILE
@@ -210,8 +262,15 @@ def main():
     
     # Process each isotope (combining all its levels)
     nuclides = {}
+    excluded_count = 0
     for (z, n, name), isotope_rows in isotope_groups.items():
         data = create_combined_entry(isotope_rows)
+        
+        # Check if this nuclide should be excluded
+        if should_exclude_nuclide(data):
+            excluded_count += 1
+            continue
+            
         nuclide_id = name  # Use just the name as ID (e.g., "185Tl")
         nuclides[nuclide_id] = data
     
@@ -247,6 +306,7 @@ def main():
         f.write(']$\n')
     
     print(f"Successfully converted {len(sorted_nuclides)} nuclides to {output_file}")
+    print(f"Excluded {excluded_count} nuclides (no half-life or energy units)")
     print(f"Covers {len(set(d['z'] for d in nuclides.values()))} elements")
     
     # Print statistics
