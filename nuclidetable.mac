@@ -3286,5 +3286,5 @@
     )$
     
     /* This function formats a nuclide name for LaTeX display */
-    nucl_display(nuclide_id) := sconcat("\\mathrm{", nuclide_id, "}")$
+    nucl_display(nuclide_id) := sconcat("\\ce{", nuclide_id, "}")$
 ]$

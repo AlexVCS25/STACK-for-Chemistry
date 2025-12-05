@@ -20,7 +20,14 @@
 7. [Chemical Reactions Module](#chemical-reactions-module)
    - [Reaction Data Retrieval Functions](#reaction-data-retrieval-functions)
    - [Available Reactions](#available-reactions)
-8. [Usage Examples](#usage-examples)
+8. [Nuclide Database Module](#nuclide-database-module)
+   - [Data Structure](#data-structure)
+   - [Core Data Retrieval Functions](#core-data-retrieval-functions)
+   - [Decay Information Functions](#decay-information-functions)
+   - [Navigation and Filtering Functions](#navigation-and-filtering-functions)
+   - [Utility Functions](#utility-functions)
+   - [Practical Examples](#practical-examples)
+9. [Usage Examples](#usage-examples)
 
 ---
 
@@ -42,6 +49,9 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 
 /* Load reactions module */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+
+/* Load nuclide database module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/nuclidetable.mac");
 ```
 
 You can load modules independently or together as needed. See [Module Dependencies](#module-dependencies) below for information on which modules depend on others.
@@ -85,16 +95,21 @@ These modules have **no dependencies** and can be loaded independently:
    - No dependencies on other modules
    - Can be used alone for reaction stoichiometry data
 
+3. **Nuclide Database Module (`nuclidetable.mac`)**
+   - Completely standalone
+   - No dependencies on other modules
+   - Can be used alone for nuclear data
+
 ### Dependent Modules
 
 These modules have dependencies and require other modules to be loaded:
 
-3. **Acid-Base Chemistry Module (`acidbase.mac`)**
+4. **Acid-Base Chemistry Module (`acidbase.mac`)**
    - **Standalone for basic functions**: Works independently for pKa/pKb data retrieval
    - **Requires `pse.mac`**: For `chem_count_H()` function which uses `chem_parse_formula()`
    - **Note**: If `pse.mac` is not loaded, `chem_count_H()` will return `0` or cause an error
 
-4. **Thermodynamic Tables Module (`thermodynamictables.mac`)**
+5. **Thermodynamic Tables Module (`thermodynamictables.mac`)**
    - **Standalone for basic functions**: Works independently for direct thermodynamic data retrieval
    - **Requires `reactions.mac`**: For reaction-based thermodynamic calculations (functions with `_by_name` suffix)
 
@@ -110,6 +125,7 @@ stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/r
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");  /* Requires pse.mac for chem_count_H() */
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
 stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");  /* Requires reactions.mac for *_by_name functions */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/nuclidetable.mac");
 ```
 
 #### Option 2: Acid-Base with H-Counting
@@ -1424,6 +1440,255 @@ The reactions database includes:
 
 ---
 
+## Nuclide Database Module
+
+The nuclide database module provides comprehensive nuclear data from the NNDC NuDat database, including information about radioactive decay, half-lives, and nuclear properties.
+
+### Data Structure
+
+The nuclide database contains the following information for each nuclide:
+- **Nuclide ID**: String identifier (e.g., "^{185}Tl")
+- **Z**: Atomic number (number of protons)
+- **N**: Neutron number
+- **Level Energies**: Array of excited state energies in MeV [0, 0.455, ...] (0 for ground state)
+- **Half-lives**: Array of half-life values [19.5, 1.8, ...]
+- **Half-life Units**: Array of units ["s", "ms", "us", "ns", "ps", "fs", "m", "h", "d", "y", "keV", "MeV", "eV"]
+- **Decay Modes**: Nested array of decay modes for each level
+- **Branching Ratios**: Nested array of branching ratios (percentages) matching decay modes
+
+### Core Data Retrieval Functions
+
+#### `nucl_data_all(nuclide_id)`
+Returns all nuclear data for a given nuclide.
+
+**Parameters:**
+- `nuclide_id`: String identifier of the nuclide (e.g., "^{14}C")
+
+**Returns:** Complete data array or `false` if nuclide not found
+
+**Example:**
+```maxima
+nucl_data_all("^{14}C");
+/* Returns: [6, 8, [0], [5686], ["y"], [["B-"]], [[100]]] */
+```
+
+#### `nucl_data_Z(nuclide_id)`
+Returns the atomic number (Z) for a given nuclide.
+
+**Example:**
+```maxima
+nucl_data_Z("^{14}C");  /* Returns: 6 */
+```
+
+#### `nucl_data_N(nuclide_id)`
+Returns the neutron number (N) for a given nuclide.
+
+**Example:**
+```maxima
+nucl_data_N("^{14}C");  /* Returns: 8 */
+```
+
+#### `nucl_mass_number(nuclide_id)`
+Returns the mass number (A = Z + N) for a given nuclide.
+
+**Example:**
+```maxima
+nucl_mass_number("^{14}C");  /* Returns: 14 */
+```
+
+### Decay Information Functions
+
+#### `nucl_halflife(nuclide_id)`
+Returns the half-life of the ground state for a given nuclide with units.
+
+**Example:**
+```maxima
+nucl_halflife("^{14}C");     /* Returns: stackunits(5686, "y") */
+nucl_halflife("^{210}Po");   /* Returns: stackunits(138.378, "d") */
+nucl_halflife("^{8}Li");     /* Returns: stackunits(838.79, "ms") */
+```
+
+#### `nucl_decay_modes(nuclide_id)`
+Returns the decay modes for the ground state of a given nuclide.
+
+**Example:**
+```maxima
+nucl_decay_modes("^{14}C");      /* Returns: ["B-"] */
+nucl_decay_modes("^{40}K");      /* Returns: ["B-", "B+"] */
+nucl_decay_modes("^{210}Po");    /* Returns: ["A"] */
+```
+
+#### `nucl_branching_ratios(nuclide_id)`
+Returns the branching ratios (in percent) for the ground state decay modes.
+
+**Example:**
+```maxima
+nucl_branching_ratios("^{14}C");  /* Returns: [100] */
+nucl_branching_ratios("^{40}K");  /* Returns: [89.28, 10.72] */
+```
+
+### Navigation and Filtering Functions
+
+#### `nucl_array()`
+Returns an array of all nuclide IDs in the database.
+
+**Example:**
+```maxima
+nucl_array();
+/* Returns: ["n", "^{3}H", "^{6}He", "^{8}He", ...] */
+```
+
+#### `nucl_array_radioactive()`
+Returns an array of all radioactive nuclide IDs.
+
+**Example:**
+```maxima
+nucl_array_radioactive();
+/* Returns array of all nuclides that undergo radioactive decay */
+```
+
+#### `nucl_array_alpha()`
+Returns an array of nuclide IDs that undergo pure alpha decay (100% alpha decay).
+
+**Example:**
+```maxima
+nucl_array_alpha();
+/* Returns: ["^{210}Po", "^{212}Po", "^{218}Rn", ...] */
+```
+
+#### `nucl_array_betaminus()`
+Returns an array of nuclide IDs that undergo pure beta-minus decay.
+
+**Example:**
+```maxima
+nucl_array_betaminus();
+/* Returns: ["^{3}H", "^{14}C", "^{32}P", ...] */
+```
+
+#### `nucl_array_betaplus()`
+Returns an array of nuclide IDs that undergo pure beta-plus decay.
+
+**Example:**
+```maxima
+nucl_array_betaplus();
+/* Returns: ["^{11}C", "^{13}N", "^{15}O", ...] */
+```
+
+#### `nucl_array_ec()`
+Returns an array of nuclide IDs that undergo pure electron capture.
+
+**Example:**
+```maxima
+nucl_array_ec();
+/* Returns: ["^{7}Be", "^{37}Ar", "^{55}Fe", ...] */
+```
+
+### Utility Functions
+
+#### `nucl_display(nuclide_id)`
+Formats a nuclide name for LaTeX display in STACK using mhchem notation.
+
+**Example:**
+```maxima
+nucl_display("^{14}C");  /* Returns: "\\ce{^{14}C}" */
+```
+
+**Note:** This function wraps the nuclide ID in `\ce{...}` for proper chemical notation. Requires `\(\require{mhchem}\)` in your question text.
+
+### Practical Examples
+
+#### Example 1: Carbon Dating Problem
+```maxima
+/* Get half-life of Carbon-14 */
+halflife_C14: nucl_halflife("^{14}C");  /* 5686 years */
+decay_mode: nucl_decay_modes("^{14}C");  /* ["B-"] */
+
+/* Calculate decay constant */
+lambda: ln(2) / 5686;  /* per year */
+```
+
+#### Example 2: Alpha Decay Chain
+```maxima
+/* Find all pure alpha emitters */
+alpha_emitters: nucl_array_alpha();
+
+/* Check specific alpha decay */
+nucl_decay_modes("^{238}U");     /* Alpha decay */
+nucl_halflife("^{238}U");        /* 4.46×10^9 years */
+```
+
+#### Example 3: Medical Isotopes
+```maxima
+/* Technetium-99m (medical imaging) */
+nucl_halflife("^{99}Tc");        /* Metastable state data */
+nucl_decay_modes("^{99}Tc");     /* Internal transition */
+
+/* Iodine-131 (thyroid treatment) */
+nucl_halflife("^{131}I");        /* 8.0247 days */
+nucl_decay_modes("^{131}I");     /* Beta-minus decay */
+```
+
+#### Example 4: Nuclear Reactor Physics
+```maxima
+/* Uranium fuel */
+nucl_halflife("^{235}U");        /* 7.04×10^8 years */
+nucl_halflife("^{238}U");        /* 4.46×10^9 years */
+
+/* Fission products */
+nucl_halflife("^{137}Cs");       /* 30.007 years */
+nucl_halflife("^{90}Sr");        /* 28.91 years */
+```
+
+### Decay Mode Notation
+
+The database uses the following notation for decay modes:
+- **A**: Alpha decay (α)
+- **B-**: Beta-minus decay (β⁻)
+- **B+**: Beta-plus decay (β⁺)
+- **EC**: Electron capture
+- **IT**: Isomeric transition
+- **SF**: Spontaneous fission
+- **N**: Neutron emission
+- **P**: Proton emission
+- **2B-**: Double beta decay
+- **B-N**: Beta-delayed neutron emission
+- **ECP**: Electron capture followed by proton emission
+- And many other specialized decay modes
+
+### Error Handling
+
+All functions return `false` when:
+- The nuclide ID is not found in the database
+- The requested data is not available
+- Invalid parameters are provided
+
+### Integration with STACK Questions
+
+The nuclide module integrates seamlessly with STACK questions:
+
+```maxima
+/* In question variables */
+random_isotope: rand(nucl_array_radioactive());
+isotope_halflife: nucl_halflife(random_isotope);
+isotope_decay: nucl_decay_modes(random_isotope);
+isotope_display: nucl_display(random_isotope);
+
+/* In question text */
+/* The isotope {@isotope_display@} has a half-life of 
+   {@isotope_halflife@} and undergoes {@isotope_decay@} decay. */
+```
+
+```latex
+/* Question Text */
+\(\require{mhchem}\)
+
+<p>The isotope {@isotope_display@} has a half-life of {@isotope_halflife@}.</p>
+```
+
+This comprehensive nuclide database enables the creation of sophisticated nuclear physics and radiochemistry problems in STACK assessments.
+
+---
+
 ## Usage Examples
 
 ### Example 1: Random Element Properties
@@ -1596,9 +1861,9 @@ stack_include("acidbase.mac");
 
 /* Select a weak acid */
 acid: rand(chem_weak_acid_array());
-
-/* Get conjugate base and properties */
 base: chem_acidbase_conjugate_base(acid);
+
+/* Get pKa */
 pka: chem_acidbase_data(acid, "pKa");
 ka: chem_acidbase_Ka(acid);
 
@@ -2022,68 +2287,6 @@ Die folgenden Datenfelder können mit `chem_data()` oder `chem_data_units()` abg
 | `Density` | Float | g/cm³ | Dichte |
 | `GroupBlock` | String | - | Elementkategorie |
 | `YearDiscovered` | Integer/String | - | Entdeckungsjahr |
-
----
-
-## Verwendungsbeispiele
-
-### Beispiel 1: Zufällige Elementeigenschaften
-```maxima
-/* Zufälliges Element auswählen */
-element: rand(chem_element_array());
-
-/* Eigenschaften abrufen */
-name: chem_data(element, "Name");
-z: chem_data(element, "AtomicNumber");
-masse: chem_data_units(element, "AtomicMass");
-config: chem_data(element, "ElectronConfiguration");
-```
-
-### Beispiel 2: Zufälliges Hauptgruppenelement
-```maxima
-/* Zufälliges Hauptgruppenelement auswählen */
-element_hg: rand(chem_element_array_maingroup());
-
-/* Hauptgruppennummer abrufen */
-hg_num: chem_data(element_hg, "MainGroup");
-```
-
-### Beispiel 3: Zufälliges Element aus Periode 3
-```maxima
-/* Zufälliges Element aus Periode 3 auswählen */
-element_p3: rand(chem_element_period(3));
-
-/* Eigenschaften abrufen */
-name: chem_data(element_p3, "Name");
-en: chem_data(element_p3, "Electronegativity");
-```
-
-### Beispiel 4: Zufälliges Alkalimetall
-```maxima
-/* Zufälliges Alkalimetall (Hauptgruppe 1) auswählen */
-alkali: rand(chem_element_maingroup(1));
-
-/* Ionisierungsenergie abrufen */
-ie: chem_data_units(alkali, "IonizationEnergy");
-```
-
-### Beispiel 5: Zufälliges Halogen
-```maxima
-/* Zufälliges Halogen (Hauptgruppe 7) auswählen */
-halogen: rand(chem_element_maingroup(7));
-
-/* Elektronenaffinität abrufen */
-ea: chem_data(halogen, "ElectronAffinity");
-```
-
-### Beispiel 6: Element nach Ordnungszahl
-```maxima
-/* Element mit Ordnungszahl 26 abrufen */
-element: chem_element(26);  /* Gibt "Fe" zurück */
-
-/* Namen abrufen */
-name: chem_data(element, "Name");  /* Gibt "Eisen" zurück */
-```
 
 ---
 

@@ -22,6 +22,7 @@ The goal of this project is to develop new chemistry functions and comprehensive
 - **Independent Modules** (load in any order):
   - `pse.mac` - Periodic table data
   - `reactions.mac` - Reaction database
+  - `nuclidetable.mac` - Nuclide database
 
 - **Dependent Modules**:
   - `acidbase.mac` - Works standalone for pKa/pKb data, but requires `pse.mac` for `chem_count_H()` function
@@ -34,6 +35,7 @@ stack_include("pse.mac");                     /* Load first - required by acidba
 stack_include("acidbase.mac");                /* Requires pse.mac for chem_count_H() */
 stack_include("reactions.mac");               /* Load before thermodynamictables.mac */
 stack_include("thermodynamictables.mac");     /* Requires reactions.mac for *_by_name functions */
+stack_include("nuclidetable.mac");            /* Load for nuclide database */
 ```
 
 **Important Note on Forbidden Functions:**
@@ -105,6 +107,15 @@ Database of common chemical reactions with stoichiometry:
 - `chem_reaction_decomposition_array` - Get decomposition reactions
 
 **Note:** The thermodynamics module (`thermodynamictables.mac`) and reactions module (`reactions.mac`) work together. Load both modules to use reaction-based thermodynamic calculations.
+
+### Nuclide Database Module (`nuclidetable.mac`)
+
+Functions for accessing nuclear data:
+- `nucl_halflife` - Retrieve half-life of a nuclide
+- `nucl_decay_modes` - Retrieve decay modes of a nuclide
+- `nucl_branching_ratios` - Retrieve branching ratios of a nuclide
+- `nucl_array_alpha` - Get array of all alpha emitters
+- `nucl_array_betaminus` - Get array of all beta- emitters
 
 ### Using Chemical Formulas in Questions
 
@@ -301,6 +312,7 @@ We welcome contributions from developers of all skill levels! Here are ways you 
 - `acidbase.mac` - Acid-base chemistry functions and molecular data
 - `thermodynamictables.mac` - Thermodynamic data and calculation functions
 - `reactions.mac` - Chemical reactions database with stoichiometry
+- `nuclidetable.mac` - Nuclear data and decay database
 - `README.md` - This documentation file
 - `ChemLibraryDocumentation.md` - Detailed function documentation
 
