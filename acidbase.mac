@@ -165,7 +165,7 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, in_brace, 
                     charge: 1
                 ) else (
                     /* Extract number before + */
-                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str))),
+                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str) - 1)),
                     charge: num_val
                 )
             ) else if sequal(substring(charge_str, slength(charge_str)), "-") then (
@@ -173,7 +173,7 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, in_brace, 
                     charge: -1
                 ) else (
                     /* Extract number before - */
-                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str))),
+                    num_val: chem_string_to_number(substring(charge_str, 1, slength(charge_str) - 1)),
                     charge: -num_val
                 )
             )
@@ -225,12 +225,12 @@ chem_remove_charge(formula) := block([chars, i, n, result, in_brace, skip_next],
                 /* Previous char is a digit, this is likely part of charge notation */
                 /* We need to remove the digit(s) before the +/- as well */
                 /* Back up and remove digits */
-                result: substring(result, 1, slength(result)),  /* Remove last char */
-                /* Keep removing digits from the end of result */H2O"
+                result: substring(result, 1, slength(result) - 1),  /* Remove last char */
+                /* Keep removing digits from the end of result */
                 while slength(result) > 0 and 
                       cgreaterp(substring(result, slength(result)), "/") and 
                       clessp(substring(result, slength(result)), ":") do (
-                    result: substring(result, 1, slength(result))
+                    result: substring(result, 1, slength(result) - 1)
                 ),
                 i: i + 1
             ) else (
@@ -322,7 +322,7 @@ chem_acidbase_conjugate_acid(substance) := block([charge, acid_formula, h_count,
     parsed: chem_parse_formula(substance),
     if is(parsed = false) then return(false),
     
-    /* Reconstruct formula with new H count */H2O"
+    /* Reconstruct formula with new H count */
     result: "",
     has_h: false,
     
