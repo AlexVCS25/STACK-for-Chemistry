@@ -32,10 +32,10 @@
 /* Database structure: ["Formula", [pKa, pKb]]
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
-    ["H+", [0, 14]],
-    ["H2O", [14, 0]],
-    ["HCl", [-7.0, 21]],
-    ["H2SO4", [-2.0, 16]],
+    ["H+", [-1.74, null]],
+    ["H2O", [15.7, 15.7]],
+    ["HCl", [-7.0, 21.0]],
+    ["H2SO4", [-3.0, 17.0]],
     ["HSO4-", [1.92, 12.08]],
     ["HNO3", [-1, 15]],
     ["H3PO4", [1.96, 12.04]],
@@ -68,23 +68,8 @@ chem_acidbase_data_all(substance) := block([data],
 /* Returns a specific property (pKa or pKb) for a substance */
 chem_acidbase_data(substance, property) := assoc(property, chem_acidbase_data_all(substance))$
 
-/* Calculates Ka from pKa for a given substance */
-chem_acidbase_Ka(substance) := block([pKa_val],
-    pKa_val: chem_acidbase_data(substance, "pKa"),
-    if is(pKa_val = false) or is(pKa_val = null) then
-        return(null)
-    else
-        return(10^(-pKa_val))
-)$
-
-/* Calculates Kb from pKb for a given substance */
-chem_acidbase_Kb(substance) := block([pKb_val],
-    pKb_val: chem_acidbase_data(substance, "pKb"),
-    if is(pKb_val = false) or is(pKb_val = null) then
-        return(null)
-    else
-        return(10^(-pKb_val))
-)$
+/* Returns a chemical formula wrapped in \ce{...} for proper LaTeX rendering with mhchem */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
 
 /****************************************************************/
 /*                                                              */
