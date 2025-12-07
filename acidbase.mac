@@ -183,6 +183,21 @@ chem_parse_charge(formula) := block([chars, i, n, charge, charge_str, in_brace, 
     return(charge)
 )$
 
+/* Helper function to convert string to number for charge parsing */
+chem_string_to_number(str) := block([result, i, char],
+    if sequal(str, "") then return(0),
+    result: 0,
+    for i: 1 thru slength(str) do (
+        char: substring(str, i, i),
+        if cgreaterp(char, "/") and clessp(char, ":") then (
+            result: result * 10 + (cint(char) - 48)
+        ) else (
+            return(0)  /* Invalid character, return 0 */
+        )
+    ),
+    return(result)
+)$
+
 /* Helper function to remove charge notation from chemical formula.
    Removes +, -, and ^{...} charge indicators from formulas.
    Requires pse.mac to be loaded for chem_string_to_number() function.
