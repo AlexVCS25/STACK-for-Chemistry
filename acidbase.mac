@@ -32,7 +32,7 @@
 /* Database structure: ["Formula", [pKa, pKb]]
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
-    ["H+", [0, null]],
+    ["H+", [0, 14]],
     ["H2O", [14, 0]],
     ["HCl", [-7.0, 21]],
     ["H2SO4", [-2.0, 16]],
@@ -226,7 +226,7 @@ chem_remove_charge(formula) := block([chars, i, n, result, in_brace, skip_next],
                 /* We need to remove the digit(s) before the +/- as well */
                 /* Back up and remove digits */
                 result: substring(result, 1, slength(result)),  /* Remove last char */
-                /* Keep removing digits from the end of result */H2O"
+                /* Keep removing digits from the end of result */
                 while slength(result) > 0 and 
                       cgreaterp(substring(result, slength(result)), "/") and 
                       clessp(substring(result, slength(result)), ":") do (
@@ -322,7 +322,7 @@ chem_acidbase_conjugate_acid(substance) := block([charge, acid_formula, h_count,
     parsed: chem_parse_formula(substance),
     if is(parsed = false) then return(false),
     
-    /* Reconstruct formula with new H count */H2O"
+    /* Reconstruct formula with new H count */
     result: "",
     has_h: false,
     
@@ -363,44 +363,28 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 /* Returns an array of all substances in the database */
 chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
 
-/* Returns an array of all acids (substances with pKa values that are not null) */
-chem_acid_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(first(second(x)) = null))),
-    map(first, filtered)
-)$
-
-/* Returns an array of all bases (substances with pKb values that are not null) */
-chem_base_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(second(second(x)) = null))),
-    map(first, filtered)
-)$
-
-/* Returns an array of weak acids (pKa > 0 and not null) */
+/* Returns an array of weak acids (pKa > 0) */
 chem_weak_acid_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(first(second(x)) = null) and first(second(x)) > 0)),
     map(first, filtered)
 )$
 
-/* Returns an array of weak bases (0 < pKb < 14 and not null) */
+/* Returns an array of weak bases (pKb > 0 and < 14) */
 chem_weak_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(second(second(x)) = null) and 
-        second(second(x)) > 0 and 
-        second(second(x)) < 14)),
+        not is(second(second(x)) = null) and second(second(x)) > 0 and second(second(x)) < 14)),
     map(first, filtered)
 )$
 
-/* Returns an array of strong acids (pKa < 0 and not null) */
+/* Returns an array of strong acids (pKa = 0 or pKa < 0) */
 chem_strong_acid_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(first(second(x)) = null) and first(second(x)) < 0)),
     map(first, filtered)
 )$
 
-/* Returns an array of strong bases (pKb <= 0 and not null) */
+/* Returns an array of strong bases (pKb = 0 or pKb < 0) */
 chem_strong_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
         not is(second(second(x)) = null) and second(second(x)) <= 0)),
