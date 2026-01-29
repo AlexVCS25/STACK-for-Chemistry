@@ -180,17 +180,52 @@ pkb: chem_acidbase_pKb("CH3COO-");  /* Returns 9.24 */
 nH: chem_acidbase_nH("H2SO4");      /* Returns 2 */
 nH: chem_acidbase_nH("CH3COOH");    /* Returns 1 */
 
-/* Random weak acid for questions */
+/* ===== RANDOM SELECTION EXAMPLES ===== */
+
+/* Select a random acid from ALL acids in database */
+random_acid: rand(chem_acid_array());
+
+/* Select a random WEAK acid (pKa > 0) */
+random_weak_acid: rand(chem_weak_acid_array());
+
+/* Select a random STRONG acid (pKa < 0) */
+random_strong_acid: rand(chem_strong_acid_array());
+
+/* Select a random base */
+random_base: rand(chem_base_array());
+
+/* Select a random weak base */
+random_weak_base: rand(chem_weak_base_array());
+
+/* ===== RANDOM SELECTION BY NUMBER OF ACIDIC PROTONS ===== */
+
+/* Select a random monoprotic acid (1 acidic proton) */
+random_monoprotic: rand(chem_acid_array_nH(1));
+
+/* Select a random diprotic acid (2 acidic protons) */
+random_diprotic: rand(chem_acid_array_nH(2));
+
+/* Select a random triprotic acid (3 acidic protons) */
+random_triprotic: rand(chem_acid_array_nH(3));
+
+/* Select a random WEAK diprotic acid */
+random_weak_diprotic: rand(chem_weak_acid_array_nH(2));
+
+/* Select a random STRONG monoprotic acid */
+random_strong_monoprotic: rand(chem_strong_acid_array_nH(1));
+
+/* ===== COMPLETE QUESTION VARIABLE EXAMPLE ===== */
+/* For a pH calculation question with a random weak acid: */
 acid: rand(chem_weak_acid_array());
+acid_display: chem_display(acid);           /* For LaTeX display */
+pka_value: chem_acidbase_pKa(acid);         /* Get pKa */
+ka_value: chem_acidbase_Ka(acid);           /* Get Ka */
+conj_base: chem_acidbase_conjugate_base(acid);  /* Get conjugate base */
+conj_base_display: chem_display(conj_base);     /* For LaTeX display */
+num_protons: chem_acidbase_nH(acid);        /* Number of acidic H */
 
 /* Get all diprotic acids (2 acidic protons) */
 diprotic: chem_acid_array_nH(2);    /* Returns ["H2SO4", "H2CO3", "H2S", ...] */
-
-/* Get only weak diprotic acids */
-weak_diprotic: chem_weak_acid_array_nH(2);  /* Returns ["H2CO3", "H2S", "H2O2", ...] */
-
-/* Get triprotic acids */
-triprotic: chem_acid_array_nH(3);   /* Returns ["H3PO4", "H3BO3", "H3AsO4"] */
 ```
 
 **Note:** This module uses a flat database structure. All acid-base pairs and their pKa/pKb values are stored directly - no formula parsing is performed. Returns `null` for unknown substances or `""` for conjugate lookups that fail.
