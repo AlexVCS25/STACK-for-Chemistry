@@ -80,6 +80,7 @@ Functions for accessing periodic table data:
 - `chem_units` - Get units for specific properties
 - `chem_parse_formula` - Parse chemical formula into element-count pairs
 - `chem_molar_mass` - Calculate molar mass from chemical formula
+- `chem_display` - Wrap formula in `\ce{...}` for LaTeX rendering
 
 #### Examples:
 ```maxima
@@ -125,6 +126,9 @@ M_H2SO4: chem_molar_mass("H2SO4");  /* Returns 98.09*g*mol^(-1) */
 /* Calculate molar mass of glucose */
 M_glucose: chem_molar_mass("C6H12O6");  /* Returns 180.18*g*mol^(-1) */
 
+/* Wrap formula for LaTeX display */
+formula_display: chem_display("H2SO4");  /* Returns "\\ce{H2SO4}" */
+
 /* Get formatted electron configuration for display */
 config_Fe: chem_electron_config("Fe");  
 /* Returns "[\mathrm{Ar}] 4\mathrm{s}^{2} 3\mathrm{d}^{6}" for LaTeX display */
@@ -157,9 +161,6 @@ A standalone module providing acid-base chemistry data through database lookup:
 - `chem_acid_array_nH(n)` - Get array of acids with exactly n acidic protons
 - `chem_strong_acid_array_nH(n)` - Get array of strong acids with n acidic protons
 - `chem_weak_acid_array_nH(n)` - Get array of weak acids with n acidic protons
-
-**Display Function:**
-- `chem_display(substance)` - Wrap formula in `\ce{...}` for LaTeX rendering
 
 #### Examples:
 ```maxima

@@ -130,9 +130,6 @@ chem_acidbase_conjugate_acid(base) := block([idx],
     if is(idx = 0) then "" else %_ACIDBASE_DATA[idx]
 )$
 
-/* Basic helper for formula display */
-chem_display(substance) := sconcat("\\ce{", substance, "}")$
-
 /* Navigation arrays */
 
 /* All acids */

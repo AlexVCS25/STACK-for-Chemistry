@@ -270,6 +270,16 @@ chem_molar_mass(formula) := block([parsed, total_mass, elem_data],
     return(stackunits(total_mass, g*mol^(-1)))
 )$
 
+/****************************************************************/
+/*                                                              */
+/*  Chemical Formula Display Function                           */
+/*                                                              */
+/****************************************************************/
+
+/* This function wraps a chemical formula in \ce{} for LaTeX/mhchem rendering.
+   Example: chem_display("H2SO4") returns "\\ce{H2SO4}" */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
+
 /* 
    This is the order of data below.  For efficiency, we don't store all the data as nested lists with repeaed fields.
    The functions above return formatted data for use with "assoc".
