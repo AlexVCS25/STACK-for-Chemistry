@@ -62,12 +62,12 @@
 /* Safe lookup for %_ACIDBASE_DATA:
    Matches the provided query against the first element of each entry.
    Accepts either exact match or stringified match to be resilient to query types. */
-chem_acidbase_lookup(query) := block([entry, qstr],
-    qstr: if stringp(query) then query else string(query),
+chem_acidbase_lookup(qry) := block([entry, qrystr],
+    qrystr: if stringp(qry) then qry else string(qry),
     for entry in %_ACIDBASE_DATA do (
         /* entry is expected to be [formula, [pKa, conjugate]] */
         if not atom(entry) then (
-            if first(entry) = query or first(entry) = qstr then return(second(entry))
+            if first(entry) = qry or first(entry) = qrystr then return(second(entry))
         )
     ),
     return(false)
