@@ -78,6 +78,8 @@ Functions for accessing periodic table data:
 - `chem_element_array` - Get arrays of elements by various criteria
 - `chem_electron_config` - Get formatted electron configurations
 - `chem_units` - Get units for specific properties
+- `chem_parse_formula` - Parse chemical formula into element-count pairs
+- `chem_molar_mass` - Calculate molar mass from chemical formula
 
 #### Examples:
 ```maxima
@@ -99,14 +101,29 @@ elem_26: chem_element(26);  /* Returns "Fe" */
 /* Get all halogens (group 17) */
 halogens: chem_element_group(17);  /* Returns ["F", "Cl", "Br", "I", "At", "Ts"] */
 
+/* Get all noble gases (main group 8) */
+noble_gases: chem_element_maingroup(8);  /* Returns ["He", "Ne", "Ar", "Kr", "Xe", "Rn", "Og"] */
+
+/* Get all main group elements */
+main_group: chem_element_array_maingroup();  /* Returns elements with MainGroup > 0 */
+
+/* Get elements in period 3 */
+period3: chem_element_period(3);  /* Returns ["Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"] */
+
 /* Get element at specific position in periodic table */
 elem_period4_group6: chem_element_period_group(4, 6);  /* Returns "Cr" */
 
-/* Calculate molar mass of glucose */
-M_glucose: chem_molar_mass("C6H12O6");  /* Returns 180.18*g/mol */
+/* Get element by period and main group */
+elem_p3_mg1: chem_element_period_maingroup(3, 1);  /* Returns "Na" */
 
 /* Parse a chemical formula */
-parsed: chem_parse_formula("Ca(OH)2");  /* Note: parentheses not fully supported */
+parsed: chem_parse_formula("H2SO4");  /* Returns [["H", 2], ["S", 1], ["O", 4]] */
+
+/* Calculate molar mass of sulfuric acid */
+M_H2SO4: chem_molar_mass("H2SO4");  /* Returns 98.09*g*mol^(-1) */
+
+/* Calculate molar mass of glucose */
+M_glucose: chem_molar_mass("C6H12O6");  /* Returns 180.18*g*mol^(-1) */
 
 /* Get formatted electron configuration for display */
 config_Fe: chem_electron_config("Fe");  
