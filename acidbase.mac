@@ -59,28 +59,32 @@
 /*                                                              */
 /****************************************************************/
 
-/* Returns all data for a given substance */
+/* Returns all data for a given substance (robust, explicit control flow) */
 chem_acidbase_data_all(substance) := block([data, pKa_raw, pKa_val, pKb_val, conjugate],
+    /* Lookup raw entry */
     data: assoc(substance, %_ACIDBASE_DATA),
-    if is(data = false) then
-        return(false)
-    else (
-        pKa_raw: first(data),
-        conjugate: second(data),
-        /* Normalize missing conjugate markers */
-        if sequal(conjugate, "none") then conjugate: "",
-        /* Coerce pKa: accept only numeric pKa values from the table; treat strings as missing */
-        if numberp(pKa_raw) then
-            pKa_val: pKa_raw
-        else
-            pKa_val: null,
-        /* Calculate pKb only when conjugate exists and pKa is numeric */
-        if sequal(conjugate, "") or not numberp(pKa_val) then
-            pKb_val: null
-        else
-            pKb_val: 14 - pKa_val,
-        return([["pKa", pKa_val], ["pKb", pKb_val], ["conjugate", conjugate]])
-    )
+    if data = false then return(false),
+
+    /* Extract raw values */
+    pKa_raw: first(data),
+    conjugate: second(data),
+
+    /* Normalize missing conjugate markers */
+    if sequal(conjugate, "none") then conjugate: "",
+
+    /* Coerce pKa: accept only numeric pKa values from the table; treat non-numeric as null */
+    if numberp(pKa_raw) then
+        pKa_val: pKa_raw
+    else
+        pKa_val: null,
+
+    /* Calculate pKb only when conjugate exists and pKa is numeric */
+    if sequal(conjugate, "") or not numberp(pKa_val) then
+        pKb_val: null
+    else
+        pKb_val: 14 - pKa_val,
+
+    return([["pKa", pKa_val], ["pKb", pKb_val], ["conjugate", conjugate]])
 )$
 
 /* Returns a specific property (pKa, pKb, or conjugate) for a substance */
@@ -438,18 +442,24 @@ chem_strong_acid_array() := block([arr],
     ))
 )$
 
-/* Returns an array of strong bases (pKb <= 0) where pKb = 14 - pKa(acid) */
-chem_strong_base_array() := block([arr],
+/* Returns an array of strong bases (pKb <= 0) where pKb = 14 - pKa(acid)
+   Uses chem_acidbase_data to ensure pKa is the normalized numeric value. */
+chem_strong_base_array() := block([arr, filtered],
     arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        block([pKa, pKb, conj],
-            conj: chem_acidbase_data(s, "conjugate"),
-            pKa: chem_acidbase_data(s, "pKa"),
-            if not is(conj = false) and not sequal(conj, "") and numberp(pKa) then (
+    filtered: sublist(arr, lambda([s],
+        block([meta, pKa, conj, pKb],
+            meta: chem_acidbase_data_all(s),
+            /* meta may be false -> skip */
+            if meta = false then return(false),
+            pKa: assoc("pKa", meta),
+            conj: assoc("conjugate", meta),
+            if not sequal(conj, "") and numberp(pKa) then (
                 pKb: 14 - pKa,
                 pKb <= 0
             ) else
                 false
         )
-    ))
+    )),
+    /* return simple list of formula strings (suitable for rand()) */
+    map(first, filtered)
 )$
