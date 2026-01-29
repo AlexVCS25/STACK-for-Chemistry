@@ -2,6 +2,22 @@
 
 This repository contains chemistry functions and databases for the STACK question type in Moodle. STACK (System for Teaching and Assessment using a Computer algebra Kernel) is a question type for Moodle that enables mathematical and scientific assessment.
 
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Modules](#modules)
+  - [Module Loading and Dependencies](#module-loading-and-dependencies)
+  - [Periodic Table Module (`pse.mac`)](#periodic-table-module-psemac)
+  - [Acid-Base Chemistry Module (`acidbase.mac`)](#acid-base-chemistry-module-acidbasemac)
+  - [Thermodynamic Tables Module (`thermodynamictables.mac`)](#thermodynamic-tables-module-thermodynamictablesmac)
+  - [Chemical Reactions Module (`reactions.mac`)](#chemical-reactions-module-reactionsmac)
+  - [Nuclide Database Module (`nuclidetable.mac`)](#nuclide-database-module-nuclidetablemac)
+- [Using Chemical Formulas in Questions](#using-chemical-formulas-in-questions)
+- [Getting Started](#getting-started)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+
 ## Purpose
 
 The goal of this project is to develop new chemistry functions and comprehensive databases for STACK in Moodle. This includes:
@@ -63,6 +79,40 @@ Functions for accessing periodic table data:
 - `chem_electron_config` - Get formatted electron configurations
 - `chem_units` - Get units for specific properties
 
+#### Examples:
+```maxima
+/* Get atomic mass of iron */
+mass_Fe: chem_data("Fe", "AtomicMass");  /* Returns 55.85 */
+
+/* Get atomic mass with units */
+mass_Fe_units: chem_data_units("Fe", "AtomicMass");  /* Returns 55.85*g*mol^(-1) */
+
+/* Get electronegativity of oxygen */
+en_O: chem_data("O", "Electronegativity");  /* Returns 3.44 */
+
+/* Get melting point of sodium with units */
+mp_Na: chem_data_units("Na", "MeltingPoint");  /* Returns 370.95*K */
+
+/* Find element by atomic number */
+elem_26: chem_element(26);  /* Returns "Fe" */
+
+/* Get all halogens (group 17) */
+halogens: chem_element_group(17);  /* Returns ["F", "Cl", "Br", "I", "At", "Ts"] */
+
+/* Get element at specific position in periodic table */
+elem_period4_group6: chem_element_period_group(4, 6);  /* Returns "Cr" */
+
+/* Calculate molar mass of glucose */
+M_glucose: chem_molar_mass("C6H12O6");  /* Returns 180.18*g/mol */
+
+/* Parse a chemical formula */
+parsed: chem_parse_formula("Ca(OH)2");  /* Note: parentheses not fully supported */
+
+/* Get formatted electron configuration for display */
+config_Fe: chem_electron_config("Fe");  
+/* Returns "[\mathrm{Ar}] 4\mathrm{s}^{2} 3\mathrm{d}^{6}" for LaTeX display */
+```
+
 ### Acid-Base Chemistry Module (`acidbase.mac`)
 
 A standalone module providing acid-base chemistry data through database lookup:
@@ -94,7 +144,7 @@ A standalone module providing acid-base chemistry data through database lookup:
 **Display Function:**
 - `chem_display(substance)` - Wrap formula in `\ce{...}` for LaTeX rendering
 
-**Example Usage:**
+#### Examples:
 ```maxima
 /* Get pKa of acetic acid */
 pka: chem_acidbase_pKa("CH3COOH");  /* Returns 4.76 */
@@ -141,6 +191,23 @@ Functions for thermodynamic calculations:
 - `chem_equilibrium_constant` - Calculate K from ΔG°
 - `chem_thermo_substance_array` - Get arrays of substances by state
 
+#### Examples:
+```maxima
+/* Get standard enthalpy of formation of liquid water */
+DeltaHf_H2O: chem_thermo_data("H2O", "DeltaHf", "l");  /* Returns -285.8 kJ/mol */
+
+/* Get standard entropy of gaseous CO2 */
+S_CO2: chem_thermo_data("CO2", "S", "g");  /* Returns 213.8 J/(mol·K) */
+
+/* Calculate reaction enthalpy for: CH4(g) + 2O2(g) → CO2(g) + 2H2O(l) */
+products: [["CO2", "g", 1], ["H2O", "l", 2]];
+reactants: [["CH4", "g", 1], ["O2", "g", 2]];
+DeltaH_combustion: chem_reaction_enthalpy(products, reactants);  /* Returns -890.4 kJ/mol */
+
+/* Calculate equilibrium constant from ΔG° */
+K_eq: chem_equilibrium_constant(-33.0, 298);  /* K = exp(-ΔG°/RT) */
+```
+
 ### Chemical Reactions Module (`reactions.mac`)
 
 Database of common chemical reactions with stoichiometry:
@@ -154,7 +221,16 @@ Database of common chemical reactions with stoichiometry:
 - `chem_reaction_synthesis_array` - Get synthesis reactions
 - `chem_reaction_decomposition_array` - Get decomposition reactions
 
-**Note:** The thermodynamics module (`thermodynamictables.mac`) and reactions module (`reactions.mac`) work together. Load both modules to use reaction-based thermodynamic calculations.
+#### Examples:
+```maxima
+/* Get complete reaction data for methane combustion */
+rxn_data: chem_reaction_data("CombustionMethane");
+/* Returns: [[["CH4", "g", 1], ["O2", "g", 2]], [["CO2", "g", 1], ["H2O", "l", 2]]] */
+
+/* Generate LaTeX equation for display */
+eqn_latex: chem_reaction_equation_latex("CombustionMethane");
+/* Returns: "\\ce{CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)}" */
+```
 
 ### Nuclide Database Module (`nuclidetable.mac`)
 
