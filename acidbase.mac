@@ -36,7 +36,7 @@
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
     ["H+", [0, "none"]],
-    ["H2O", [14, "H2O"]],
+    ["H2O", [14, "OH-"]],
     ["HCl", [-7.0, "Cl-"]],
     ["H2SO4", [-2.0, "HSO4-"]],
     ["HSO4-", [1.92, "SO4^{2-}"]],
