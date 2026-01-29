@@ -426,8 +426,6 @@ chem_strong_base_array() := block([filtered],
         else
             false
     )),
-    if emptyp(filtered) then
-        [["H2O", [14, "H2O"]]]  /* Return H2O as default if no strong bases found */
-    else
-        map(first, filtered)
+    /* Return list of formulas (strings). If none found return empty list. */
+    if emptyp(filtered) then [] else map(first, filtered)
 )$
