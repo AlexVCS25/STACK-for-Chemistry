@@ -12,37 +12,52 @@ stack_unit_si_declare(true);
 /* Print fractions as decimals */
 stackfltfmt:"~f";
 
-/* Test strong acids */
-strong_acid: rand(chem_strong_acid_array());
+/* Pick random entries without guards (assumes non-empty arrays) */
+sa_list: chem_strong_acid_array();
+strong_acid: rand(sa_list);
 conj_base: chem_acidbase_conjugate_base(strong_acid);
 pka_strong_acid: chem_acidbase_data(strong_acid, "pKa");
 ka_strong_acid: chem_acidbase_Ka(strong_acid);
 
-/* Test weak acids */
-weak_acid: rand(chem_weak_acid_array());
+/* Weak acids */
+wa_list: chem_weak_acid_array();
+weak_acid: rand(wa_list);
 pka_weak_acid: chem_acidbase_data(weak_acid, "pKa");
 ka_weak_acid: chem_acidbase_Ka(weak_acid);
 
-/* Test strong bases */
-/* strong_base: rand(chem_strong_base_array()); */
-/* conj_acid: chem_acidbase_conjugate_acid(strong_base); */
-/* pkb_strong_base: chem_acidbase_data(strong_base, "pKb"); */
-/* kb_strong_base: chem_acidbase_Kb(strong_base); */
+/* Strong bases */
+sb_list: chem_strong_base_array();
+strong_base: rand(sb_list);
+conj_acid: chem_acidbase_conjugate_acid(strong_base);
+pkb_strong_base: chem_acidbase_data(strong_base, "pKb");
+kb_strong_base: chem_acidbase_Kb(strong_base);
 
-/* Test weak bases */
-/* weak_base: rand(chem_weak_base_array()); */
-/* pkb_weak_base: chem_acidbase_data(weak_base, "pKb"); */
-/* kb_weak_base: chem_acidbase_Kb(weak_base); */
+/* Weak bases */
+wb_list: chem_weak_base_array();
+weak_base: rand(wb_list);
+pkb_weak_base: chem_acidbase_data(weak_base, "pKb");
+kb_weak_base: chem_acidbase_Kb(weak_base);
 
 /* Random substance */
-random_sub: rand(chem_acidbase_array());
-
-/* Display formats */
-strong_acid_display: chem_display(strong_acid);
-weak_acid_display: chem_display(weak_acid);
-/* strong_base_display: chem_display(strong_base); */
-/* weak_base_display: chem_display(weak_base); */
+arr_all: chem_acidbase_array();
+random_sub: rand(arr_all);
 random_sub_display: chem_display(random_sub);
 
-/* Test answer */
+/* Display strings for LaTeX/mhchem via STACK placeholders (German and English) */
+question_text_de: "\\(\\require{mhchem}\\)\n\n**Starke Säuren und Basen:**\n\nDas hier ist eine starke Säure: \\({@strong_acid_display@}\\) mit einem pKa von {@pka_strong_acid@}. Das entspricht einem Ka von {@chem_acidbase_Ka(strong_acid)@}. Ihre korrespondierende Base ist \\({@chem_display(conj_base)@}\\).\n\nDas hier ist eine starke Base: \\({@chem_display(strong_base)@}\\) mit einem pKb von {@pkb_strong_base@} und ihre korrespondierende Säure ist \\({@chem_display(conj_acid)@}\\).\n\n**Schwache Säuren und Basen:**\n\nDas hier ist eine schwache Säure: \\({@chem_display(weak_acid)@}\\) mit einem pKa von {@chem_acidbase_data(weak_acid, \"pKa\")@}. Das entspricht einem Ka von {@chem_acidbase_Ka(weak_acid)@}.\n\nDas hier ist eine schwache Base: \\({@chem_display(weak_base)@}\\) mit einem pKb von {@chem_acidbase_data(weak_base, \"pKb\")@}. Das entspricht einem Kb von {@chem_acidbase_Kb(weak_base)@}.\n\n**Molare Masse:**\n\n\\({@chem_display(strong_acid)@}\\) hat eine molare Masse von {@chem_molar_mass(strong_acid)@}.\n\n**Ihre Antwort:**\n\n[[input:ans1]] [[validation:ans1]]";
+
+/* English version */
+question_text_en: "\\(\\require{mhchem}\\)\n\n**Strong acids and bases:**\n\nThis is a strong acid: {@strong_acid_display@} with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@chem_acidbase_Ka(strong_acid)@}. Its conjugate base is {@conj_base_display@}.\n\nThis is a strong base: {@strong_base_display@} with a pKb of {@pkb_strong_base@} and its conjugate acid is {@conj_acid_display@}.\n\n**Weak acids and bases:**\n\nThis is a weak acid: {@weak_acid_display@} with a pKa of {@chem_acidbase_data(weak_acid, \"pKa\")@}. That corresponds to a Ka of {@chem_acidbase_Ka(weak_acid)@}.\n\nThis is a weak base: {@weak_base_display@} with a pKb of {@chem_acidbase_data(weak_base, \"pKb\")@}. That corresponds to a Kb of {@chem_acidbase_Kb(weak_base)@}.\n\n**Molar mass:**\n\n{@strong_acid_display@} has a molar mass of {@chem_molar_mass(strong_acid)@}.\n\n**Your answer:**\n\n[[input:ans1]] [[validation:ans1]]";
+
+/* Conjugate display variables (make them explicit so placeholders can reference them) */
+conj_base_display: if strong_acid = "" then "" else chem_display(conj_base);
+conj_acid_display: if strong_base = "" then "" else chem_display(conj_acid);
+
+/* Convenience display variables used by STACK placeholders */
+strong_acid_display: chem_display(strong_acid);
+weak_acid_display: chem_display(weak_acid);
+strong_base_display: chem_display(strong_base);
+weak_base_display: chem_display(weak_base);
+
+/* Test answer placeholder */
 ta1: 10;

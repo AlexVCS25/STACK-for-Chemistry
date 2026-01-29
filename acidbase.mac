@@ -115,3 +115,23 @@ chem_strong_base_array() := block([arr],
         )
     ))
 )$
+
+/* Returns the conjugate base string (as stored in the DB) for a given substance.
+   Returns "" if no conjugate stored or substance not found. */
+chem_acidbase_conjugate_base(substance) := block([meta, conj],
+    meta: chem_acidbase_data_all(substance),
+    if meta = false then return(""),
+    conj: assoc("conjugate", meta),
+    if sequal(conj, false) or sequal(conj, "") then return("") else return(conj)
+)$
+
+/* Returns the conjugate acid string for a given base by searching the DB.
+   Returns "" if no conjugate acid is found. */
+chem_acidbase_conjugate_acid(substance) := block([entry, found],
+    for entry in %_ACIDBASE_DATA do (
+        if not atom(entry) then (
+            if second(entry) = substance or second(entry) = substance then return(first(entry))
+        )
+    ),
+    return("")
+)$
