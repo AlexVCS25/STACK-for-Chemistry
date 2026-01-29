@@ -28,20 +28,18 @@
     ["NH4+", 9.25, 4.75, "NH3"]
 ]$
 
-/* Get pKa for an ACID (column 1 -> column 2) */
-chem_acidbase_pKa(acid) := block([entry, acid_str],
-    acid_str: if stringp(acid) then acid else string(acid),
+/* Get pKa for an ACID (looks up column 1, returns column 2) */
+chem_acidbase_pKa(acid) := block([entry],
     for entry in %_ACIDBASE_DATA do (
-        if is(first(entry) = acid_str) then return(second(entry))
+        if sequal(first(entry), acid) then return(second(entry))
     ),
     return(null)
 )$
 
-/* Get pKb for a BASE (column 4 -> column 3) */
-chem_acidbase_pKb(base) := block([entry, base_str],
-    base_str: if stringp(base) then base else string(base),
+/* Get pKb for a BASE (looks up column 4, returns column 3) */
+chem_acidbase_pKb(base) := block([entry],
     for entry in %_ACIDBASE_DATA do (
-        if is(fourth(entry) = base_str) then return(third(entry))
+        if sequal(fourth(entry), base) then return(third(entry))
     ),
     return(null)
 )$
@@ -58,20 +56,18 @@ chem_acidbase_Kb(base) := block([pKb],
     if not numberp(pKb) then return(null) else return(10^(-pKb))
 )$
 
-/* Get conjugate base for an acid */
-chem_acidbase_conjugate_base(acid) := block([entry, acid_str],
-    acid_str: if stringp(acid) then acid else string(acid),
+/* Get conjugate base for an acid (looks up column 1, returns column 4) */
+chem_acidbase_conjugate_base(acid) := block([entry],
     for entry in %_ACIDBASE_DATA do (
-        if is(first(entry) = acid_str) then return(fourth(entry))
+        if sequal(first(entry), acid) then return(fourth(entry))
     ),
     return("")
 )$
 
-/* Get conjugate acid for a base */
-chem_acidbase_conjugate_acid(base) := block([entry, base_str],
-    base_str: if stringp(base) then base else string(base),
+/* Get conjugate acid for a base (looks up column 4, returns column 1) */
+chem_acidbase_conjugate_acid(base) := block([entry],
     for entry in %_ACIDBASE_DATA do (
-        if is(fourth(entry) = base_str) then return(first(entry))
+        if sequal(fourth(entry), base) then return(first(entry))
     ),
     return("")
 )$
@@ -88,47 +84,47 @@ chem_acid_array() := map(first, %_ACIDBASE_DATA)$
 chem_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not is(fourth(entry) = "") then
+        if not sequal(fourth(entry), "") then
             result: append(result, [fourth(entry)])
     ),
     result
 )$
 
-/* Strong acids: pKa < 0 */
+/* Strong acids: pKa < 0 (returns column 1) */
 chem_strong_acid_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if numberp(second(entry)) and is(second(entry) < 0) then
+        if numberp(second(entry)) and second(entry) < 0 then
             result: append(result, [first(entry)])
     ),
     result
 )$
 
-/* Weak acids: pKa > 0 */
+/* Weak acids: pKa > 0 (returns column 1) */
 chem_weak_acid_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if numberp(second(entry)) and is(second(entry) > 0) then
+        if numberp(second(entry)) and second(entry) > 0 then
             result: append(result, [first(entry)])
     ),
     result
 )$
 
-/* Strong bases: pKb <= 0 */
+/* Strong bases: pKb <= 0 (returns column 4) */
 chem_strong_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not is(fourth(entry) = "") and numberp(third(entry)) and is(third(entry) <= 0) then
+        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) <= 0 then
             result: append(result, [fourth(entry)])
     ),
     result
 )$
 
-/* Weak bases: 0 < pKb < 14 */
+/* Weak bases: 0 < pKb < 14 (returns column 4) */
 chem_weak_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not is(fourth(entry) = "") and numberp(third(entry)) and is(third(entry) > 0) and is(third(entry) < 14) then
+        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) > 0 and third(entry) < 14 then
             result: append(result, [fourth(entry)])
     ),
     result
