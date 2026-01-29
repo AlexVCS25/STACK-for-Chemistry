@@ -65,14 +65,14 @@ ka_weak_acid: chem_acidbase_Ka(weak_acid);
 sb_list: chem_strong_base_array();
 strong_base: rand(sb_list);
 conj_acid: chem_acidbase_conjugate_acid(strong_base);
-pkb_strong_base: chem_acidbase_data(strong_base, "pKb");
-kb_strong_base: chem_acidbase_Kb(strong_base);
+pkb_strong_base: chem_acidbase_pKb_base(strong_base);
+kb_strong_base: chem_acidbase_Kb_base(strong_base);
 
 /* Weak bases */
 wb_list: chem_weak_base_array();
 weak_base: rand(wb_list);
-pkb_weak_base: chem_acidbase_data(weak_base, "pKb");
-kb_weak_base: chem_acidbase_Kb(weak_base);
+pkb_weak_base: chem_acidbase_pKb_base(weak_base);
+kb_weak_base: chem_acidbase_Kb_base(weak_base);
 
 /* Random substance */
 arr_all: chem_acidbase_array();

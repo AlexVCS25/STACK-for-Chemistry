@@ -157,3 +157,27 @@ chem_acidbase_conjugate_acid(substance) := block([entry, conj],
     ),
     return("")
 )$
+
+/* Returns pKb for a BASE (not an acid).
+   Finds the conjugate acid in the DB and computes pKb = 14 - pKa.
+   Returns null if the base is not found. */
+chem_acidbase_pKb_base(base_substance) := block([entry, conj, pKa],
+    for entry in %_ACIDBASE_DATA do (
+        if not atom(entry) then (
+            conj: second(second(entry)),
+            if sequal(conj, base_substance) then (
+                pKa: first(second(entry)),
+                if numberp(pKa) then return(14 - pKa) else return(null)
+            )
+        )
+    ),
+    return(null)
+)$
+
+/* Returns Kb for a BASE (not an acid).
+   Uses chem_acidbase_pKb_base to get pKb, then computes 10^(-pKb).
+   Returns null if the base is not found or pKb is not numeric. */
+chem_acidbase_Kb_base(base_substance) := block([pKb],
+    pKb: chem_acidbase_pKb_base(base_substance),
+    if not numberp(pKb) then return(null) else return(10^(-pKb))
+)$
