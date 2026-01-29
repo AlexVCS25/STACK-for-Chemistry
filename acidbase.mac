@@ -453,57 +453,74 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 /* Returns an array of all substances in the database */
 chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
 
-/* Returns an array of all acids (substances with pKa values that are not null) */
-chem_acid_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(first(second(x)) = null))),
-    map(first, filtered)
+/* Returns an array of all acids (substances with pKa values that are numeric and not null) */
+chem_acid_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([pKa],
+            pKa: chem_acidbase_data(s, "pKa"),
+            not is(pKa = false) and not is(pKa = null) and numberp(pKa)
+        )
+    ))
 )$
 
-/* Returns an array of all bases (substances that act as bases - must have valid conjugate and pKa) */
-chem_base_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not sequal(second(x), "") and 
-        not is(first(second(x)) = null))),
-    map(first, filtered)
+/* Returns an array of all bases (represented by acids that have a conjugate base listed) */
+chem_base_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([conj, pKa],
+            conj: chem_acidbase_data(s, "conjugate"),
+            pKa: chem_acidbase_data(s, "pKa"),
+            not is(conj = false) and not sequal(conj, "") and not is(pKa = false) and numberp(pKa)
+        )
+    ))
 )$
 
-/* Returns an array of weak acids (pKa > 0 and not null) */
-chem_weak_acid_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(first(second(x)) = null) and first(second(x)) > 0)),
-    map(first, filtered)
+/* Returns an array of weak acids (pKa > 0 and numeric) */
+chem_weak_acid_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([pKa], pKa: chem_acidbase_data(s, "pKa"), not is(pKa = false) and not is(pKa = null) and numberp(pKa) and pKa > 0)
+    ))
 )$
 
-/* Returns an array of weak bases (0 < pKb < 14, must have valid conjugate) */
-chem_weak_base_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not sequal(second(x), "") and 
-        not is(first(second(x)) = null) and
-        numberp(first(second(x))) and
-        14 - first(second(x)) > 0 and 
-        14 - first(second(x)) < 14)),
-    map(first, filtered)
-)$
-
-/* Returns an array of strong acids (pKa < 0 and not null) */
-chem_strong_acid_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(first(second(x)) = null) and first(second(x)) < 0)),
-    map(first, filtered)
-)$
-
-/* Returns an array of strong bases (pKb <= 0, must have valid conjugate) */
-chem_strong_base_array() := block([filtered],
-    filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        if not sequal(second(x), "") and not is(first(second(x)) = null) then
-            if numberp(first(second(x))) then
-                14 - first(second(x)) <= 0
-            else
+/* Returns an array of weak bases (0 < pKb < 14) where pKb = 14 - pKa(acid) */
+chem_weak_base_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([pKa, pKb, conj],
+            conj: chem_acidbase_data(s, "conjugate"),
+            pKa: chem_acidbase_data(s, "pKa"),
+            /* need a valid conjugate and numeric pKa to compute pKb of the conjugate base */
+            if not is(conj = false) and not sequal(conj, "") and numberp(pKa) then (
+                pKb: 14 - pKa,
+                pKb > 0 and pKb < 14
+            ) else
                 false
-        else
-            false
-    )),
-    /* Return list of formulas (strings). If none found return empty list. */
-    if emptyp(filtered) then [] else map(first, filtered)
+        )
+    ))
+)$
+
+/* Returns an array of strong acids (pKa < 0 and numeric) */
+chem_strong_acid_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([pKa], pKa: chem_acidbase_data(s, "pKa"), not is(pKa = false) and not is(pKa = null) and numberp(pKa) and pKa < 0)
+    ))
+)$
+
+/* Returns an array of strong bases (pKb <= 0) where pKb = 14 - pKa(acid) */
+chem_strong_base_array() := block([arr],
+    arr: chem_acidbase_array(),
+    sublist(arr, lambda([s],
+        block([pKa, pKb, conj],
+            conj: chem_acidbase_data(s, "conjugate"),
+            pKa: chem_acidbase_data(s, "pKa"),
+            if not is(conj = false) and not sequal(conj, "") and numberp(pKa) then (
+                pKb: 14 - pKa,
+                pKb <= 0
+            ) else
+                false
+        )
+    ))
 )$
