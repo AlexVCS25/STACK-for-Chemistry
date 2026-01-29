@@ -59,10 +59,24 @@
 /*                                                              */
 /****************************************************************/
 
+/* Safe lookup for %_ACIDBASE_DATA:
+   Matches the provided key against the first element of each entry.
+   Accepts either exact match or stringified match to be resilient to key types. */
+chem_acidbase_lookup(key) := block([entry, kstr],
+    kstr: if stringp(key) then key else stringify(key),
+    for entry in %_ACIDBASE_DATA do (
+        /* entry is expected to be [formula, [pKa, conjugate]] */
+        if not atom(entry) then (
+            if first(entry) = key or first(entry) = kstr then return(second(entry))
+        )
+    ),
+    return(false)
+)$
+
 /* Returns all data for a given substance (robust, explicit control flow) */
 chem_acidbase_data_all(substance) := block([data, pKa_raw, pKa_val, pKb_val, conjugate],
-    /* Lookup raw entry */
-    data: assoc(substance, %_ACIDBASE_DATA),
+    /* Lookup raw entry using the safe lookup */
+    data: chem_acidbase_lookup(substance),
     if data = false then return(false),
 
     /* Extract raw values */
