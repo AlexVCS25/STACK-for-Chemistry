@@ -72,6 +72,7 @@ A standalone module providing acid-base chemistry data through database lookup:
 - `chem_acidbase_pKb(base)` - Get pKb value for a base
 - `chem_acidbase_Ka(acid)` - Calculate Ka from pKa (returns 10^(-pKa))
 - `chem_acidbase_Kb(base)` - Calculate Kb from pKb (returns 10^(-pKb))
+- `chem_acidbase_nH(acid)` - Get number of acidic protons for an acid
 
 **Conjugate Pair Functions:**
 - `chem_acidbase_conjugate_base(acid)` - Get conjugate base for an acid
@@ -84,6 +85,11 @@ A standalone module providing acid-base chemistry data through database lookup:
 - `chem_strong_acid_array()` - Get array of strong acids (pKa < 0)
 - `chem_weak_base_array()` - Get array of weak bases (0 < pKb < 14)
 - `chem_strong_base_array()` - Get array of strong bases (pKb ≤ 0)
+
+**Array Functions by Number of Acidic Protons:**
+- `chem_acid_array_nH(n)` - Get array of acids with exactly n acidic protons
+- `chem_strong_acid_array_nH(n)` - Get array of strong acids with n acidic protons
+- `chem_weak_acid_array_nH(n)` - Get array of weak acids with n acidic protons
 
 **Display Function:**
 - `chem_display(substance)` - Wrap formula in `\ce{...}` for LaTeX rendering
@@ -102,8 +108,21 @@ base: chem_acidbase_conjugate_base("CH3COOH");  /* Returns "CH3COO-" */
 /* Get pKb of the conjugate base */
 pkb: chem_acidbase_pKb("CH3COO-");  /* Returns 9.24 */
 
+/* Get number of acidic protons */
+nH: chem_acidbase_nH("H2SO4");      /* Returns 2 */
+nH: chem_acidbase_nH("CH3COOH");    /* Returns 1 */
+
 /* Random weak acid for questions */
 acid: rand(chem_weak_acid_array());
+
+/* Get all diprotic acids (2 acidic protons) */
+diprotic: chem_acid_array_nH(2);    /* Returns ["H2SO4", "H2CO3", "H2S", ...] */
+
+/* Get only weak diprotic acids */
+weak_diprotic: chem_weak_acid_array_nH(2);  /* Returns ["H2CO3", "H2S", "H2O2", ...] */
+
+/* Get triprotic acids */
+triprotic: chem_acid_array_nH(3);   /* Returns ["H3PO4", "H3BO3", "H3AsO4"] */
 ```
 
 **Note:** This module uses a flat database structure. All acid-base pairs and their pKa/pKb values are stored directly - no formula parsing is performed. Returns `null` for unknown substances or `""` for conjugate lookups that fail.
