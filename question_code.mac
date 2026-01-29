@@ -79,12 +79,6 @@ arr_all: chem_acid_array();
 random_sub: rand(arr_all);
 random_sub_display: chem_display(random_sub);
 
-/* Display strings for LaTeX/mhchem via STACK placeholders (German and English) */
-question_text_de: "\\(\\require{mhchem}\\)\n\n**Starke Säuren und Basen:**\n\nDas hier ist eine starke Säure: \\({@strong_acid_display@}\\) mit einem pKa von {@pka_strong_acid@}. Das entspricht einem Ka von {@chem_acidbase_Ka(strong_acid)@}. Ihre korrespondierende Base ist \\({@chem_display(conj_base)@}\\).\n\nDas hier ist eine starke Base: \\({@chem_display(strong_base)@}\\) mit einem pKb von {@pkb_strong_base@} und ihre korrespondierende Säure ist \\({@chem_display(conj_acid)@}\\).\n\n**Schwache Säuren und Basen:**\n\nDas hier ist eine schwache Säure: \\({@chem_display(weak_acid)@}\\) mit einem pKa von {@chem_acidbase_pKa(weak_acid)@}. Das entspricht einem Ka von {@chem_acidbase_Ka(weak_acid)@}.\n\nDas hier ist eine schwache Base: \\({@chem_display(weak_base)@}\\) mit einem pKb von {@chem_acidbase_pKb(weak_base)@}. Das entspricht einem Kb von {@chem_acidbase_Kb(weak_base)@}.\n\n**Molare Masse:**\n\n\\({@chem_display(strong_acid)@}\\) hat eine molare Masse von {@chem_molar_mass(strong_acid)@}.\n\n**Ihre Antwort:**\n\n[[input:ans1]] [[validation:ans1]]";
-
-/* English version */
-question_text_en: "\\(\\require{mhchem}\\)\n\n**Strong acids and bases:**\n\nThis is a strong acid: \\({@strong_acid_display@}\\) with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@chem_acidbase_Ka(strong_acid)@}. Its conjugate base is \\({@conj_base_display@}\\).\n\nThis is a strong base: \\({@strong_base_display@}\\) with a pKb of {@pkb_strong_base@} and its conjugate acid is \\({@conj_acid_display@}\\).\n\n**Weak acids and bases:**\n\nThis is a weak acid: \\({@weak_acid_display@}\\) with a pKa of {@chem_acidbase_pKa(weak_acid)@}. That corresponds to a Ka of {@chem_acidbase_Ka(weak_acid)@}.\n\nThis is a weak base: \\({@weak_base_display@}\\) with a pKb of {@chem_acidbase_pKb(weak_base)@}. That corresponds to a Kb of {@chem_acidbase_Kb(weak_base)@}.\n\n**Molar mass:**\n\n\\({@strong_acid_display@}\\) has a molar mass of {@chem_molar_mass(strong_acid)@}.\n\n**Your answer:**\n\n[[input:ans1]] [[validation:ans1]]";
-
 /* Conjugate display variables */
 conj_base_display: chem_display(conj_base);
 conj_acid_display: chem_display(conj_acid);

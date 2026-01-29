@@ -5,47 +5,56 @@
     Simplified, robust acid-base helper.
 */
 
-/* Acid-base database: [acid, pKa, pKb, base]
-   pKa: acidic dissociation constant of the acid
-   pKb: basic dissociation constant of the conjugate base (pKb = 14 - pKa)
-   Empty string "" for base means no conjugate base defined */
+/* Acid-base database using assoc-compatible format: [acid, [pKa, pKb, base]] */
 %_ACIDBASE_DATA: [
-    ["H3O+", 0, 14, "H2O"],
-    ["H2O", 14, 0, "OH-"],
-    ["HCl", -7.0, 21.0, "Cl-"],
-    ["H2SO4", -2.0, 16.0, "HSO4-"],
-    ["HSO4-", 1.92, 12.08, "SO4^{2-}"],
-    ["HNO3", -1, 15, "NO3-"],
-    ["H3PO4", 2.12, 11.88, "H2PO4-"],
-    ["H2PO4-", 7.21, 6.79, "HPO4^{2-}"],
-    ["HPO4^{2-}", 12.32, 1.68, "PO4^{3-}"],
-    ["HF", 3.17, 10.83, "F-"],
-    ["CH3COOH", 4.74, 9.26, "CH3COO-"],
-    ["H2CO3", 6.35, 7.65, "HCO3-"],
-    ["HCO3-", 10.33, 3.67, "CO3^{2-}"],
-    ["H2S", 7.00, 7.00, "HS-"],
-    ["HS-", 12.89, 1.11, "S^{2-}"],
-    ["NH4+", 9.25, 4.75, "NH3"]
+    ["H3O+", [0, 14, "H2O"]],
+    ["H2O", [14, 0, "OH-"]],
+    ["HCl", [-7.0, 21.0, "Cl-"]],
+    ["H2SO4", [-2.0, 16.0, "HSO4-"]],
+    ["HSO4-", [1.92, 12.08, "SO4^{2-}"]],
+    ["HNO3", [-1, 15, "NO3-"]],
+    ["H3PO4", [2.12, 11.88, "H2PO4-"]],
+    ["H2PO4-", [7.21, 6.79, "HPO4^{2-}"]],
+    ["HPO4^{2-}", [12.32, 1.68, "PO4^{3-}"]],
+    ["HF", [3.17, 10.83, "F-"]],
+    ["CH3COOH", [4.74, 9.26, "CH3COO-"]],
+    ["H2CO3", [6.35, 7.65, "HCO3-"]],
+    ["HCO3-", [10.33, 3.67, "CO3^{2-}"]],
+    ["H2S", [7.00, 7.00, "HS-"]],
+    ["HS-", [12.89, 1.11, "S^{2-}"]],
+    ["NH4+", [9.25, 4.75, "NH3"]]
 ]$
 
-/* Get pKa for an ACID (looks up column 1, returns column 2) */
-chem_acidbase_pKa(acid) := block([i, n, entry],
-    n: length(%_ACIDBASE_DATA),
-    for i: 1 thru n do (
-        entry: %_ACIDBASE_DATA[i],
-        if is(entry[1] = acid) then return(entry[2])
-    ),
-    return(null)
+/* Reverse lookup table: [base, [pKa, pKb, acid]] for base lookups */
+%_ACIDBASE_DATA_REV: [
+    ["H2O", [0, 14, "H3O+"]],
+    ["OH-", [14, 0, "H2O"]],
+    ["Cl-", [-7.0, 21.0, "HCl"]],
+    ["HSO4-", [-2.0, 16.0, "H2SO4"]],
+    ["SO4^{2-}", [1.92, 12.08, "HSO4-"]],
+    ["NO3-", [-1, 15, "HNO3"]],
+    ["H2PO4-", [2.12, 11.88, "H3PO4"]],
+    ["HPO4^{2-}", [7.21, 6.79, "H2PO4-"]],
+    ["PO4^{3-}", [12.32, 1.68, "HPO4^{2-}"]],
+    ["F-", [3.17, 10.83, "HF"]],
+    ["CH3COO-", [4.74, 9.26, "CH3COOH"]],
+    ["HCO3-", [6.35, 7.65, "H2CO3"]],
+    ["CO3^{2-}", [10.33, 3.67, "HCO3-"]],
+    ["HS-", [7.00, 7.00, "H2S"]],
+    ["S^{2-}", [12.89, 1.11, "HS-"]],
+    ["NH3", [9.25, 4.75, "NH4+"]]
+]$
+
+/* Get pKa for an ACID */
+chem_acidbase_pKa(acid) := block([data],
+    data: assoc(acid, %_ACIDBASE_DATA),
+    if data = false then return(null) else return(first(data))
 )$
 
-/* Get pKb for a BASE (looks up column 4, returns column 3) */
-chem_acidbase_pKb(base) := block([i, n, entry],
-    n: length(%_ACIDBASE_DATA),
-    for i: 1 thru n do (
-        entry: %_ACIDBASE_DATA[i],
-        if is(entry[4] = base) then return(entry[3])
-    ),
-    return(null)
+/* Get pKb for a BASE */
+chem_acidbase_pKb(base) := block([data],
+    data: assoc(base, %_ACIDBASE_DATA_REV),
+    if data = false then return(null) else return(second(data))
 )$
 
 /* Get Ka for an ACID */
@@ -60,24 +69,16 @@ chem_acidbase_Kb(base) := block([pKb],
     if not numberp(pKb) then return(null) else return(10^(-pKb))
 )$
 
-/* Get conjugate base for an acid (looks up column 1, returns column 4) */
-chem_acidbase_conjugate_base(acid) := block([i, n, entry],
-    n: length(%_ACIDBASE_DATA),
-    for i: 1 thru n do (
-        entry: %_ACIDBASE_DATA[i],
-        if is(entry[1] = acid) then return(entry[4])
-    ),
-    return("")
+/* Get conjugate base for an acid */
+chem_acidbase_conjugate_base(acid) := block([data],
+    data: assoc(acid, %_ACIDBASE_DATA),
+    if data = false then return("") else return(third(data))
 )$
 
-/* Get conjugate acid for a base (looks up column 4, returns column 1) */
-chem_acidbase_conjugate_acid(base) := block([i, n, entry],
-    n: length(%_ACIDBASE_DATA),
-    for i: 1 thru n do (
-        entry: %_ACIDBASE_DATA[i],
-        if is(entry[4] = base) then return(entry[1])
-    ),
-    return("")
+/* Get conjugate acid for a base */
+chem_acidbase_conjugate_acid(base) := block([data],
+    data: assoc(base, %_ACIDBASE_DATA_REV),
+    if data = false then return("") else return(third(data))
 )$
 
 /* Basic helper for formula display */
@@ -86,73 +87,51 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 /* Navigation arrays */
 
 /* All acids (column 1) */
-chem_acid_array() := block([i, n, result],
-    n: length(%_ACIDBASE_DATA),
-    result: [],
-    for i: 1 thru n do (
-        result: append(result, [%_ACIDBASE_DATA[i][1]])
-    ),
-    result
-)$
+chem_acid_array() := map(first, %_ACIDBASE_DATA)$
 
-/* All bases (column 4), excluding empty strings */
-chem_base_array() := block([i, n, result, base],
-    n: length(%_ACIDBASE_DATA),
-    result: [],
-    for i: 1 thru n do (
-        base: %_ACIDBASE_DATA[i][4],
-        if not is(base = "") then
-            result: append(result, [base])
-    ),
-    result
-)$
+/* All bases */
+chem_base_array() := map(first, %_ACIDBASE_DATA_REV)$
 
-/* Strong acids: pKa < 0 (returns column 1) */
-chem_strong_acid_array() := block([i, n, result, pKa],
-    n: length(%_ACIDBASE_DATA),
+/* Strong acids: pKa < 0 */
+chem_strong_acid_array() := block([result, entry, pKa],
     result: [],
-    for i: 1 thru n do (
-        pKa: %_ACIDBASE_DATA[i][2],
+    for entry in %_ACIDBASE_DATA do (
+        pKa: first(second(entry)),
         if numberp(pKa) and pKa < 0 then
-            result: append(result, [%_ACIDBASE_DATA[i][1]])
+            result: append(result, [first(entry)])
     ),
     result
 )$
 
-/* Weak acids: pKa > 0 (returns column 1) */
-chem_weak_acid_array() := block([i, n, result, pKa],
-    n: length(%_ACIDBASE_DATA),
+/* Weak acids: pKa > 0 */
+chem_weak_acid_array() := block([result, entry, pKa],
     result: [],
-    for i: 1 thru n do (
-        pKa: %_ACIDBASE_DATA[i][2],
+    for entry in %_ACIDBASE_DATA do (
+        pKa: first(second(entry)),
         if numberp(pKa) and pKa > 0 then
-            result: append(result, [%_ACIDBASE_DATA[i][1]])
+            result: append(result, [first(entry)])
     ),
     result
 )$
 
-/* Strong bases: pKb <= 0 (returns column 4) */
-chem_strong_base_array() := block([i, n, result, pKb, base],
-    n: length(%_ACIDBASE_DATA),
+/* Strong bases: pKb <= 0 */
+chem_strong_base_array() := block([result, entry, pKb],
     result: [],
-    for i: 1 thru n do (
-        base: %_ACIDBASE_DATA[i][4],
-        pKb: %_ACIDBASE_DATA[i][3],
-        if not is(base = "") and numberp(pKb) and pKb <= 0 then
-            result: append(result, [base])
+    for entry in %_ACIDBASE_DATA_REV do (
+        pKb: second(second(entry)),
+        if numberp(pKb) and pKb <= 0 then
+            result: append(result, [first(entry)])
     ),
     result
 )$
 
-/* Weak bases: 0 < pKb < 14 (returns column 4) */
-chem_weak_base_array() := block([i, n, result, pKb, base],
-    n: length(%_ACIDBASE_DATA),
+/* Weak bases: 0 < pKb < 14 */
+chem_weak_base_array() := block([result, entry, pKb],
     result: [],
-    for i: 1 thru n do (
-        base: %_ACIDBASE_DATA[i][4],
-        pKb: %_ACIDBASE_DATA[i][3],
-        if not is(base = "") and numberp(pKb) and pKb > 0 and pKb < 14 then
-            result: append(result, [base])
+    for entry in %_ACIDBASE_DATA_REV do (
+        pKb: second(second(entry)),
+        if numberp(pKb) and pKb > 0 and pKb < 14 then
+            result: append(result, [first(entry)])
     ),
     result
 )$
