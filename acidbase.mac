@@ -67,7 +67,7 @@
 _acidbase_find_acid(acid) := block([i, n],
     n: length(%_ACIDBASE_DATA),
     for i: 1 step 4 thru n do (
-        if is(%_ACIDBASE_DATA[i] = acid) then return(i)
+        if is(equal(%_ACIDBASE_DATA[i], acid)) then return(i)
     ),
     0
 )$
@@ -76,7 +76,7 @@ _acidbase_find_acid(acid) := block([i, n],
 _acidbase_find_base(base) := block([i, n],
     n: length(%_ACIDBASE_DATA),
     for i: 4 step 4 thru n do (
-        if is(%_ACIDBASE_DATA[i] = base) then return(i - 3)
+        if is(equal(%_ACIDBASE_DATA[i], base)) then return(i - 3)
     ),
     0
 )$
