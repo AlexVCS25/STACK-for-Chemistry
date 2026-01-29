@@ -45,40 +45,50 @@
     ["NH3", [9.25, 4.75, "NH4+"]]
 ]$
 
+/* Get all data for an ACID: returns [pKa, pKb, base] or false */
+chem_acidbase_acid_data(acid) := assoc(acid, %_ACIDBASE_DATA)$
+
+/* Get all data for a BASE: returns [pKa, pKb, acid] or false */
+chem_acidbase_base_data(base) := assoc(base, %_ACIDBASE_DATA_REV)$
+
 /* Get pKa for an ACID */
 chem_acidbase_pKa(acid) := block([data],
-    data: assoc(acid, %_ACIDBASE_DATA),
-    if data = false then return(null) else return(first(data))
+    data: chem_acidbase_acid_data(acid),
+    if is(data = false) then null else first(data)
 )$
 
 /* Get pKb for a BASE */
 chem_acidbase_pKb(base) := block([data],
-    data: assoc(base, %_ACIDBASE_DATA_REV),
-    if data = false then return(null) else return(second(data))
+    data: chem_acidbase_base_data(base),
+    if is(data = false) then null else second(data)
 )$
 
 /* Get Ka for an ACID */
 chem_acidbase_Ka(acid) := block([pKa],
     pKa: chem_acidbase_pKa(acid),
-    if not numberp(pKa) then return(null) else return(10^(-pKa))
+    if is(pKa = null) then null
+    else if not numberp(pKa) then null
+    else 10^(-pKa)
 )$
 
 /* Get Kb for a BASE */
 chem_acidbase_Kb(base) := block([pKb],
     pKb: chem_acidbase_pKb(base),
-    if not numberp(pKb) then return(null) else return(10^(-pKb))
+    if is(pKb = null) then null
+    else if not numberp(pKb) then null
+    else 10^(-pKb)
 )$
 
 /* Get conjugate base for an acid */
 chem_acidbase_conjugate_base(acid) := block([data],
-    data: assoc(acid, %_ACIDBASE_DATA),
-    if data = false then return("") else return(third(data))
+    data: chem_acidbase_acid_data(acid),
+    if is(data = false) then "" else third(data)
 )$
 
 /* Get conjugate acid for a base */
 chem_acidbase_conjugate_acid(base) := block([data],
-    data: assoc(base, %_ACIDBASE_DATA_REV),
-    if data = false then return("") else return(third(data))
+    data: chem_acidbase_base_data(base),
+    if is(data = false) then "" else third(data)
 )$
 
 /* Basic helper for formula display */
@@ -86,7 +96,7 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
 
 /* Navigation arrays */
 
-/* All acids (column 1) */
+/* All acids */
 chem_acid_array() := map(first, %_ACIDBASE_DATA)$
 
 /* All bases */
@@ -97,7 +107,7 @@ chem_strong_acid_array() := block([result, entry, pKa],
     result: [],
     for entry in %_ACIDBASE_DATA do (
         pKa: first(second(entry)),
-        if numberp(pKa) and pKa < 0 then
+        if numberp(pKa) and is(pKa < 0) then
             result: append(result, [first(entry)])
     ),
     result
@@ -108,7 +118,7 @@ chem_weak_acid_array() := block([result, entry, pKa],
     result: [],
     for entry in %_ACIDBASE_DATA do (
         pKa: first(second(entry)),
-        if numberp(pKa) and pKa > 0 then
+        if numberp(pKa) and is(pKa > 0) then
             result: append(result, [first(entry)])
     ),
     result
@@ -119,7 +129,7 @@ chem_strong_base_array() := block([result, entry, pKb],
     result: [],
     for entry in %_ACIDBASE_DATA_REV do (
         pKb: second(second(entry)),
-        if numberp(pKb) and pKb <= 0 then
+        if numberp(pKb) and is(pKb <= 0) then
             result: append(result, [first(entry)])
     ),
     result
@@ -130,7 +140,7 @@ chem_weak_base_array() := block([result, entry, pKb],
     result: [],
     for entry in %_ACIDBASE_DATA_REV do (
         pKb: second(second(entry)),
-        if numberp(pKb) and pKb > 0 and pKb < 14 then
+        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then
             result: append(result, [first(entry)])
     ),
     result
