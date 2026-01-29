@@ -416,11 +416,16 @@ chem_strong_acid_array() := block([filtered],
 )$
 
 /* Returns an array of strong bases (pKb <= 0, must have valid conjugate) */
-chem_strong_base_array() := block([filtered],
+chem_strong_base_array() := block([filtered, pKa_val, pKb_val],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not sequal(second(x), "") and 
-        not is(first(second(x)) = null) and
-        numberp(first(second(x))) and
-        14 - first(second(x)) <= 0)),
+        block([pKa_val, pKb_val],
+            pKa_val: first(second(x)),
+            if not sequal(second(x), "") and not is(pKa_val = null) and numberp(pKa_val) then (
+                pKb_val: 14 - pKa_val,
+                pKb_val <= 0
+            ) else
+                false
+        )
+    )),
     map(first, filtered)
 )$
