@@ -443,23 +443,25 @@ chem_strong_acid_array() := block([arr],
 )$
 
 /* Returns an array of strong bases (pKb <= 0) where pKb = 14 - pKa(acid)
-   Uses chem_acidbase_data to ensure pKa is the normalized numeric value. */
+   Uses chem_acidbase_data_all to get normalized numeric pKa. */
 chem_strong_base_array() := block([arr, filtered],
     arr: chem_acidbase_array(),
     filtered: sublist(arr, lambda([s],
         block([meta, pKa, conj, pKb],
             meta: chem_acidbase_data_all(s),
-            /* meta may be false -> skip */
-            if meta = false then return(false),
-            pKa: assoc("pKa", meta),
-            conj: assoc("conjugate", meta),
-            if not sequal(conj, "") and numberp(pKa) then (
-                pKb: 14 - pKa,
-                pKb <= 0
-            ) else
-                false
+            /* skip if lookup failed */
+            if meta = false then false
+            else (
+                pKa: assoc("pKa", meta),
+                conj: assoc("conjugate", meta),
+                if not sequal(conj, "") and numberp(pKa) then (
+                    pKb: 14 - pKa,
+                    pKb <= 0
+                ) else
+                    false
+            )
         )
     )),
-    /* return simple list of formula strings (suitable for rand()) */
-    map(first, filtered)
+    /* filtered is already a list of formula strings suitable for rand() */
+    filtered
 )$
