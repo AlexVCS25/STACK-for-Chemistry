@@ -4,7 +4,7 @@ Strong acids and bases:
 
 This is a strong acid: \({@strong_acid_display@}\) with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@ka_strong_acid@}. Its conjugate base is \({@conj_base_display@}\).
 
-This is a strong base: \({@strong_base_display@}\) with a pKb of {@pkb_strong_base@} and its conjugate acid is \({@conj_acid_display@}\).
+This is a strong base: \({@strong_base_display@}\) with a pKb of {@pkb_strong_base@}. That corresponds to a Kb of {@kb_strong_base@}. Its conjugate acid is \({@conj_acid_display@}\).
 
 Weak acids and bases:
 

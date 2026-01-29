@@ -29,17 +29,19 @@
 ]$
 
 /* Get pKa for an ACID (column 1 -> column 2) */
-chem_acidbase_pKa(acid) := block([entry],
+chem_acidbase_pKa(acid) := block([entry, acid_str],
+    acid_str: if stringp(acid) then acid else string(acid),
     for entry in %_ACIDBASE_DATA do (
-        if sequal(first(entry), acid) then return(second(entry))
+        if is(first(entry) = acid_str) then return(second(entry))
     ),
     return(null)
 )$
 
 /* Get pKb for a BASE (column 4 -> column 3) */
-chem_acidbase_pKb(base) := block([entry],
+chem_acidbase_pKb(base) := block([entry, base_str],
+    base_str: if stringp(base) then base else string(base),
     for entry in %_ACIDBASE_DATA do (
-        if sequal(fourth(entry), base) then return(third(entry))
+        if is(fourth(entry) = base_str) then return(third(entry))
     ),
     return(null)
 )$
@@ -57,17 +59,19 @@ chem_acidbase_Kb(base) := block([pKb],
 )$
 
 /* Get conjugate base for an acid */
-chem_acidbase_conjugate_base(acid) := block([entry],
+chem_acidbase_conjugate_base(acid) := block([entry, acid_str],
+    acid_str: if stringp(acid) then acid else string(acid),
     for entry in %_ACIDBASE_DATA do (
-        if sequal(first(entry), acid) then return(fourth(entry))
+        if is(first(entry) = acid_str) then return(fourth(entry))
     ),
     return("")
 )$
 
 /* Get conjugate acid for a base */
-chem_acidbase_conjugate_acid(base) := block([entry],
+chem_acidbase_conjugate_acid(base) := block([entry, base_str],
+    base_str: if stringp(base) then base else string(base),
     for entry in %_ACIDBASE_DATA do (
-        if sequal(fourth(entry), base) then return(first(entry))
+        if is(fourth(entry) = base_str) then return(first(entry))
     ),
     return("")
 )$
@@ -84,7 +88,7 @@ chem_acid_array() := map(first, %_ACIDBASE_DATA)$
 chem_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not sequal(fourth(entry), "") then
+        if not is(fourth(entry) = "") then
             result: append(result, [fourth(entry)])
     ),
     result
@@ -94,7 +98,7 @@ chem_base_array() := block([result, entry],
 chem_strong_acid_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if numberp(second(entry)) and second(entry) < 0 then
+        if numberp(second(entry)) and is(second(entry) < 0) then
             result: append(result, [first(entry)])
     ),
     result
@@ -104,7 +108,7 @@ chem_strong_acid_array() := block([result, entry],
 chem_weak_acid_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if numberp(second(entry)) and second(entry) > 0 then
+        if numberp(second(entry)) and is(second(entry) > 0) then
             result: append(result, [first(entry)])
     ),
     result
@@ -114,7 +118,7 @@ chem_weak_acid_array() := block([result, entry],
 chem_strong_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) <= 0 then
+        if not is(fourth(entry) = "") and numberp(third(entry)) and is(third(entry) <= 0) then
             result: append(result, [fourth(entry)])
     ),
     result
@@ -124,7 +128,7 @@ chem_strong_base_array() := block([result, entry],
 chem_weak_base_array() := block([result, entry],
     result: [],
     for entry in %_ACIDBASE_DATA do (
-        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) > 0 and third(entry) < 14 then
+        if not is(fourth(entry) = "") and numberp(third(entry)) and is(third(entry) > 0) and is(third(entry) < 14) then
             result: append(result, [fourth(entry)])
     ),
     result
