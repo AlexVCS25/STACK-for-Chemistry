@@ -17,26 +17,29 @@ The goal of this project is to develop new chemistry functions and comprehensive
 
 ### Module Loading and Dependencies
 
-**Important:** All modules are now independent and can be loaded in any order:
+**All modules are independent** and can be loaded in any order. One optional dependency exists for advanced functionality:
 
-- **Independent Modules** (load in any order):
-  - `pse.mac` - Periodic table data
-  - `acidbase.mac` - Acid-base chemistry (standalone)
-  - `reactions.mac` - Reaction database
-  - `nuclidetable.mac` - Nuclide database
-  - `thermodynamictables.mac` - Thermodynamic data (standalone for basic functions)
-
-- **Optional Dependencies**:
-  - `thermodynamictables.mac` - Requires `reactions.mac` only for reaction-based calculations (`*_by_name` functions)
+| Module | Status | Notes |
+|--------|--------|-------|
+| `pse.mac` | ✅ Independent | Periodic table data and molar mass calculations |
+| `acidbase.mac` | ✅ Independent | Acid-base chemistry with flat database |
+| `reactions.mac` | ✅ Independent | Chemical reactions database |
+| `nuclidetable.mac` | ✅ Independent | Nuclide data (raw data structure only) |
+| `thermodynamictables.mac` | ✅ Independent* | *`*_by_name` functions require `reactions.mac` |
 
 **Quick Start:**
 ```maxima
-/* Load modules as needed - order doesn't matter */
+/* Load only the modules you need - order doesn't matter */
 stack_include("pse.mac");                     /* Periodic table data */
 stack_include("acidbase.mac");                /* Acid-base chemistry */
 stack_include("reactions.mac");               /* Chemical reactions */
 stack_include("thermodynamictables.mac");     /* Thermodynamic data */
 stack_include("nuclidetable.mac");            /* Nuclide database */
+
+/* For reaction-based thermodynamic calculations, load both: */
+stack_include("reactions.mac");
+stack_include("thermodynamictables.mac");
+/* Then use: chem_reaction_enthalpy_by_name("CombustionMethane") */
 ```
 
 **Important Note on Forbidden Functions:**
@@ -136,12 +139,19 @@ Database of common chemical reactions with stoichiometry:
 
 ### Nuclide Database Module (`nuclidetable.mac`)
 
-Functions for accessing nuclear data:
-- `nucl_halflife` - Retrieve half-life of a nuclide
-- `nucl_decay_modes` - Retrieve decay modes of a nuclide
-- `nucl_branching_ratios` - Retrieve branching ratios of a nuclide
-- `nucl_array_alpha` - Get array of all alpha emitters
-- `nucl_array_betaminus` - Get array of all beta- emitters
+Database containing nuclear data for radioactive isotopes:
+- Half-lives for ground and excited states
+- Decay modes (alpha, beta-minus, beta-plus, EC, IT, etc.)
+- Branching ratios for multiple decay paths
+
+**Note:** This module currently provides the raw data structure `%_NUCLIDE_DATA`. Retrieval functions are planned for future implementation.
+
+**Database Structure:**
+```maxima
+/* Each entry: ["Nuclide_ID", [Z, N, LevelEnergies, Halflives, HalflifeUnits, DecayModes, BranchingRatios]] */
+/* Example: Access tritium data */
+assoc("3H", %_NUCLIDE_DATA);
+```
 
 ### Using Chemical Formulas in Questions
 
