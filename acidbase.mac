@@ -59,16 +59,94 @@
 /*                                                              */
 /****************************************************************/
 
+/* Manual string-to-float parser (handles optional leading +/- and decimal point) */
+chem_string_to_float(str) := block([s, chars, i, n, sign, int_part, frac_part, in_frac, digit],
+    if not stringp(str) then return(false),
+    /* Trim whitespace */
+    s: sconcat("", str), /* copy */
+    s: replace(" ", "", s),
+    if sequal(s, "") then return(false),
+    chars: charlist(s),
+    n: length(chars),
+    i: 1,
+    sign: 1,
+    int_part: 0,
+    frac_part: 0,
+    in_frac: false,
+    
+    /* Handle sign */
+    if i <= n and sequal(chars[i], "-") then ( sign: -1, i: i + 1 )
+    else if i <= n and sequal(chars[i], "+") then ( i: i + 1 ),
+    
+    /* Parse digits */
+    while i <= n do (
+        if sequal(chars[i], ".") then (
+            if in_frac then return(false) /* second decimal point -> fail */
+            else ( in_frac: true, i: i + 1 )
+        ) else if cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
+            digit: cint(chars[i]) - 48,
+            if not in_frac then (
+                int_part: int_part * 10 + digit
+            ) else (
+                /* accumulate fractional digits */
+                frac_part: frac_part * 10 + digit,
+                /* store number of fraction digits by using a multiplier on return */
+                /* we will compute final value after loop */
+            ),
+            i: i + 1
+        ) else (
+            /* non-numeric character -> stop and fail */
+            return(false)
+        )
+    ),
+    /* Compute fractional divisor */
+    if frac_part = 0 then
+        return(sign * int_part)
+    else (
+        /* count digits in frac_part: simpler to compute by converting to string length */
+        /* build frac_str from chars of original after decimal */
+        /* recompute fractional divisor */
+        /* construct fractional part by rereading characters after '.' */
+        i: 1,
+        /* find decimal point index */
+        while i <= n and not sequal(chars[i], ".") do i: i + 1,
+        /* if no decimal found (should not happen) */
+        if i > n then return(sign * int_part),
+        /* collect frac digits */
+        i: i + 1,
+        block([mult:1, fval:0],
+            while i <= n do (
+                if cgreaterp(chars[i], "/") and clessp(chars[i], ":") then (
+                    fval: fval * 10 + (cint(chars[i]) - 48),
+                    mult: mult * 10,
+                    i: i + 1
+                ) else return(false)
+            ),
+            return(sign * (int_part + fval/mult))
+        )
+    )
+)$
+
 /* Returns all data for a given substance */
-chem_acidbase_data_all(substance) := block([data, pKa_val, pKb_val, conjugate],
+chem_acidbase_data_all(substance) := block([data, pKa_raw, pKa_val, pKb_val, conjugate],
     data: assoc(substance, %_ACIDBASE_DATA),
     if is(data = false) then
         return(false)
     else (
-        pKa_val: first(data),
+        pKa_raw: first(data),
         conjugate: second(data),
-        /* Calculate pKb from conjugate acid's pKa only if conjugate exists */
-        if is(pKa_val = null) or sequal(conjugate, "") then
+        /* Normalize missing conjugate markers */
+        if sequal(conjugate, "none") then conjugate: "",
+        /* Coerce pKa to numeric if possible */
+        if numberp(pKa_raw) then
+            pKa_val: pKa_raw
+        else if stringp(pKa_raw) then (
+            pKa_val: chem_string_to_float(pKa_raw),
+            if pKa_val = false then pKa_val: null
+        ) else
+            pKa_val: null,
+        /* Calculate pKb only when conjugate exists and pKa is numeric */
+        if sequal(conjugate, "") or not numberp(pKa_val) then
             pKb_val: null
         else
             pKb_val: 14 - pKa_val,
