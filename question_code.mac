@@ -1,0 +1,48 @@
+/* Question code for testing acidbase.mac functionality */
+
+/* Load periodic table module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+
+/* Load acid-base chemistry module */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+
+/* Allow units */
+stack_unit_si_declare(true);
+
+/* Print fractions as decimals */
+stackfltfmt:"~f";
+
+/* Test strong acids */
+strong_acid: rand(chem_strong_acid_array());
+conj_base: chem_acidbase_conjugate_base(strong_acid);
+pka_strong_acid: chem_acidbase_data(strong_acid, "pKa");
+ka_strong_acid: chem_acidbase_Ka(strong_acid);
+
+/* Test weak acids */
+weak_acid: rand(chem_weak_acid_array());
+pka_weak_acid: chem_acidbase_data(weak_acid, "pKa");
+ka_weak_acid: chem_acidbase_Ka(weak_acid);
+
+/* Test strong bases */
+/* strong_base: rand(chem_strong_base_array()); */
+/* conj_acid: chem_acidbase_conjugate_acid(strong_base); */
+/* pkb_strong_base: chem_acidbase_data(strong_base, "pKb"); */
+/* kb_strong_base: chem_acidbase_Kb(strong_base); */
+
+/* Test weak bases */
+/* weak_base: rand(chem_weak_base_array()); */
+/* pkb_weak_base: chem_acidbase_data(weak_base, "pKb"); */
+/* kb_weak_base: chem_acidbase_Kb(weak_base); */
+
+/* Random substance */
+random_sub: rand(chem_acidbase_array());
+
+/* Display formats */
+strong_acid_display: chem_display(strong_acid);
+weak_acid_display: chem_display(weak_acid);
+/* strong_base_display: chem_display(strong_base); */
+/* weak_base_display: chem_display(weak_base); */
+random_sub_display: chem_display(random_sub);
+
+/* Test answer */
+ta1: 10;
