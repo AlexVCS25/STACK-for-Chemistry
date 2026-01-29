@@ -46,15 +46,15 @@ The goal of this project is to develop new chemistry functions and comprehensive
 **Quick Start:**
 ```maxima
 /* Load only the modules you need - order doesn't matter */
-stack_include("pse.mac");                     /* Periodic table data */
-stack_include("acidbase.mac");                /* Acid-base chemistry */
-stack_include("reactions.mac");               /* Chemical reactions */
-stack_include("thermodynamictables.mac");     /* Thermodynamic data */
-stack_include("nuclidetable.mac");            /* Nuclide database */
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
 
 /* For reaction-based thermodynamic calculations, load both: */
-stack_include("reactions.mac");
-stack_include("thermodynamictables.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include_contrib("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
 /* Then use: chem_reaction_enthalpy_by_name("CombustionMethane") */
 ```
 
