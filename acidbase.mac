@@ -65,17 +65,24 @@ chem_acid_array() := block([arr],
     sublist(arr, lambda([s], numberp(chem_acidbase_data(s, "pKa"))))
 )$
 
-chem_base_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        not sequal(chem_acidbase_data(s, "conjugate"), "") and numberp(chem_acidbase_data(s, "pKa"))
-    ))
+/* Returns an array of conjugate BASE formulas (not the acid keys).
+   Filters to non-empty conjugates where the parent acid has a numeric pKa. */
+chem_base_array() := block([result, entry, conj, pKa],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not atom(entry) then (
+            pKa: first(second(entry)),
+            conj: second(second(entry)),
+            if not sequal(conj, "") and numberp(pKa) then
+                result: append(result, [conj])
+        )
+    ),
+    result
 )$
 
 chem_weak_acid_array() := block([arr],
     arr: chem_acidbase_array(),
     sublist(arr, lambda([s],
-        /* fixed: declare pKa in block var list, assign inside block body */
         block([pKa],
             pKa: chem_acidbase_data(s, "pKa"),
             numberp(pKa) and pKa > 0
@@ -86,7 +93,6 @@ chem_weak_acid_array() := block([arr],
 chem_strong_acid_array() := block([arr],
     arr: chem_acidbase_array(),
     sublist(arr, lambda([s],
-        /* fixed: declare pKa in block var list, assign inside block body */
         block([pKa],
             pKa: chem_acidbase_data(s, "pKa"),
             numberp(pKa) and pKa < 0
@@ -94,26 +100,40 @@ chem_strong_acid_array() := block([arr],
     ))
 )$
 
-chem_weak_base_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        block([pKa, pKb, conj],
-            conj: chem_acidbase_data(s, "conjugate"),
-            pKa: chem_acidbase_data(s, "pKa"),
-            if not sequal(conj, "") and numberp(pKa) then (pKb: 14 - pKa, pKb > 0 and pKb < 14) else false
+/* Returns an array of weak BASE formulas (0 < pKb < 14).
+   pKb = 14 - pKa of the conjugate acid. Returns the base (conjugate) string. */
+chem_weak_base_array() := block([result, entry, pKa, pKb, conj],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not atom(entry) then (
+            pKa: first(second(entry)),
+            conj: second(second(entry)),
+            if not sequal(conj, "") and numberp(pKa) then (
+                pKb: 14 - pKa,
+                if pKb > 0 and pKb < 14 then
+                    result: append(result, [conj])
+            )
         )
-    ))
+    ),
+    result
 )$
 
-chem_strong_base_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        block([pKa, pKb, conj],
-            conj: chem_acidbase_data(s, "conjugate"),
-            pKa: chem_acidbase_data(s, "pKa"),
-            if not sequal(conj, "") and numberp(pKa) then (pKb: 14 - pKa, pKb <= 0) else false
+/* Returns an array of strong BASE formulas (pKb <= 0).
+   pKb = 14 - pKa of the conjugate acid. Returns the base (conjugate) string. */
+chem_strong_base_array() := block([result, entry, pKa, pKb, conj],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not atom(entry) then (
+            pKa: first(second(entry)),
+            conj: second(second(entry)),
+            if not sequal(conj, "") and numberp(pKa) then (
+                pKb: 14 - pKa,
+                if pKb <= 0 then
+                    result: append(result, [conj])
+            )
         )
-    ))
+    ),
+    result
 )$
 
 /* Returns the conjugate base string (as stored in the DB) for a given substance.
@@ -126,11 +146,13 @@ chem_acidbase_conjugate_base(substance) := block([meta, conj],
 )$
 
 /* Returns the conjugate acid string for a given base by searching the DB.
+   Searches for entries where the conjugate field matches the given substance.
    Returns "" if no conjugate acid is found. */
-chem_acidbase_conjugate_acid(substance) := block([entry, found],
+chem_acidbase_conjugate_acid(substance) := block([entry, conj],
     for entry in %_ACIDBASE_DATA do (
         if not atom(entry) then (
-            if second(entry) = substance or second(entry) = substance then return(first(entry))
+            conj: second(second(entry)),
+            if sequal(conj, substance) then return(first(entry))
         )
     ),
     return("")

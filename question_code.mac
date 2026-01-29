@@ -1,3 +1,39 @@
+/* Explanation of variables and functions used
+   - sa_list: list of strong acids (strings) from chem_strong_acid_array()
+   - strong_acid: selected strong acid (string)
+   - conj_base: conjugate base of strong_acid from chem_acidbase_conjugate_base()
+   - pka_strong_acid: pKa number (or null) via chem_acidbase_data(strong_acid, "pKa")
+   - ka_strong_acid: Ka via chem_acidbase_Ka(strong_acid)
+
+   - wa_list: list of weak acids from chem_weak_acid_array()
+   - weak_acid: selected weak acid
+   - pka_weak_acid, ka_weak_acid: pKa and Ka for weak_acid
+
+   - sb_list: list of strong bases from chem_strong_base_array()
+   - strong_base: selected strong base
+   - conj_acid: conjugate acid of strong_base from chem_acidbase_conjugate_acid()
+   - pkb_strong_base, kb_strong_base: pKb and Kb for strong_base
+
+   - wb_list / weak_base / pkb_weak_base / kb_weak_base: analogous for weak bases
+
+   - arr_all: all database entries via chem_acidbase_array()
+   - random_sub: a random substance string from arr_all
+   - random_sub_display: chem_display(random_sub)
+
+   Display variables used by STACK placeholders:
+   - strong_acid_display, weak_acid_display, strong_base_display, weak_base_display
+   - conj_base_display, conj_acid_display
+
+   Functions exercised from acidbase.mac and pse.mac:
+   - chem_strong_acid_array(), chem_weak_acid_array(), chem_strong_base_array(), chem_weak_base_array()
+   - chem_acidbase_conjugate_base(), chem_acidbase_conjugate_acid()
+   - chem_acidbase_data(), chem_acidbase_Ka(), chem_acidbase_Kb()
+   - chem_molar_mass() (from pse.mac)
+   - chem_display(), chem_acidbase_array()
+
+   The code below computes the variables and prepares two question text strings (German and English).
+*/
+
 /* Question code for testing acidbase.mac functionality */
 
 /* Load periodic table module */
@@ -47,7 +83,7 @@ random_sub_display: chem_display(random_sub);
 question_text_de: "\\(\\require{mhchem}\\)\n\n**Starke Säuren und Basen:**\n\nDas hier ist eine starke Säure: \\({@strong_acid_display@}\\) mit einem pKa von {@pka_strong_acid@}. Das entspricht einem Ka von {@chem_acidbase_Ka(strong_acid)@}. Ihre korrespondierende Base ist \\({@chem_display(conj_base)@}\\).\n\nDas hier ist eine starke Base: \\({@chem_display(strong_base)@}\\) mit einem pKb von {@pkb_strong_base@} und ihre korrespondierende Säure ist \\({@chem_display(conj_acid)@}\\).\n\n**Schwache Säuren und Basen:**\n\nDas hier ist eine schwache Säure: \\({@chem_display(weak_acid)@}\\) mit einem pKa von {@chem_acidbase_data(weak_acid, \"pKa\")@}. Das entspricht einem Ka von {@chem_acidbase_Ka(weak_acid)@}.\n\nDas hier ist eine schwache Base: \\({@chem_display(weak_base)@}\\) mit einem pKb von {@chem_acidbase_data(weak_base, \"pKb\")@}. Das entspricht einem Kb von {@chem_acidbase_Kb(weak_base)@}.\n\n**Molare Masse:**\n\n\\({@chem_display(strong_acid)@}\\) hat eine molare Masse von {@chem_molar_mass(strong_acid)@}.\n\n**Ihre Antwort:**\n\n[[input:ans1]] [[validation:ans1]]";
 
 /* English version */
-question_text_en: "\\(\\require{mhchem}\\)\n\n**Strong acids and bases:**\n\nThis is a strong acid: {@strong_acid_display@} with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@chem_acidbase_Ka(strong_acid)@}. Its conjugate base is {@conj_base_display@}.\n\nThis is a strong base: {@strong_base_display@} with a pKb of {@pkb_strong_base@} and its conjugate acid is {@conj_acid_display@}.\n\n**Weak acids and bases:**\n\nThis is a weak acid: {@weak_acid_display@} with a pKa of {@chem_acidbase_data(weak_acid, \"pKa\")@}. That corresponds to a Ka of {@chem_acidbase_Ka(weak_acid)@}.\n\nThis is a weak base: {@weak_base_display@} with a pKb of {@chem_acidbase_data(weak_base, \"pKb\")@}. That corresponds to a Kb of {@chem_acidbase_Kb(weak_base)@}.\n\n**Molar mass:**\n\n{@strong_acid_display@} has a molar mass of {@chem_molar_mass(strong_acid)@}.\n\n**Your answer:**\n\n[[input:ans1]] [[validation:ans1]]";
+question_text_en: "\\(\\require{mhchem}\\)\n\n**Strong acids and bases:**\n\nThis is a strong acid: \\({@strong_acid_display@}\\) with a pKa of {@pka_strong_acid@}. That corresponds to a Ka of {@chem_acidbase_Ka(strong_acid)@}. Its conjugate base is \\({@conj_base_display@}\\).\n\nThis is a strong base: \\({@strong_base_display@}\\) with a pKb of {@pkb_strong_base@} and its conjugate acid is \\({@conj_acid_display@}\\).\n\n**Weak acids and bases:**\n\nThis is a weak acid: \\({@weak_acid_display@}\\) with a pKa of {@chem_acidbase_data(weak_acid, \"pKa\")@}. That corresponds to a Ka of {@chem_acidbase_Ka(weak_acid)@}.\n\nThis is a weak base: \\({@weak_base_display@}\\) with a pKb of {@chem_acidbase_data(weak_base, \"pKb\")@}. That corresponds to a Kb of {@chem_acidbase_Kb(weak_base)@}.\n\n**Molar mass:**\n\n\\({@strong_acid_display@}\\) has a molar mass of {@chem_molar_mass(strong_acid)@}.\n\n**Your answer:**\n\n[[input:ans1]] [[validation:ans1]]";
 
 /* Conjugate display variables (make them explicit so placeholders can reference them) */
 conj_base_display: if strong_acid = "" then "" else chem_display(conj_base);
