@@ -2,182 +2,133 @@
     ETH Zurich
     Copyright (C) 2025 Alexander Pitzer
 
-    Simplified, robust acid-base helper (restored clean baseline).
+    Simplified, robust acid-base helper.
 */
 
-/* Minimal acid-base database */
+/* Acid-base database: [acid, pKa, pKb, base]
+   pKa: acidic dissociation constant of the acid
+   pKb: basic dissociation constant of the conjugate base (pKb = 14 - pKa)
+   Empty string "" for base means no conjugate base defined */
 %_ACIDBASE_DATA: [
-    ["H3O+", [0, "H2O"]],
-    ["H2O", [14, "OH-"]],
-    ["HCl", [-7.0, "Cl-"]],
-    ["H2SO4", [-2.0, "HSO4-"]],
-    ["HSO4-", [1.92, "SO4^{2-}"]],
-    ["HNO3", [-1, "NO3-"]],
-    ["H3PO4", [2.12, "H2PO4-"]],
-    ["H2PO4-", [7.21, "HPO4^{2-}"]],
-    ["HPO4^{2-}", [12.32, "PO4^{3-}"]],
-    ["HF", [3.17, "F-"]],
-    ["CH3COOH", [4.74, "CH3COO-"]],
-    ["H2CO3", [6.35, "HCO3-"]],
-    ["HCO3-", [10.33, "CO3^{2-}"]],
-    ["H2S", [7.00, "HS-"]],
-    ["HS-", [12.89, "S^{2-}"]],
-    ["NH4+", [9.25, "NH3"]]
+    ["H3O+", 0, 14, "H2O"],
+    ["H2O", 14, 0, "OH-"],
+    ["HCl", -7.0, 21.0, "Cl-"],
+    ["H2SO4", -2.0, 16.0, "HSO4-"],
+    ["HSO4-", 1.92, 12.08, "SO4^{2-}"],
+    ["HNO3", -1, 15, "NO3-"],
+    ["H3PO4", 2.12, 11.88, "H2PO4-"],
+    ["H2PO4-", 7.21, 6.79, "HPO4^{2-}"],
+    ["HPO4^{2-}", 12.32, 1.68, "PO4^{3-}"],
+    ["HF", 3.17, 10.83, "F-"],
+    ["CH3COOH", 4.74, 9.26, "CH3COO-"],
+    ["H2CO3", 6.35, 7.65, "HCO3-"],
+    ["HCO3-", 10.33, 3.67, "CO3^{2-}"],
+    ["H2S", 7.00, 7.00, "HS-"],
+    ["HS-", 12.89, 1.11, "S^{2-}"],
+    ["NH4+", 9.25, 4.75, "NH3"]
 ]$
 
-/* Return normalized data for a substance: ["pKa", pKa_or_null], ["pKb", pKb_or_null], ["conjugate", conjugate_string] */
-chem_acidbase_data_all(substance) := block([entry, pKa_raw, pKa_val, pKb_val, conj],
-    entry: assoc(substance, %_ACIDBASE_DATA),
-    if entry = false then return(false),
-    pKa_raw: first(entry),
-    conj: second(entry),
-    /* Treat empty or explicit "" as missing conjugate */
-    if sequal(conj, "none") then conj: "",
-    /* Accept only numeric pKa values from the database */
-    if numberp(pKa_raw) then pKa_val: pKa_raw else pKa_val: null,
-    /* Compute pKb only when conjugate present and pKa numeric */
-    if sequal(conj, "") or not numberp(pKa_val) then pKb_val: null else pKb_val: 14 - pKa_val,
-    return([["pKa", pKa_val], ["pKb", pKb_val], ["conjugate", conj]])
-)$
-
-/* Simple accessor */
-chem_acidbase_data(substance, property) := assoc(property, chem_acidbase_data_all(substance))$
-
-/* Ka / Kb */
-chem_acidbase_Ka(substance) := block([pKa],
-    pKa: chem_acidbase_data(substance, "pKa"),
-    if not numberp(pKa) then return(null) else return(10^(-pKa))
-)$
-
-chem_acidbase_Kb(substance) := block([pKb],
-    pKb: chem_acidbase_data(substance, "pKb"),
-    if not numberp(pKb) then return(null) else return(10^(-pKb))
-)$
-
-/* Basic helpers for formula display (kept minimal) */
-chem_display(substance) := sconcat("\\ce{", substance, "}")$
-
-/* Navigation: return lists of formula strings only (safe for rand()) */
-chem_acidbase_array() := map(first, %_ACIDBASE_DATA)$
-
-chem_acid_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s], numberp(chem_acidbase_data(s, "pKa"))))
-)$
-
-/* Returns an array of conjugate BASE formulas (not the acid keys).
-   Filters to non-empty conjugates where the parent acid has a numeric pKa. */
-chem_base_array() := block([result, entry, conj, pKa],
-    result: [],
+/* Get pKa for an ACID (column 1 -> column 2) */
+chem_acidbase_pKa(acid) := block([entry],
     for entry in %_ACIDBASE_DATA do (
-        if not atom(entry) then (
-            pKa: first(second(entry)),
-            conj: second(second(entry)),
-            if not sequal(conj, "") and numberp(pKa) then
-                result: append(result, [conj])
-        )
-    ),
-    result
-)$
-
-chem_weak_acid_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        block([pKa],
-            pKa: chem_acidbase_data(s, "pKa"),
-            numberp(pKa) and pKa > 0
-        )
-    ))
-)$
-
-chem_strong_acid_array() := block([arr],
-    arr: chem_acidbase_array(),
-    sublist(arr, lambda([s],
-        block([pKa],
-            pKa: chem_acidbase_data(s, "pKa"),
-            numberp(pKa) and pKa < 0
-        )
-    ))
-)$
-
-/* Returns an array of weak BASE formulas (0 < pKb < 14).
-   pKb = 14 - pKa of the conjugate acid. Returns the base (conjugate) string. */
-chem_weak_base_array() := block([result, entry, pKa, pKb, conj],
-    result: [],
-    for entry in %_ACIDBASE_DATA do (
-        if not atom(entry) then (
-            pKa: first(second(entry)),
-            conj: second(second(entry)),
-            if not sequal(conj, "") and numberp(pKa) then (
-                pKb: 14 - pKa,
-                if pKb > 0 and pKb < 14 then
-                    result: append(result, [conj])
-            )
-        )
-    ),
-    result
-)$
-
-/* Returns an array of strong BASE formulas (pKb <= 0).
-   pKb = 14 - pKa of the conjugate acid. Returns the base (conjugate) string. */
-chem_strong_base_array() := block([result, entry, pKa, pKb, conj],
-    result: [],
-    for entry in %_ACIDBASE_DATA do (
-        if not atom(entry) then (
-            pKa: first(second(entry)),
-            conj: second(second(entry)),
-            if not sequal(conj, "") and numberp(pKa) then (
-                pKb: 14 - pKa,
-                if pKb <= 0 then
-                    result: append(result, [conj])
-            )
-        )
-    ),
-    result
-)$
-
-/* Returns the conjugate base string (as stored in the DB) for a given substance.
-   Returns "" if no conjugate stored or substance not found. */
-chem_acidbase_conjugate_base(substance) := block([meta, conj],
-    meta: chem_acidbase_data_all(substance),
-    if meta = false then return(""),
-    conj: assoc("conjugate", meta),
-    if sequal(conj, false) or sequal(conj, "") then return("") else return(conj)
-)$
-
-/* Returns the conjugate acid string for a given base by searching the DB.
-   Searches for entries where the conjugate field matches the given substance.
-   Returns "" if no conjugate acid is found. */
-chem_acidbase_conjugate_acid(substance) := block([entry, conj],
-    for entry in %_ACIDBASE_DATA do (
-        if not atom(entry) then (
-            conj: second(second(entry)),
-            if sequal(conj, substance) then return(first(entry))
-        )
-    ),
-    return("")
-)$
-
-/* Returns pKb for a BASE (not an acid).
-   Finds the conjugate acid in the DB and computes pKb = 14 - pKa.
-   Returns null if the base is not found. */
-chem_acidbase_pKb_base(base_substance) := block([entry, conj, pKa],
-    for entry in %_ACIDBASE_DATA do (
-        if not atom(entry) then (
-            conj: second(second(entry)),
-            if sequal(conj, base_substance) then (
-                pKa: first(second(entry)),
-                if numberp(pKa) then return(14 - pKa) else return(null)
-            )
-        )
+        if sequal(first(entry), acid) then return(second(entry))
     ),
     return(null)
 )$
 
-/* Returns Kb for a BASE (not an acid).
-   Uses chem_acidbase_pKb_base to get pKb, then computes 10^(-pKb).
-   Returns null if the base is not found or pKb is not numeric. */
-chem_acidbase_Kb_base(base_substance) := block([pKb],
-    pKb: chem_acidbase_pKb_base(base_substance),
+/* Get pKb for a BASE (column 4 -> column 3) */
+chem_acidbase_pKb(base) := block([entry],
+    for entry in %_ACIDBASE_DATA do (
+        if sequal(fourth(entry), base) then return(third(entry))
+    ),
+    return(null)
+)$
+
+/* Get Ka for an ACID */
+chem_acidbase_Ka(acid) := block([pKa],
+    pKa: chem_acidbase_pKa(acid),
+    if not numberp(pKa) then return(null) else return(10^(-pKa))
+)$
+
+/* Get Kb for a BASE */
+chem_acidbase_Kb(base) := block([pKb],
+    pKb: chem_acidbase_pKb(base),
     if not numberp(pKb) then return(null) else return(10^(-pKb))
 )$
+
+/* Get conjugate base for an acid */
+chem_acidbase_conjugate_base(acid) := block([entry],
+    for entry in %_ACIDBASE_DATA do (
+        if sequal(first(entry), acid) then return(fourth(entry))
+    ),
+    return("")
+)$
+
+/* Get conjugate acid for a base */
+chem_acidbase_conjugate_acid(base) := block([entry],
+    for entry in %_ACIDBASE_DATA do (
+        if sequal(fourth(entry), base) then return(first(entry))
+    ),
+    return("")
+)$
+
+/* Basic helper for formula display */
+chem_display(substance) := sconcat("\\ce{", substance, "}")$
+
+/* Navigation arrays */
+
+/* All acids (column 1) */
+chem_acid_array() := map(first, %_ACIDBASE_DATA)$
+
+/* All bases (column 4), excluding empty strings */
+chem_base_array() := block([result, entry],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not sequal(fourth(entry), "") then
+            result: append(result, [fourth(entry)])
+    ),
+    result
+)$
+
+/* Strong acids: pKa < 0 */
+chem_strong_acid_array() := block([result, entry],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if numberp(second(entry)) and second(entry) < 0 then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Weak acids: pKa > 0 */
+chem_weak_acid_array() := block([result, entry],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if numberp(second(entry)) and second(entry) > 0 then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Strong bases: pKb <= 0 */
+chem_strong_base_array() := block([result, entry],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) <= 0 then
+            result: append(result, [fourth(entry)])
+    ),
+    result
+)$
+
+/* Weak bases: 0 < pKb < 14 */
+chem_weak_base_array() := block([result, entry],
+    result: [],
+    for entry in %_ACIDBASE_DATA do (
+        if not sequal(fourth(entry), "") and numberp(third(entry)) and third(entry) > 0 and third(entry) < 14 then
+            result: append(result, [fourth(entry)])
+    ),
+    result
+)$
+
+/* Legacy: return all acid formulas */
+chem_acidbase_array() := chem_acid_array()$
