@@ -72,7 +72,7 @@ _acidbase_find_acid(acid) := block([i, n],
     0
 )$
 
-/* Helper: find index of base (returns position of base, or 0 if not found) */
+/* Helper: find index of base (returns starting position of entry, or 0 if not found) */
 _acidbase_find_base(base) := block([i, n],
     n: length(%_ACIDBASE_DATA),
     for i: 4 step 4 thru n do (
@@ -81,22 +81,22 @@ _acidbase_find_base(base) := block([i, n],
     0
 )$
 
-/* Get pKa for an ACID */
+/* Get pKa for an ACID - acid is at idx, pKa is at idx+1 */
 chem_acidbase_pKa(acid) := block([idx],
     idx: _acidbase_find_acid(acid),
-    if is(idx = 0) then null else %_ACIDBASE_DATA[idx + 1]
+    if idx = 0 then null else %_ACIDBASE_DATA[idx + 1]
 )$
 
-/* Get pKb for a BASE */
+/* Get pKb for a BASE - entry starts at idx, pKb is at idx+2 */
 chem_acidbase_pKb(base) := block([idx],
     idx: _acidbase_find_base(base),
-    if is(idx = 0) then null else %_ACIDBASE_DATA[idx + 2]
+    if idx = 0 then null else %_ACIDBASE_DATA[idx + 2]
 )$
 
 /* Get Ka for an ACID */
 chem_acidbase_Ka(acid) := block([pKa],
     pKa: chem_acidbase_pKa(acid),
-    if is(pKa = null) then null
+    if pKa = null then null
     else if not numberp(pKa) then null
     else 10^(-pKa)
 )$
@@ -104,21 +104,21 @@ chem_acidbase_Ka(acid) := block([pKa],
 /* Get Kb for a BASE */
 chem_acidbase_Kb(base) := block([pKb],
     pKb: chem_acidbase_pKb(base),
-    if is(pKb = null) then null
+    if pKb = null then null
     else if not numberp(pKb) then null
     else 10^(-pKb)
 )$
 
-/* Get conjugate base for an acid */
+/* Get conjugate base for an acid - acid at idx, base at idx+3 */
 chem_acidbase_conjugate_base(acid) := block([idx],
     idx: _acidbase_find_acid(acid),
-    if is(idx = 0) then "" else %_ACIDBASE_DATA[idx + 3]
+    if idx = 0 then "" else %_ACIDBASE_DATA[idx + 3]
 )$
 
-/* Get conjugate acid for a base */
+/* Get conjugate acid for a base - entry starts at idx, acid at idx */
 chem_acidbase_conjugate_acid(base) := block([idx],
     idx: _acidbase_find_base(base),
-    if is(idx = 0) then "" else %_ACIDBASE_DATA[idx]
+    if idx = 0 then "" else %_ACIDBASE_DATA[idx]
 )$
 
 /* Basic helper for formula display */
