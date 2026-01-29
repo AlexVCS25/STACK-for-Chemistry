@@ -60,14 +60,14 @@
 /****************************************************************/
 
 /* Safe lookup for %_ACIDBASE_DATA:
-   Matches the provided key against the first element of each entry.
-   Accepts either exact match or stringified match to be resilient to key types. */
-chem_acidbase_lookup(key) := block([entry, kstr],
-    kstr: if stringp(key) then key else stringify(key),
+   Matches the provided query against the first element of each entry.
+   Accepts either exact match or stringified match to be resilient to query types. */
+chem_acidbase_lookup(query) := block([entry, qstr],
+    qstr: if stringp(query) then query else string(query),
     for entry in %_ACIDBASE_DATA do (
         /* entry is expected to be [formula, [pKa, conjugate]] */
         if not atom(entry) then (
-            if first(entry) = key or first(entry) = kstr then return(second(entry))
+            if first(entry) = query or first(entry) = qstr then return(second(entry))
         )
     ),
     return(false)
