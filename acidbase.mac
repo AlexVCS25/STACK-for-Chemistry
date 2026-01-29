@@ -29,25 +29,28 @@
 /*                                                              */
 /****************************************************************/
 
-/* Database structure: ["Formula", [pKa, pKb]]
+/* Database structure: ["Formula", [pKa, "conjugate_formula"]]
+   pKa: acidic dissociation constant of this species
+   conjugate_formula: the conjugate base species
+   pKb is calculated as: pKb = 14 - pKa(conjugate acid)
    null indicates the value is not applicable or not available */
 %_ACIDBASE_DATA: [
-    ["H+", [0, null]],
-    ["H2O", [14, 0]],
-    ["HCl", [-7.0, 21]],
-    ["H2SO4", [-2.0, 16]],
-    ["HSO4-", [1.92, 12.08]],
-    ["HNO3", [-1, 15]],
-    ["H3PO4", [1.96, 12.04]],
-    ["H2PO4-", [7.21, 6.79]],
-    ["HPO4^{2-}", [12.32, 1.68]],
-    ["HF", [3.45, 10.55]],
-    ["CH3COOH", [4.74, 9.26]],
-    ["H2CO3", [6.46, 7.54]],
-    ["HCO3-", [10.40, 3.6]],
-    ["H2S", [7.00, 7.00]],
-    ["NH4+", [9.21, 4.79]],
-    ["OH-", [24, -10]]
+    ["H+", [0, ""]],
+    ["H2O", [14, "H2O"]],
+    ["HCl", [-7.0, "Cl-"]],
+    ["H2SO4", [-2.0, "HSO4-"]],
+    ["HSO4-", [1.92, "SO4^{2-}"]],
+    ["HNO3", [-1, "NO3-"]],
+    ["H3PO4", [2.12, "H2PO4-"]],
+    ["H2PO4-", [7.21, "HPO4^{2-}"]],
+    ["HPO4^{2-}", [12.32, "PO4^{3-}"]],
+    ["HF", [3.17, "F-"]],
+    ["CH3COOH", [4.74, "CH3COO-"]],
+    ["H2CO3", [6.35, "HCO3-"]],
+    ["HCO3-", [10.33, "CO3^{2-}"]],
+    ["H2S", [7.00, "HS-"]],
+    ["HS-", [12.89, "S^{2-}"]],
+    ["NH4+", [9.25, "NH3"]]
 ]$
 
 /****************************************************************/
@@ -57,15 +60,23 @@
 /****************************************************************/
 
 /* Returns all data for a given substance */
-chem_acidbase_data_all(substance) := block([data],
+chem_acidbase_data_all(substance) := block([data, pKa_val, pKb_val, conjugate],
     data: assoc(substance, %_ACIDBASE_DATA),
     if is(data = false) then
         return(false)
-    else
-        return([["pKa", first(data)], ["pKb", second(data)]])
+    else (
+        pKa_val: first(data),
+        conjugate: second(data),
+        /* Calculate pKb from conjugate acid's pKa */
+        if is(pKa_val = null) or sequal(conjugate, "") then
+            pKb_val: null
+        else
+            pKb_val: 14 - pKa_val,
+        return([["pKa", pKa_val], ["pKb", pKb_val], ["conjugate", conjugate]])
+    )
 )$
 
-/* Returns a specific property (pKa or pKb) for a substance */
+/* Returns a specific property (pKa, pKb, or conjugate) for a substance */
 chem_acidbase_data(substance, property) := assoc(property, chem_acidbase_data_all(substance))$
 
 /* Calculates Ka from pKa for a given substance */
@@ -77,7 +88,8 @@ chem_acidbase_Ka(substance) := block([pKa_val],
         return(10^(-pKa_val))
 )$
 
-/* Calculates Kb from pKb for a given substance */
+/* Calculates Kb from pKb for a given substance.
+   pKb is calculated from the conjugate acid's pKa using: pKb = 14 - pKa */
 chem_acidbase_Kb(substance) := block([pKb_val],
     pKb_val: chem_acidbase_data(substance, "pKb"),
     if is(pKb_val = false) or is(pKb_val = null) then
@@ -370,10 +382,10 @@ chem_acid_array() := block([filtered],
     map(first, filtered)
 )$
 
-/* Returns an array of all bases (substances with pKb values that are not null) */
+/* Returns an array of all bases (substances with conjugate formula that are not empty) */
 chem_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(second(second(x)) = null))),
+        not sequal(second(x), ""))),
     map(first, filtered)
 )$
 
@@ -387,9 +399,9 @@ chem_weak_acid_array() := block([filtered],
 /* Returns an array of weak bases (0 < pKb < 14 and not null) */
 chem_weak_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(second(second(x)) = null) and 
-        second(second(x)) > 0 and 
-        second(second(x)) < 14)),
+        not sequal(second(x), "") and 
+        14 - first(second(x)) > 0 and 
+        14 - first(second(x)) < 14)),
     map(first, filtered)
 )$
 
@@ -403,6 +415,6 @@ chem_strong_acid_array() := block([filtered],
 /* Returns an array of strong bases (pKb <= 0 and not null) */
 chem_strong_base_array() := block([filtered],
     filtered: sublist(%_ACIDBASE_DATA, lambda([x], 
-        not is(second(second(x)) = null) and second(second(x)) <= 0)),
+        not sequal(second(x), "") and 14 - first(second(x)) <= 0)),
     map(first, filtered)
 )$
