@@ -7,7 +7,7 @@ This repository contains chemistry functions and databases for the STACK questio
 The goal of this project is to develop new chemistry functions and comprehensive databases for STACK in Moodle. This includes:
 
 - **Periodic table data**: Complete element information including atomic numbers, masses, electron configurations, and physical properties
-- **Acid-base chemistry**: Comprehensive database of acids and bases with pKa/pKb values, automatic conjugate acid/base calculation
+- **Acid-base chemistry**: Comprehensive database of acids and bases with pKa/pKb values, automatic conjugate acid/base lookup
 - **Molecule parsing**: Parse chemical formulas and calculate molar masses
 - **Multi-language support**: Element names in multiple languages (currently English, German, and Finnish)
 - **Unit support**: Integration with STACK's units system for physical quantities
@@ -17,25 +17,26 @@ The goal of this project is to develop new chemistry functions and comprehensive
 
 ### Module Loading and Dependencies
 
-**Important:** Most modules are independent, but some combinations require specific loading order:
+**Important:** All modules are now independent and can be loaded in any order:
 
 - **Independent Modules** (load in any order):
   - `pse.mac` - Periodic table data
+  - `acidbase.mac` - Acid-base chemistry (standalone)
   - `reactions.mac` - Reaction database
   - `nuclidetable.mac` - Nuclide database
+  - `thermodynamictables.mac` - Thermodynamic data (standalone for basic functions)
 
-- **Dependent Modules**:
-  - `acidbase.mac` - Works standalone for pKa/pKb data, but requires `pse.mac` for `chem_count_H()` function
-  - `thermodynamictables.mac` - Works standalone for basic thermodynamic data, but requires `reactions.mac` for reaction-based calculations (`*_by_name` functions)
+- **Optional Dependencies**:
+  - `thermodynamictables.mac` - Requires `reactions.mac` only for reaction-based calculations (`*_by_name` functions)
 
 **Quick Start:**
 ```maxima
-/* For full functionality, load in this order: */
-stack_include("pse.mac");                     /* Load first - required by acidbase.mac */
-stack_include("acidbase.mac");                /* Requires pse.mac for chem_count_H() */
-stack_include("reactions.mac");               /* Load before thermodynamictables.mac */
-stack_include("thermodynamictables.mac");     /* Requires reactions.mac for *_by_name functions */
-stack_include("nuclidetable.mac");            /* Load for nuclide database */
+/* Load modules as needed - order doesn't matter */
+stack_include("pse.mac");                     /* Periodic table data */
+stack_include("acidbase.mac");                /* Acid-base chemistry */
+stack_include("reactions.mac");               /* Chemical reactions */
+stack_include("thermodynamictables.mac");     /* Thermodynamic data */
+stack_include("nuclidetable.mac");            /* Nuclide database */
 ```
 
 **Important Note on Forbidden Functions:**
@@ -61,23 +62,48 @@ Functions for accessing periodic table data:
 
 ### Acid-Base Chemistry Module (`acidbase.mac`)
 
-Functions for acid-base chemistry:
-- `chem_display` - Automatically format chemical formulas for LaTeX rendering with `\ce{...}`
-- `chem_acidbase_data` - Retrieve pKa and pKb values
-- `chem_acidbase_Ka` / `chem_acidbase_Kb` - Calculate Ka and Kb from pK values
-- `chem_acid_array` - Get array of all acids (with pKa ≠ null)
-- `chem_base_array` - Get array of all bases (with pKb ≠ null)
-- `chem_weak_acid_array` / `chem_weak_base_array` - Get arrays of weak acids or bases
-- `chem_strong_acid_array` / `chem_strong_base_array` - Get arrays of strong acids or bases
-- `chem_count_H` - Count hydrogen atoms in a chemical formula
-- `chem_parse_charge` - Extract charge from chemical formulas
-- `chem_remove_charge` - Remove charge notation from formulas
-- `chem_acidbase_conjugate_base` - Calculate conjugate base after deprotonation
-- `chem_acidbase_conjugate_acid` - Calculate conjugate acid after protonation
+A standalone module providing acid-base chemistry data through database lookup:
 
-**Note:** The `acidbase.mac` module requires `pse.mac` to be loaded first for formula parsing functions (`chem_count_H`, `chem_acidbase_conjugate_base`, `chem_acidbase_conjugate_acid`).
+**Data Retrieval Functions:**
+- `chem_acidbase_pKa(acid)` - Get pKa value for an acid
+- `chem_acidbase_pKb(base)` - Get pKb value for a base
+- `chem_acidbase_Ka(acid)` - Calculate Ka from pKa (returns 10^(-pKa))
+- `chem_acidbase_Kb(base)` - Calculate Kb from pKb (returns 10^(-pKb))
 
-**Important:** Strong acids (HCl, H₂SO₄, HNO₃) have `null` pKb values because they completely dissociate in water. Similarly, strong bases have `null` pKa values.
+**Conjugate Pair Functions:**
+- `chem_acidbase_conjugate_base(acid)` - Get conjugate base for an acid
+- `chem_acidbase_conjugate_acid(base)` - Get conjugate acid for a base
+
+**Array Functions for Random Selection:**
+- `chem_acid_array()` - Get array of all acids in database
+- `chem_base_array()` - Get array of all bases in database
+- `chem_weak_acid_array()` - Get array of weak acids (pKa > 0)
+- `chem_strong_acid_array()` - Get array of strong acids (pKa < 0)
+- `chem_weak_base_array()` - Get array of weak bases (0 < pKb < 14)
+- `chem_strong_base_array()` - Get array of strong bases (pKb ≤ 0)
+
+**Display Function:**
+- `chem_display(substance)` - Wrap formula in `\ce{...}` for LaTeX rendering
+
+**Example Usage:**
+```maxima
+/* Get pKa of acetic acid */
+pka: chem_acidbase_pKa("CH3COOH");  /* Returns 4.76 */
+
+/* Get Ka from pKa */
+ka: chem_acidbase_Ka("CH3COOH");    /* Returns 10^(-4.76) */
+
+/* Get conjugate base */
+base: chem_acidbase_conjugate_base("CH3COOH");  /* Returns "CH3COO-" */
+
+/* Get pKb of the conjugate base */
+pkb: chem_acidbase_pKb("CH3COO-");  /* Returns 9.24 */
+
+/* Random weak acid for questions */
+acid: rand(chem_weak_acid_array());
+```
+
+**Note:** This module uses a flat database structure. All acid-base pairs and their pKa/pKb values are stored directly - no formula parsing is performed. Returns `null` for unknown substances or `""` for conjugate lookups that fail.
 
 ### Thermodynamic Tables Module (`thermodynamictables.mac`)
 
@@ -135,7 +161,9 @@ Use the `chem_display()` function to automatically wrap formulas for proper rend
 /* In Question Variables */
 acid: rand(chem_weak_acid_array());
 acid_display: chem_display(acid);  /* Wraps formula in \ce{...} */
-pka_value: chem_acidbase_data(acid, "pKa");
+pka_value: chem_acidbase_pKa(acid);
+conj_base: chem_acidbase_conjugate_base(acid);
+conj_base_display: chem_display(conj_base);
 ```
 
 ```latex
@@ -144,6 +172,7 @@ pka_value: chem_acidbase_data(acid, "pKa");
 
 <p>Calculate the pH of a 0.1 M solution of {@acid_display@}.</p>
 <p>Given: pKa = {@pka_value@}</p>
+<p>The conjugate base is {@conj_base_display@}.</p>
 ```
 
 The formulas will be automatically rendered with proper subscripts and superscripts:
@@ -309,7 +338,7 @@ We welcome contributions from developers of all skill levels! Here are ways you 
 ## File Structure
 
 - `pse.mac` - Periodic table functions and element data
-- `acidbase.mac` - Acid-base chemistry functions and molecular data
+- `acidbase.mac` - Acid-base chemistry functions and database (standalone)
 - `thermodynamictables.mac` - Thermodynamic data and calculation functions
 - `reactions.mac` - Chemical reactions database with stoichiometry
 - `nuclidetable.mac` - Nuclear data and decay database
