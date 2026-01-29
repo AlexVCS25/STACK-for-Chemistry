@@ -74,12 +74,24 @@ chem_base_array() := block([arr],
 
 chem_weak_acid_array() := block([arr],
     arr: chem_acidbase_array(),
-    sublist(arr, lambda([s], block([pKa]:=chem_acidbase_data(s,"pKa"), numberp(pKa) and pKa > 0)))
+    sublist(arr, lambda([s],
+        /* fixed: declare pKa in block var list, assign inside block body */
+        block([pKa],
+            pKa: chem_acidbase_data(s, "pKa"),
+            numberp(pKa) and pKa > 0
+        )
+    ))
 )$
 
 chem_strong_acid_array() := block([arr],
     arr: chem_acidbase_array(),
-    sublist(arr, lambda([s], block([pKa]:=chem_acidbase_data(s,"pKa"), numberp(pKa) and pKa < 0)))
+    sublist(arr, lambda([s],
+        /* fixed: declare pKa in block var list, assign inside block body */
+        block([pKa],
+            pKa: chem_acidbase_data(s, "pKa"),
+            numberp(pKa) and pKa < 0
+        )
+    ))
 )$
 
 chem_weak_base_array() := block([arr],
