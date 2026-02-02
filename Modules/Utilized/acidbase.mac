@@ -260,9 +260,85 @@ chem_acidbase_array() := chem_acid_array()$
 
 /****************************************************************/
 /*                                                              */
-/*  Titration Curve Functions                                   */
+/*  Titration Curve Functions for Polyprotic Acids              */
+/*  Using Alpha Fractions and Charge Balance                    */
 /*                                                              */
 /****************************************************************/
+
+/* Get all pKa values for a polyprotic acid as a list
+   Returns list like [pKa1, pKa2, pKa3] for triprotic acid
+   The acid string should be the fully protonated form */
+chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, nH],
+    pKa_values: [],
+    current_acid: acid,
+    nH: chem_acidbase_nH(acid),
+    
+    if is(nH = null) then return([]),
+    
+    while not is(current_acid = "") and not is(current_acid = null) do (
+        current_pKa: chem_acidbase_pKa(current_acid),
+        if is(current_pKa = null) then return(pKa_values),
+        pKa_values: append(pKa_values, [current_pKa]),
+        current_base: chem_acidbase_conjugate_base(current_acid),
+        if is(current_base = "") or is(current_base = null) then return(pKa_values),
+        current_acid: current_base
+    ),
+    
+    return(pKa_values)
+)$
+
+/* Convert pKa list to Ka list */
+_pKa_to_Ka(pKa_list) := block([Ka_list, i],
+    Ka_list: [],
+    i: 1,
+    while i <= length(pKa_list) do (
+        Ka_list: append(Ka_list, [float(10^(-pKa_list[i]))]),
+        i: i + 1
+    ),
+    return(Ka_list)
+)$
+
+/* Calculate alpha fractions for an n-protic acid
+   H = [H+] concentration
+   Ka_list = [Ka1, Ka2, ..., Kan]
+   Returns list [alpha_0, alpha_1, ..., alpha_n] where
+   alpha_0 = fraction of fully protonated form HnA
+   alpha_n = fraction of fully deprotonated form A^n- */
+_alpha_fractions(H, Ka_list) := block([n, terms, D, alphas, prod, i, j],
+    n: length(Ka_list),
+    
+    /* Build denominator: D = H^n + Ka1*H^(n-1) + Ka1*Ka2*H^(n-2) + ... + Ka1*Ka2*...*Kan */
+    terms: [H^n],
+    prod: 1.0,
+    i: 1,
+    while i <= n do (
+        prod: prod * Ka_list[i],
+        terms: append(terms, [prod * H^(n - i)]),
+        i: i + 1
+    ),
+    
+    D: 0,
+    i: 1,
+    while i <= length(terms) do (
+        D: D + terms[i],
+        i: i + 1
+    ),
+    
+    /* Avoid division by zero */
+    if is(D < 1e-100) then D: 1e-100,
+    
+    /* Calculate alpha_i = (Ka1*Ka2*...*Ka_i) * H^(n-i) / D */
+    alphas: [],
+    prod: 1.0,
+    i: 0,
+    while i <= n do (
+        if is(i > 0) then prod: prod * Ka_list[i],
+        alphas: append(alphas, [prod * H^(n - i) / D]),
+        i: i + 1
+    ),
+    
+    return(alphas)
+)$
 
 /* Solve cubic proton balance equation using Newton-Raphson
    The full proton balance: [H+] = [A-] + [OH-] - [B_added]
