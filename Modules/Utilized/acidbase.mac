@@ -264,78 +264,92 @@ chem_acidbase_array() := chem_acid_array()$
 /*                                                              */
 /****************************************************************/
 
-/* Calculate [H+] using the cubic proton balance equation for weak acid + strong base titration
-   Returns the hydrogen ion concentration */
-_titration_cubic_H(Ka, Kw, c_acid_total, c_base_total, c_conj_base) := block(
-    [a, b, c, d, H_guess, H, iter, f, fp],
-    
-    /* Initial guess based on simplified assumptions */
-    if is(c_acid_total > c_conj_base) then (
-        H_guess: Ka * (c_acid_total - c_conj_base) / max(c_conj_base, 1e-10)
-    ) else if is(c_conj_base > c_acid_total) then (
-        H_guess: Kw / ((c_conj_base - c_acid_total) + 1e-10)
-    ) else (
-        H_guess: sqrt(Kw * Ka / max(c_acid_total, 1e-10))
-    ),
-    
-    H_guess: max(H_guess, 1e-14),
-    H_guess: min(H_guess, 1),
-    
-    H: H_guess,
-    
-    /* Newton-Raphson iteration */
-    iter: 1,
-    while iter <= 50 do (
-        f: H^3 + (Ka + c_base_total)*H^2 + (Ka*(c_conj_base - c_acid_total) - Kw)*H - Ka*Kw,
-        fp: 3*H^2 + 2*(Ka + c_base_total)*H + (Ka*(c_conj_base - c_acid_total) - Kw),
-        
-        if is(abs(fp) < 1e-20) then return(H),
-        
-        H: H - f/fp,
-        H: max(H, 1e-14),
-        
-        if is(abs(f) < 1e-15) then return(H),
-        iter: iter + 1
-    ),
-    
-    return(H)
-)$
-
-/* Calculate pH at a given point during titration using cubic equation */
+/* Calculate pH at a given point during titration of weak acid with strong base
+   Uses different formulas for different regions of the titration curve
+   acid: the acid formula (string)
+   c_acid: initial acid concentration (M)
+   c_base: titrant (base) concentration (M)
+   v_acid: volume of acid (mL)
+   v_base: volume of base added (mL)
+   Returns: pH value */
 chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
-    [pKa, Ka, Kw, v_total, n_acid_init, n_base_added, c_acid_curr, c_conj_base, c_excess_base, H, pH],
+    [pKa, Ka, Kw, v_total, n_acid_init, n_base_added, 
+     c_HA, c_A, c_OH_excess, H, pH, ratio],
     
     Kw: 1.0e-14,
     pKa: chem_acidbase_pKa(acid),
     if is(pKa = null) then return(false),
     Ka: float(10^(-pKa)),
     
+    /* Total volume in L */
     v_total: (v_acid + v_base) / 1000.0,
+    
+    /* Moles of acid initially and base added */
     n_acid_init: c_acid * v_acid / 1000.0,
     n_base_added: c_base * v_base / 1000.0,
     
-    if is(n_base_added < n_acid_init) then (
-        c_acid_curr: (n_acid_init - n_base_added) / v_total,
-        c_conj_base: n_base_added / v_total,
-        c_excess_base: 0
-    ) else (
-        c_acid_curr: 0,
-        c_conj_base: n_acid_init / v_total,
-        c_excess_base: (n_base_added - n_acid_init) / v_total
+    /* Case 1: No base added - pure weak acid */
+    if is(v_base = 0) or is(n_base_added < 1e-12) then (
+        /* [H+] from weak acid: solve H^2 + Ka*H - Ka*c_acid = 0 */
+        H: (-Ka + sqrt(Ka^2 + 4*Ka*c_acid)) / 2,
+        pH: -log(H)/log(10),
+        return(float(pH))
     ),
     
-    H: _titration_cubic_H(Ka, Kw, c_acid_curr, c_excess_base, c_conj_base),
-    pH: -log(H) / log(10),
+    /* Case 2: Before equivalence point - buffer region */
+    if is(n_base_added < n_acid_init * 0.9999) then (
+        c_HA: (n_acid_init - n_base_added) / v_total,
+        c_A: n_base_added / v_total,
+        
+        /* Henderson-Hasselbalch with correction for very small ratios */
+        if is(c_A < 1e-10) then (
+            /* Almost no conjugate base - treat as weak acid */
+            H: (-Ka + sqrt(Ka^2 + 4*Ka*c_HA)) / 2,
+            pH: -log(H)/log(10)
+        ) else (
+            /* Standard buffer calculation */
+            ratio: c_A / c_HA,
+            pH: pKa + log(ratio)/log(10)
+        ),
+        return(float(pH))
+    ),
     
-    return(float(pH))
+    /* Case 3: At equivalence point (within 0.01% of equivalence) */
+    if is(n_base_added >= n_acid_init * 0.9999) and is(n_base_added <= n_acid_init * 1.0001) then (
+        /* Only conjugate base A- present */
+        /* Kb = Kw/Ka, [OH-] = sqrt(Kb * c_A) */
+        c_A: n_acid_init / v_total,
+        block([Kb, OH],
+            Kb: Kw / Ka,
+            OH: sqrt(Kb * c_A),
+            pH: 14 + log(OH)/log(10)
+        ),
+        return(float(pH))
+    ),
+    
+    /* Case 4: After equivalence point - excess strong base */
+    if is(n_base_added > n_acid_init * 1.0001) then (
+        c_OH_excess: (n_base_added - n_acid_init) / v_total,
+        /* pH from excess OH- */
+        pH: 14 + log(c_OH_excess)/log(10),
+        return(float(pH))
+    ),
+    
+    /* Fallback - should not reach here */
+    return(7.0)
 )$
 
-/* Generate titration curve data with n_points data points */
+/* Generate titration curve data with n_points data points
+   Returns list of [volume, pH] pairs */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     [v_equiv, v_max, data, v, pH, idx, delta_v],
     
+    /* Calculate equivalence volume */
     v_equiv: (c_acid * v_acid) / c_base,
+    /* Go 50% past equivalence */
     v_max: v_equiv * 1.5,
+    
+    /* Calculate increment */
     delta_v: v_max / (n_points - 1),
     
     data: [],
@@ -344,7 +358,12 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     while idx < n_points do (
         v: idx * delta_v,
         pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
-        if not is(pH = false) then data: append(data, [[float(v), float(pH)]]),
+        if not is(pH = false) then (
+            /* Clamp pH to reasonable range */
+            if is(pH < 0) then pH: 0,
+            if is(pH > 14) then pH: 14,
+            data: append(data, [[float(v), float(pH)]])
+        ),
         idx: idx + 1
     ),
     
