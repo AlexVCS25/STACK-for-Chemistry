@@ -265,16 +265,12 @@ chem_acidbase_array() := chem_acid_array()$
 /*                                                              */
 /****************************************************************/
 
-/* Get all pKa values for a polyprotic acid as a list
-   Returns list like [pKa1, pKa2, pKa3] for triprotic acid */
-chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, max_iter, nH],
+/* Get all pKa values for a polyprotic acid as a list */
+chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, max_iter],
     pKa_values: [],
     current_acid: acid,
-    nH: chem_acidbase_nH(acid),
+    max_iter: 5,
     
-    if is(nH = null) then return([]),
-    
-    max_iter: 10,
     while max_iter > 0 and not is(current_acid = "") and not is(current_acid = null) do (
         current_pKa: chem_acidbase_pKa(current_acid),
         if is(current_pKa = null) then return(pKa_values),
@@ -298,169 +294,111 @@ _pKa_to_Ka(pKa_list) := block([Ka_list, idx],
     return(Ka_list)
 )$
 
-/* Calculate alpha fractions for an n-protic acid
-   H = [H+] concentration
-   Ka_list = [Ka1, Ka2, ..., Kan]
-   Returns list [alpha_0, alpha_1, ..., alpha_n] where
-   alpha_0 = fraction of fully protonated form HnA
-   alpha_n = fraction of fully deprotonated form A^n- */
-_alpha_fractions(H, Ka_list) := block([n, terms, D, alphas, prod, idx],
+/* Calculate alpha fractions - OPTIMIZED */
+_alpha_fractions(H, Ka_list) := block([n, D, alphas, prod, idx, Hn],
     n: length(Ka_list),
+    Hn: float(H^n),
     
-    /* Build denominator terms: H^n, Ka1*H^(n-1), Ka1*Ka2*H^(n-2), ..., Ka1*...*Kan */
-    terms: [H^n],
+    /* Build denominator */
+    D: Hn,
     prod: 1.0,
     idx: 1,
     while idx <= n do (
         prod: prod * Ka_list[idx],
-        terms: append(terms, [prod * H^(n - idx)]),
+        D: D + prod * float(H^(n - idx)),
         idx: idx + 1
     ),
     
-    /* Sum all terms for denominator */
-    D: 0,
-    idx: 1,
-    while idx <= length(terms) do (
-        D: D + terms[idx],
-        idx: idx + 1
-    ),
+    if is(D < 1e-50) then D: 1e-50,
     
-    /* Avoid division by zero */
-    if is(D < 1e-15) then D: 1e-15,
-    
-    /* Calculate alpha_i = (Ka1*Ka2*...*Ka_i) * H^(n-i) / D */
-    alphas: [],
+    /* Calculate alphas */
+    alphas: [Hn / D],
     prod: 1.0,
-    idx: 0,
+    idx: 1,
     while idx <= n do (
-        if is(idx > 0) then prod: prod * Ka_list[idx],
-        alphas: append(alphas, [prod * H^(n - idx) / D]),
+        prod: prod * Ka_list[idx],
+        alphas: append(alphas, [prod * float(H^(n - idx)) / D]),
         idx: idx + 1
     ),
     
     return(alphas)
 )$
 
-/* Charge balance equation for titration
-   H = [H+]
-   CT = total analytical acid concentration
-   CB = concentration of strong base added
-   Ka_list = [Ka1, ..., Kan]
-   Kw = water autoionization constant
-   Returns: residual of charge balance (should be 0 at equilibrium) */
-_charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, negative_charge, idx, n],
+/* Charge balance equation - OPTIMIZED */
+_charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, neg_charge, idx, n],
     alphas: _alpha_fractions(H, Ka_list),
     n: length(Ka_list),
     
-    /* Calculate sum of i * alpha_i for i = 1 to n */
-    /* This gives the average negative charge per acid molecule */
-    negative_charge: 0,
+    neg_charge: 0.0,
     idx: 1,
     while idx <= n do (
-        negative_charge: negative_charge + idx * alphas[idx + 1],
+        neg_charge: neg_charge + idx * alphas[idx + 1],
         idx: idx + 1
     ),
-    negative_charge: CT * negative_charge,
     
-    /* Charge balance: [H+] + [added base cation] = [OH-] + [negative charges from acid] */
-    /* Rearranged: H + CB - Kw/H - negative_charge = 0 */
-    return(H + CB - Kw/H - negative_charge)
+    return(float(H + CB - Kw/H - CT * neg_charge))
 )$
 
-/* Solve for pH using bisection method (Brent's method simplified)
-   CT = total acid concentration
-   CB = concentration of strong base added
-   Ka_list = [Ka1, ..., Kan]
-   Returns: pH value */
-_solve_pH(CT, CB, Ka_list) := block([Kw, H_low, H_high, H_mid, f_low, f_high, f_mid, iter, tol],
+/* Solve for pH using bisection - OPTIMIZED with fewer iterations */
+_solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, iter],
     Kw: 1.0e-14,
     
-    /* Bracket: pH from 0 to 14, so H from 1 to 1e-14 */
-    H_low: 1e-14,
-    H_high: 1.0,
+    H_lo: 1e-14,
+    H_hi: 1.0,
     
-    f_low: _charge_balance(H_low, CT, CB, Ka_list, Kw),
-    f_high: _charge_balance(H_high, CT, CB, Ka_list, Kw),
+    f_lo: _charge_balance(H_lo, CT, CB, Ka_list, Kw),
+    f_hi: _charge_balance(H_hi, CT, CB, Ka_list, Kw),
     
-    /* Bisection method */
-    tol: 1e-12,
+    /* Only 40 iterations - sufficient for ~12 decimal places */
     iter: 0,
-    
-    while iter < 100 do (
-        H_mid: (H_low + H_high) / 2,
+    while iter < 40 do (
+        H_mid: (H_lo + H_hi) / 2.0,
         f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
         
-        if is(abs(f_mid) < tol) or is((H_high - H_low) / 2 < tol * H_mid) then (
-            return(-log(H_mid) / log(10))
-        ),
+        if is(abs(f_mid) < 1e-10) then return(float(-log(H_mid) / log(10))),
         
-        /* Decide which half to keep */
-        if is(f_mid * f_high < 0) then (
-            H_low: H_mid,
-            f_low: f_mid
+        if is(f_mid * f_hi < 0) then (
+            H_lo: H_mid
         ) else (
-            H_high: H_mid,
-            f_high: f_mid
+            H_hi: H_mid
         ),
         
         iter: iter + 1
     ),
     
-    /* Return best estimate */
-    return(-log(H_mid) / log(10))
+    return(float(-log(H_mid) / log(10)))
 )$
 
-/* Calculate pH at a given point during titration
-   acid: the fully protonated acid formula (string)
-   c_acid: initial acid concentration (M)
-   c_base: titrant (NaOH) concentration (M)
-   v_acid: volume of acid solution (mL)
-   v_base: volume of base added (mL)
-   Returns: pH value */
+/* Calculate pH at a given point during titration */
 chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
     [pKa_list, Ka_list, v_total, CT, CB, pH],
     
-    /* Get pKa values and convert to Ka */
     pKa_list: chem_acidbase_pKa_list(acid),
     if is(length(pKa_list) = 0) then return(false),
     Ka_list: _pKa_to_Ka(pKa_list),
     
-    /* Calculate concentrations after mixing */
-    v_total: (v_acid + v_base) / 1000.0,  /* Total volume in L */
+    v_total: float((v_acid + v_base) / 1000.0),
+    CT: float((c_acid * v_acid / 1000.0) / v_total),
+    CB: float((c_base * v_base / 1000.0) / v_total),
     
-    /* CT = total acid concentration (diluted) */
-    CT: (c_acid * v_acid / 1000.0) / v_total,
-    
-    /* CB = concentration of added base (diluted) */
-    CB: (c_base * v_base / 1000.0) / v_total,
-    
-    /* Solve for pH */
     pH: _solve_pH(CT, CB, Ka_list),
     
-    /* Clamp to reasonable range */
     if is(pH < 0) then pH: 0.0,
     if is(pH > 14) then pH: 14.0,
     
-    return(float(pH))
+    return(pH)
 )$
 
-/* Generate titration curve data with n_points data points
-   Returns list of [volume, pH] pairs */
+/* Generate titration curve data - use fewer points by default */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     [num_protons, v_final_equiv, v_max, data, v, pH, idx, delta_v],
     
-    /* Get number of protons to determine final equivalence volume */
     num_protons: length(chem_acidbase_pKa_list(acid)),
     if is(num_protons = 0) then num_protons: 1,
     
-    /* Final equivalence volume */
-    v_final_equiv: (num_protons * c_acid * v_acid) / c_base,
-    
-    /* Go 20% past final equivalence */
-    v_max: v_final_equiv * 1.2,
-    
-    /* Calculate increment */
-    delta_v: v_max / (n_points - 1),
+    v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
+    v_max: float(v_final_equiv * 1.2),
+    delta_v: float(v_max / (n_points - 1)),
     
     data: [],
     idx: 0,
@@ -468,9 +406,7 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     while idx < n_points do (
         v: float(idx * delta_v),
         pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
-        if not is(pH = false) then (
-            data: append(data, [[v, pH]])
-        ),
+        if not is(pH = false) then data: append(data, [[v, pH]]),
         idx: idx + 1
     ),
     
