@@ -68,8 +68,10 @@
 _acidbase_find_acid(acid) := block([i, n, result],
     n: length(%_ACIDBASE_DATA),
     result: 0,
-    for i: 1 step 5 thru n do (
-        if is(%_ACIDBASE_DATA[i] = acid) then (result: i, return(result))
+    i: 1,
+    while i <= n do (
+        if is(%_ACIDBASE_DATA[i] = acid) then (result: i, return(result)),
+        i: i + 5
     ),
     result
 )$
@@ -78,8 +80,10 @@ _acidbase_find_acid(acid) := block([i, n, result],
 _acidbase_find_base(base) := block([i, n, result],
     n: length(%_ACIDBASE_DATA),
     result: 0,
-    for i: 4 step 5 thru n do (
-        if is(%_ACIDBASE_DATA[i] = base) then (result: i - 3, return(result))
+    i: 4,
+    while i <= n do (
+        if is(%_ACIDBASE_DATA[i] = base) then (result: i - 3, return(result)),
+        i: i + 5
     ),
     result
 )$
@@ -136,7 +140,11 @@ chem_acidbase_conjugate_acid(base) := block([idx],
 chem_acid_array() := block([result, i, n],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do result: append(result, [%_ACIDBASE_DATA[i]]),
+    i: 1,
+    while i <= n do (
+        result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
     result
 )$
 
@@ -144,7 +152,11 @@ chem_acid_array() := block([result, i, n],
 chem_base_array() := block([result, i, n],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 4 step 5 thru n do result: append(result, [%_ACIDBASE_DATA[i]]),
+    i: 4,
+    while i <= n do (
+        result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
+    ),
     result
 )$
 
@@ -152,9 +164,11 @@ chem_base_array() := block([result, i, n],
 chem_strong_acid_array() := block([result, i, n, pKa],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
-        if numberp(pKa) and is(pKa < 0) then result: append(result, [%_ACIDBASE_DATA[i]])
+        if numberp(pKa) and is(pKa < 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
     ),
     result
 )$
@@ -163,9 +177,11 @@ chem_strong_acid_array() := block([result, i, n, pKa],
 chem_weak_acid_array() := block([result, i, n, pKa],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
-        if numberp(pKa) and is(pKa > 0) then result: append(result, [%_ACIDBASE_DATA[i]])
+        if numberp(pKa) and is(pKa > 0) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
     ),
     result
 )$
@@ -174,9 +190,11 @@ chem_weak_acid_array() := block([result, i, n, pKa],
 chem_strong_base_array() := block([result, i, n, pKb],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKb: %_ACIDBASE_DATA[i + 2],
-        if numberp(pKb) and is(pKb <= 0) then result: append(result, [%_ACIDBASE_DATA[i + 3]])
+        if numberp(pKb) and is(pKb <= 0) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        i: i + 5
     ),
     result
 )$
@@ -185,9 +203,11 @@ chem_strong_base_array() := block([result, i, n, pKb],
 chem_weak_base_array() := block([result, i, n, pKb],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKb: %_ACIDBASE_DATA[i + 2],
-        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then result: append(result, [%_ACIDBASE_DATA[i + 3]])
+        if numberp(pKb) and is(pKb > 0) and is(pKb < 14) then result: append(result, [%_ACIDBASE_DATA[i + 3]]),
+        i: i + 5
     ),
     result
 )$
@@ -196,9 +216,11 @@ chem_weak_base_array() := block([result, i, n, pKb],
 chem_acid_array_nH(nH_target) := block([result, i, n, nH],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         nH: %_ACIDBASE_DATA[i + 4],
-        if numberp(nH) and is(nH = nH_target) then result: append(result, [%_ACIDBASE_DATA[i]])
+        if numberp(nH) and is(nH = nH_target) then result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
     ),
     result
 )$
@@ -207,11 +229,13 @@ chem_acid_array_nH(nH_target) := block([result, i, n, nH],
 chem_strong_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
         nH: %_ACIDBASE_DATA[i + 4],
         if numberp(pKa) and is(pKa < 0) and numberp(nH) and is(nH = nH_target) then 
-            result: append(result, [%_ACIDBASE_DATA[i]])
+            result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
     ),
     result
 )$
@@ -220,11 +244,13 @@ chem_strong_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
 chem_weak_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
     n: length(%_ACIDBASE_DATA),
     result: [],
-    for i: 1 step 5 thru n do (
+    i: 1,
+    while i <= n do (
         pKa: %_ACIDBASE_DATA[i + 1],
         nH: %_ACIDBASE_DATA[i + 4],
         if numberp(pKa) and is(pKa > 0) and numberp(nH) and is(nH = nH_target) then 
-            result: append(result, [%_ACIDBASE_DATA[i]])
+            result: append(result, [%_ACIDBASE_DATA[i]]),
+        i: i + 5
     ),
     result
 )$
@@ -241,57 +267,41 @@ chem_acidbase_array() := chem_acid_array()$
 /* Calculate [H+] using the cubic proton balance equation for weak acid + strong base titration
    Returns the hydrogen ion concentration */
 _titration_cubic_H(Ka, Kw, c_acid_total, c_base_total, c_conj_base) := block(
-    [a, b, c, d, H_guess, H, i, f, fp],
-    
-    /* Cubic equation: H^3 + (Ka + c_base_total)*H^2 + (Ka*(c_conj_base - c_acid_total) - Kw)*H - Ka*Kw = 0 */
-    /* We solve using Newton-Raphson iteration */
+    [a, b, c, d, H_guess, H, iter, f, fp],
     
     /* Initial guess based on simplified assumptions */
     if is(c_acid_total > c_conj_base) then (
-        /* Buffer region or before equivalence */
         H_guess: Ka * (c_acid_total - c_conj_base) / max(c_conj_base, 1e-10)
     ) else if is(c_conj_base > c_acid_total) then (
-        /* After equivalence - excess base */
         H_guess: Kw / ((c_conj_base - c_acid_total) + 1e-10)
     ) else (
-        /* At equivalence */
         H_guess: sqrt(Kw * Ka / max(c_acid_total, 1e-10))
     ),
     
-    /* Ensure positive initial guess */
     H_guess: max(H_guess, 1e-14),
     H_guess: min(H_guess, 1),
     
     H: H_guess,
     
     /* Newton-Raphson iteration */
-    for i: 1 thru 50 do (
-        /* f(H) = H^3 + (Ka + Cb)*H^2 + (Ka*(Cconj - Ca) - Kw)*H - Ka*Kw */
+    iter: 1,
+    while iter <= 50 do (
         f: H^3 + (Ka + c_base_total)*H^2 + (Ka*(c_conj_base - c_acid_total) - Kw)*H - Ka*Kw,
-        /* f'(H) = 3*H^2 + 2*(Ka + Cb)*H + (Ka*(Cconj - Ca) - Kw) */
         fp: 3*H^2 + 2*(Ka + c_base_total)*H + (Ka*(c_conj_base - c_acid_total) - Kw),
         
         if is(abs(fp) < 1e-20) then return(H),
         
         H: H - f/fp,
-        
-        /* Keep H positive */
         H: max(H, 1e-14),
         
-        /* Check convergence */
-        if is(abs(f) < 1e-15) then return(H)
+        if is(abs(f) < 1e-15) then return(H),
+        iter: iter + 1
     ),
     
     return(H)
 )$
 
-/* Calculate pH at a given point during titration using cubic equation
-   acid: the acid formula (string)
-   c_acid: initial acid concentration (M)
-   c_base: titrant (base) concentration (M)
-   v_acid: volume of acid (mL)
-   v_base: volume of base added (mL)
-   Returns: pH value */
+/* Calculate pH at a given point during titration using cubic equation */
 chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
     [pKa, Ka, Kw, v_total, n_acid_init, n_base_added, c_acid_curr, c_conj_base, c_excess_base, H, pH],
     
@@ -300,66 +310,56 @@ chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
     if is(pKa = null) then return(false),
     Ka: float(10^(-pKa)),
     
-    /* Total volume in L */
     v_total: (v_acid + v_base) / 1000.0,
-    
-    /* Moles */
     n_acid_init: c_acid * v_acid / 1000.0,
     n_base_added: c_base * v_base / 1000.0,
     
-    /* Current concentrations after reaction */
     if is(n_base_added < n_acid_init) then (
-        /* Before equivalence: HA remains, A- formed */
         c_acid_curr: (n_acid_init - n_base_added) / v_total,
         c_conj_base: n_base_added / v_total,
         c_excess_base: 0
     ) else (
-        /* At or after equivalence: no HA, only A- and possibly excess OH- */
         c_acid_curr: 0,
         c_conj_base: n_acid_init / v_total,
         c_excess_base: (n_base_added - n_acid_init) / v_total
     ),
     
-    /* Calculate [H+] using cubic equation */
     H: _titration_cubic_H(Ka, Kw, c_acid_curr, c_excess_base, c_conj_base),
-    
-    /* Calculate pH = -log10([H+]) */
     pH: -log(H) / log(10),
     
     return(float(pH))
 )$
 
-/* Generate titration curve data with n_points data points
-   Returns list of [volume, pH] pairs */
+/* Generate titration curve data with n_points data points */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
-    [v_equiv, v_max, data, v, pH, i, delta_v],
+    [v_equiv, v_max, data, v, pH, idx, delta_v],
     
-    /* Calculate equivalence volume */
     v_equiv: (c_acid * v_acid) / c_base,
-    /* Go 50% past equivalence */
     v_max: v_equiv * 1.5,
-    
-    /* Step size (avoiding forbidden word) */
     delta_v: v_max / (n_points - 1),
     
     data: [],
+    idx: 0,
     
-    for i: 0 thru (n_points - 1) do (
-        v: i * delta_v,
+    while idx < n_points do (
+        v: idx * delta_v,
         pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
-        if not is(pH = false) then data: append(data, [[float(v), float(pH)]])
+        if not is(pH = false) then data: append(data, [[float(v), float(pH)]]),
+        idx: idx + 1
     ),
     
     return(data)
 )$
 
 /* Convert titration data to JSXGraph-compatible JavaScript array string */
-chem_titration_jsxgraph_points(data) := block([result, i, pair],
+chem_titration_jsxgraph_points(data) := block([result, idx, pair],
     result: "[",
-    for i: 1 thru length(data) do (
-        pair: data[i],
+    idx: 1,
+    while idx <= length(data) do (
+        pair: data[idx],
         result: sconcat(result, "[", string(float(first(pair))), ",", string(float(second(pair))), "]"),
-        if is(i < length(data)) then result: sconcat(result, ",")
+        if is(idx < length(data)) then result: sconcat(result, ","),
+        idx: idx + 1
     ),
     result: sconcat(result, "]"),
     return(result)
