@@ -231,3 +231,159 @@ chem_weak_acid_array_nH(nH_target) := block([result, i, n, pKa, nH],
 
 /* Legacy: return all acid formulas */
 chem_acidbase_array() := chem_acid_array()$
+
+/****************************************************************/
+/*                                                              */
+/*  Titration Curve Functions                                   */
+/*                                                              */
+/****************************************************************/
+
+/* Calculate pH at a given point during titration of a weak acid with strong base
+   acid: the acid formula (string)
+   c_acid: initial acid concentration (M)
+   c_base: titrant (base) concentration (M)
+   v_acid: volume of acid (mL)
+   v_base: volume of base added (mL)
+   Returns: pH value */
+chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
+    [pKa, Ka, n_acid_initial, n_base_added, v_total, n_acid, n_conj_base, pH, c_h, Kw],
+    
+    Kw: 1e-14,
+    pKa: chem_acidbase_pKa(acid),
+    if is(pKa = null) then return(false),
+    Ka: 10^(-pKa),
+    
+    /* Calculate moles */
+    n_acid_initial: c_acid * v_acid / 1000,  /* Convert mL to L */
+    n_base_added: c_base * v_base / 1000,
+    v_total: (v_acid + v_base) / 1000,  /* Total volume in L */
+    
+    /* Before any base added */
+    if is(v_base = 0) then (
+        /* Weak acid only: pH from Ka */
+        c_h: sqrt(Ka * c_acid),
+        pH: -log(c_h) / log(10),
+        return(float(pH))
+    ),
+    
+    /* Calculate remaining acid and formed conjugate base */
+    n_acid: n_acid_initial - n_base_added,
+    n_conj_base: n_base_added,
+    
+    /* Before equivalence point */
+    if is(n_base_added < n_acid_initial) then (
+        /* Buffer region: Henderson-Hasselbalch */
+        pH: pKa + log(n_conj_base / n_acid) / log(10),
+        return(float(pH))
+    ),
+    
+    /* At equivalence point */
+    if is(abs(n_base_added - n_acid_initial) < 1e-10) then (
+        /* Only conjugate base present */
+        /* Kb = Kw/Ka, then calculate OH- */
+        block([Kb, c_conj_base, c_oh],
+            Kb: Kw / Ka,
+            c_conj_base: n_acid_initial / v_total,
+            c_oh: sqrt(Kb * c_conj_base),
+            pH: 14 + log(c_oh) / log(10),
+            return(float(pH))
+        )
+    ),
+    
+    /* After equivalence point */
+    if is(n_base_added > n_acid_initial) then (
+        /* Excess strong base */
+        block([n_oh_excess, c_oh],
+            n_oh_excess: n_base_added - n_acid_initial,
+            c_oh: n_oh_excess / v_total,
+            pH: 14 + log(c_oh) / log(10),
+            return(float(pH))
+        )
+    ),
+    
+    return(7.0)  /* Fallback */
+)$
+
+/* Generate titration curve data points as a list of [v_base, pH] pairs
+   acid: the acid formula (string)
+   c_acid: initial acid concentration (M)
+   c_base: titrant concentration (M)
+   v_acid: volume of acid (mL)
+   n_points: number of data points (default ~50)
+   Returns: list of [volume, pH] pairs */
+chem_titration_curve_data(acid, c_acid, c_base, v_acid) := block(
+    [v_equiv, v_max, v_step, data, v, pH, i],
+    
+    /* Calculate equivalence volume */
+    v_equiv: (c_acid * v_acid) / c_base,
+    v_max: v_equiv * 1.5,  /* Go 50% past equivalence */
+    
+    data: [],
+    
+    /* Generate points - more dense near equivalence */
+    /* Before equivalence: 20 points */
+    for i: 0 thru 19 do (
+        v: i * v_equiv / 20,
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]])
+    ),
+    
+    /* Near equivalence: 10 points */
+    for i: 0 thru 9 do (
+        v: v_equiv * (0.95 + i * 0.01),
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]])
+    ),
+    
+    /* After equivalence: 10 points */
+    for i: 1 thru 10 do (
+        v: v_equiv * (1.05 + i * 0.045),
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]])
+    ),
+    
+    return(data)
+)$
+
+/* Convert titration data to JSXGraph-compatible JavaScript array string
+   data: list of [v, pH] pairs from chem_titration_curve_data
+   Returns: string like "[[0,2.87],[1,3.12],...]" */
+chem_titration_jsxgraph_points(data) := block([result, i, pair],
+    result: "[",
+    for i: 1 thru length(data) do (
+        pair: data[i],
+        result: sconcat(result, "[", string(float(first(pair))), ",", string(float(second(pair))), "]"),
+        if is(i < length(data)) then result: sconcat(result, ",")
+    ),
+    result: sconcat(result, "]"),
+    return(result)
+)$
+
+/* Get the equivalence point volume for a titration
+   c_acid: acid concentration (M)
+   c_base: base concentration (M)  
+   v_acid: volume of acid (mL)
+   Returns: equivalence volume in mL */
+chem_titration_equiv_volume(c_acid, c_base, v_acid) := float((c_acid * v_acid) / c_base)$
+
+/* Get the pH at the equivalence point
+   acid: acid formula
+   c_acid: acid concentration (M)
+   c_base: base concentration (M)
+   v_acid: volume of acid (mL)
+   Returns: pH at equivalence */
+chem_titration_equiv_pH(acid, c_acid, c_base, v_acid) := block([v_equiv],
+    v_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid),
+    chem_titration_pH(acid, c_acid, c_base, v_acid, v_equiv)
+)$
+
+/* Get the half-equivalence pH (should equal pKa for weak acid)
+   acid: acid formula
+   c_acid: acid concentration (M)
+   c_base: base concentration (M)
+   v_acid: volume of acid (mL)
+   Returns: pH at half-equivalence */
+chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid) := block([v_half],
+    v_half: chem_titration_equiv_volume(c_acid, c_base, v_acid) / 2,
+    chem_titration_pH(acid, c_acid, c_base, v_acid, v_half)
+)$
