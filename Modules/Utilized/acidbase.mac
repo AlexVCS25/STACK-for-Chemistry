@@ -332,20 +332,20 @@ chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
 /* Generate titration curve data with n_points data points
    Returns list of [volume, pH] pairs */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
-    [v_equiv, v_max, data, v, pH, i, step],
+    [v_equiv, v_max, data, v, pH, i, delta_v],
     
     /* Calculate equivalence volume */
     v_equiv: (c_acid * v_acid) / c_base,
     /* Go 50% past equivalence */
     v_max: v_equiv * 1.5,
     
-    /* Step size */
-    step: v_max / (n_points - 1),
+    /* Step size (avoiding forbidden word) */
+    delta_v: v_max / (n_points - 1),
     
     data: [],
     
     for i: 0 thru (n_points - 1) do (
-        v: i * step,
+        v: i * delta_v,
         pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
         if not is(pH = false) then data: append(data, [[float(v), float(pH)]])
     ),
