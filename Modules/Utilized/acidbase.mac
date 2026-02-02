@@ -261,29 +261,25 @@ chem_acidbase_array() := chem_acid_array()$
 /****************************************************************/
 /*                                                              */
 /*  Titration Curve Functions for Polyprotic Acids              */
-/*  Using Alpha Fractions and Charge Balance                    */
 /*                                                              */
 /****************************************************************/
 
 /* Get all pKa values for a polyprotic acid as a list
-   Returns list like [pKa1, pKa2, pKa3] for triprotic acid
-   The acid string should be the fully protonated form */
-chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, nH],
+   Returns list like [pKa1, pKa2, pKa3] for triprotic acid */
+chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, max_iter],
     pKa_values: [],
     current_acid: acid,
-    nH: chem_acidbase_nH(acid),
+    max_iter: 10,
     
-    if is(nH = null) then return([]),
-    
-    while not is(current_acid = "") and not is(current_acid = null) do (
+    while max_iter > 0 and not is(current_acid = "") and not is(current_acid = null) do (
         current_pKa: chem_acidbase_pKa(current_acid),
         if is(current_pKa = null) then return(pKa_values),
         pKa_values: append(pKa_values, [current_pKa]),
         current_base: chem_acidbase_conjugate_base(current_acid),
         if is(current_base = "") or is(current_base = null) then return(pKa_values),
-        current_acid: current_base
+        current_acid: current_base,
+        max_iter: max_iter - 1
     ),
-    
     return(pKa_values)
 )$
 
