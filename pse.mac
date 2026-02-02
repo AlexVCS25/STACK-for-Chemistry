@@ -558,22 +558,3 @@ chem_display(substance) := sconcat("\\ce{", substance, "}")$
   ]]
 ]$
 
-
-/* Each element must be a list of atoms and numbers. */
-CLL:[
-     [["H",2],["O",1]],            /* Water */
-     [["C",1],["O",2]],            /* Carbon dioxide */
-     [["Ca",1],["C", 1], ["O",3]]  /* Calcium carbonate */
-    ];
-/* Choose one of these. */
-CL:rand(CLL);
-/* The CL list written as a single string. */
-CN:apply(sconcat, map(lambda([ex], if is(second(ex)=1) then first(ex) else sconcat(first(ex),string(second(ex)))), CL));
-/* Calculate the final answer. */
-ta1:stackunits(dispsf(apply("+",map(lambda([ex],second(ex)*chem_data(first(ex),"AtomicMass")), CL)),3), chem_units("AtomicMass"));
-/* Create a table of atomic masses of the elements used. */
-/* Get unique elements in the formula CL. */
-tt:setify(map(first, CL));
-/* Make a list of list of values. */
-tt:map(lambda([ex], [ex, dispsf(chem_data(ex,"AtomicMass"),3)]), listify(tt));
-tt:apply(table, append([["Element", "Atomic Mass"]], tt));
