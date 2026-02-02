@@ -413,14 +413,16 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     return(data)
 )$
 
-/* Convert titration data to JSXGraph-compatible JavaScript array string */
+/* Convert titration data to JSXGraph-compatible JavaScript array string 
+   Rounds values to 3 decimal places for cleaner output */
 chem_titration_jsxgraph_points(data) := block([result, idx, pair, vv, pp],
     result: "[",
     idx: 1,
     while idx <= length(data) do (
         pair: data[idx],
-        vv: float(first(pair)),
-        pp: float(second(pair)),
+        /* Round to 3 decimal places */
+        vv: float(round(1000 * first(pair)) / 1000),
+        pp: float(round(1000 * second(pair)) / 1000),
         result: sconcat(result, "[", string(vv), ",", string(pp), "]"),
         if is(idx < length(data)) then result: sconcat(result, ","),
         idx: idx + 1
