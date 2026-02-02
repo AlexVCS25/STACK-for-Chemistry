@@ -327,78 +327,152 @@ _titration_solve_cubic(Ka, Kw, Ca, Ca_conj, Cb, H_init) := block(
    v_base: volume of base added (mL)
    Returns: pH value */
 chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
-    [pKa, Ka, Kw, v_total, n_acid_init, n_base_added, 
-     Ca, Ca_conj, Cb, H_init, H, pH],
+    [pKa_list, num_protons, Kw, v_total, n_acid_init, n_base_added,
+     equiv_points, current_region, pH, i, n_remaining, fraction,
+     c_species, Ka_current, pKa_current, Kb, OH, H],
     
     Kw: 1.0e-14,
-    pKa: chem_acidbase_pKa(acid),
-    if is(pKa = null) then return(false),
-    Ka: float(10^(-pKa)),
+    
+    /* Get list of pKa values */
+    pKa_list: chem_acidbase_pKa_list(acid),
+    num_protons: length(pKa_list),
+    
+    /* If no pKa found, return false */
+    if is(num_protons = 0) then return(false),
     
     /* Total volume in L */
     v_total: (v_acid + v_base) / 1000.0,
     
-    /* Moles of acid initially and base added */
+    /* Moles */
     n_acid_init: c_acid * v_acid / 1000.0,
     n_base_added: c_base * v_base / 1000.0,
     
-    /* Calculate concentrations after neutralization reaction */
-    if is(n_base_added <= n_acid_init) then (
-        /* Before or at equivalence: HA + OH- -> A- + H2O */
-        Ca: (n_acid_init - n_base_added) / v_total,      /* remaining HA */
-        Ca_conj: n_base_added / v_total,                  /* formed A- */
-        Cb: 0                                             /* no excess base */
-    ) else (
-        /* After equivalence: excess OH- */
-        Ca: 0,                                            /* all HA consumed */
-        Ca_conj: n_acid_init / v_total,                   /* all original acid is now A- */
-        Cb: (n_base_added - n_acid_init) / v_total        /* excess OH- */
+    /* Calculate equivalence points (in moles of base) */
+    /* equiv_points[i] = moles of base needed to reach i-th equivalence point */
+    equiv_points: [],
+    i: 1,
+    while i <= num_protons do (
+        equiv_points: append(equiv_points, [i * n_acid_init]),
+        i: i + 1
     ),
     
-    /* Calculate initial guess using simplified formulas */
-    if is(v_base = 0) or is(n_base_added < 1e-12) then (
-        /* Pure weak acid: H = sqrt(Ka * Ca) approximately */
-        H_init: sqrt(Ka * c_acid)
-    ) else if is(n_base_added < n_acid_init * 0.5) then (
-        /* Early buffer region */
-        H_init: Ka * Ca / max(Ca_conj, 1e-12)
-    ) else if is(n_base_added < n_acid_init * 0.99) then (
-        /* Buffer region: Henderson-Hasselbalch */
-        H_init: Ka * Ca / Ca_conj
-    ) else if is(n_base_added < n_acid_init * 1.01) then (
-        /* Near equivalence point: conjugate base hydrolysis */
-        H_init: sqrt(Kw * Ka / max(Ca_conj, 1e-12))
-    ) else (
-        /* After equivalence: excess strong base dominates */
-        H_init: Kw / max(Cb, 1e-12)
+    /* Determine which region we are in */
+    /* Region 0: before any base added (pure polyprotic acid)
+       Region 1: between 0 and 1st equivalence
+       Region 2: between 1st and 2nd equivalence
+       etc.
+       Region num_protons+1: after final equivalence (excess base) */
+    
+    /* Case: No base added - pure polyprotic acid */
+    if is(v_base < 0.0001) then (
+        /* For polyprotic acid, pH is dominated by first dissociation */
+        pKa_current: pKa_list[1],
+        Ka_current: float(10^(-pKa_current)),
+        /* Quadratic approximation: H^2 + Ka*H - Ka*c = 0 */
+        H: (-Ka_current + sqrt(Ka_current*Ka_current + 4*Ka_current*c_acid)) / 2,
+        pH: -log(H)/log(10),
+        return(float(pH))
     ),
     
-    /* Ensure H_init is reasonable */
-    H_init: max(H_init, 1e-14),
-    H_init: min(H_init, 1),
+    /* Find which region we're in */
+    current_region: 0,
+    i: 1,
+    while i <= num_protons do (
+        if is(n_base_added < equiv_points[i]) then (
+            current_region: i,
+            i: num_protons + 10  /* Exit loop */
+        ) else (
+            i: i + 1
+        )
+    ),
     
-    /* Solve the cubic equation */
-    H: _titration_solve_cubic(Ka, Kw, Ca, Ca_conj, Cb, float(H_init)),
+    /* If we passed all equivalence points, we're in excess base region */
+    if is(current_region = 0) then current_region: num_protons + 1,
     
-    /* Calculate pH */
-    pH: -log(H) / log(10),
+    /* Calculate pH based on region */
     
-    /* Clamp to reasonable range */
-    if is(pH < 0) then pH: 0,
-    if is(pH > 14) then pH: 14,
+    /* Region 1 to num_protons: Buffer regions or at equivalence points */
+    if is(current_region >= 1) and is(current_region <= num_protons) then (
+        /* Previous equivalence point (0 if in first region) */
+        block([prev_equiv, next_equiv, n_in_region, pKa_this, frac_to_next],
+            if is(current_region = 1) then prev_equiv: 0
+            else prev_equiv: equiv_points[current_region - 1],
+            
+            next_equiv: equiv_points[current_region],
+            pKa_this: pKa_list[current_region],
+            
+            /* How far are we between prev and next equivalence? */
+            n_in_region: n_base_added - prev_equiv,
+            frac_to_next: n_in_region / (next_equiv - prev_equiv),
+            
+            /* At equivalence point of this region? */
+            if is(abs(n_base_added - next_equiv) < n_acid_init * 0.001) then (
+                /* At equivalence point i: amphoteric species or conjugate base */
+                if is(current_region < num_protons) then (
+                    /* Amphoteric: pH = (pKa_i + pKa_{i+1}) / 2 */
+                    pH: (pKa_list[current_region] + pKa_list[current_region + 1]) / 2
+                ) else (
+                    /* Final equivalence: only conjugate base present */
+                    /* Kb = Kw/Ka, [OH-] = sqrt(Kb * c) */
+                    block([c_conj, Ka_last],
+                        c_conj: n_acid_init / v_total,
+                        Ka_last: float(10^(-pKa_list[num_protons])),
+                        Kb: Kw / Ka_last,
+                        OH: sqrt(Kb * c_conj),
+                        pH: 14.0 + log(OH)/log(10)
+                    )
+                ),
+                return(float(pH))
+            ),
+            
+            /* Buffer region: Henderson-Hasselbalch */
+            /* [conjugate base] / [acid] ratio */
+            block([c_acid_form, c_base_form, ratio],
+                /* In region i, the acid form has (num_protons - i + 1) protons */
+                /* Moles of acid form = n_acid_init - (n_base_added - prev_equiv) for this stage */
+                c_acid_form: (n_acid_init - n_in_region) / v_total,
+                c_base_form: n_in_region / v_total,
+                
+                /* Avoid division by zero */
+                if is(c_acid_form < 1e-12) then c_acid_form: 1e-12,
+                if is(c_base_form < 1e-12) then c_base_form: 1e-12,
+                
+                ratio: c_base_form / c_acid_form,
+                pH: pKa_this + log(ratio)/log(10)
+            ),
+            return(float(pH))
+        )
+    ),
     
-    return(float(pH))
+    /* Region num_protons + 1: After final equivalence - excess strong base */
+    if is(current_region = num_protons + 1) then (
+        block([n_excess_base, c_OH],
+            n_excess_base: n_base_added - equiv_points[num_protons],
+            c_OH: n_excess_base / v_total,
+            if is(c_OH < 1e-14) then c_OH: 1e-14,
+            pH: 14.0 + log(c_OH)/log(10)
+        ),
+        return(float(pH))
+    ),
+    
+    /* Fallback */
+    return(7.0)
 )$
 
 /* Generate titration curve data with n_points data points
    Returns list of [volume, pH] pairs */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
-    [v_equiv, v_max, data, v, pH, idx, delta_v],
+    [num_protons, v_final_equiv, v_max, data, v, pH, idx, delta_v],
     
-    /* Calculate equivalence volume */
-    v_equiv: (c_acid * v_acid) / c_base,
-    /* Go 50% past equivalence */
-    v_max: v_equiv * 1.5,
+    /* Get number of protons to determine final equivalence volume */
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then num_protons: 1,
+    
+    /* Final equivalence volume */
+    v_final_equiv: (num_protons * c_acid * v_acid) / c_base,
+    
+    /* Go 20% past final equivalence */
+    v_max: v_final_equiv * 1.2,
     
     /* Calculate increment */
     delta_v: v_max / (n_points - 1),
@@ -407,10 +481,13 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     idx: 0,
     
     while idx < n_points do (
-        v: idx * delta_v,
+        v: float(idx * delta_v),
         pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
         if not is(pH = false) then (
-            data: append(data, [[float(v), float(pH)]])
+            /* Clamp pH to reasonable range */
+            if is(pH < 0) then pH: 0.0,
+            if is(pH > 14) then pH: 14.0,
+            data: append(data, [[v, pH]])
         ),
         idx: idx + 1
     ),
@@ -419,12 +496,14 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
 )$
 
 /* Convert titration data to JSXGraph-compatible JavaScript array string */
-chem_titration_jsxgraph_points(data) := block([result, idx, pair],
+chem_titration_jsxgraph_points(data) := block([result, idx, pair, vv, pp],
     result: "[",
     idx: 1,
     while idx <= length(data) do (
         pair: data[idx],
-        result: sconcat(result, "[", string(float(first(pair))), ",", string(float(second(pair))), "]"),
+        vv: float(first(pair)),
+        pp: float(second(pair)),
+        result: sconcat(result, "[", string(vv), ",", string(pp), "]"),
         if is(idx < length(data)) then result: sconcat(result, ","),
         idx: idx + 1
     ),
@@ -432,17 +511,85 @@ chem_titration_jsxgraph_points(data) := block([result, idx, pair],
     return(result)
 )$
 
-/* Get the equivalence point volume (in mL) */
-chem_titration_equiv_volume(c_acid, c_base, v_acid) := float((c_acid * v_acid) / c_base)$
+/* Get the i-th equivalence point volume (in mL)
+   i = 1 for first equivalence, i = 2 for second, etc.
+   For monoprotic acids, only i = 1 is valid */
+chem_titration_equiv_volume(c_acid, c_base, v_acid, i) := block([],
+    if not integerp(i) then i: 1,
+    if is(i < 1) then i: 1,
+    float((i * c_acid * v_acid) / c_base)
+)$
 
-/* Get the pH at the equivalence point */
-chem_titration_equiv_pH(acid, c_acid, c_base, v_acid) := block([v_equiv],
-    v_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid),
+/* Overload for backwards compatibility - assumes first equivalence point */
+chem_titration_equiv_volume_simple(c_acid, c_base, v_acid) := 
+    chem_titration_equiv_volume(c_acid, c_base, v_acid, 1)$
+
+/* Get the pH at the i-th equivalence point */
+chem_titration_equiv_pH(acid, c_acid, c_base, v_acid, i) := block([v_equiv],
+    if not integerp(i) then i: 1,
+    v_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid, i),
     chem_titration_pH(acid, c_acid, c_base, v_acid, v_equiv)
 )$
 
-/* Get the half-equivalence pH */
-chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid) := block([v_half],
-    v_half: chem_titration_equiv_volume(c_acid, c_base, v_acid) / 2,
+/* Get the pH at the i-th half-equivalence point (should equal pKa_i) */
+chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid, i) := block([v_half, prev_equiv],
+    if not integerp(i) then i: 1,
+    if is(i < 1) then i: 1,
+    
+    /* Half-equivalence for stage i is halfway between (i-1)th and i-th equivalence */
+    if is(i = 1) then (
+        prev_equiv: 0
+    ) else (
+        prev_equiv: chem_titration_equiv_volume(c_acid, c_base, v_acid, i - 1)
+    ),
+    v_half: (prev_equiv + chem_titration_equiv_volume(c_acid, c_base, v_acid, i)) / 2,
     chem_titration_pH(acid, c_acid, c_base, v_acid, v_half)
+)$
+
+/* Get list of all equivalence volumes for a polyprotic acid (in mL) */
+chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid) := block([num_protons, volumes, i],
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then return([]),
+    
+    volumes: [],
+    i: 1,
+    while i <= num_protons do (
+        volumes: append(volumes, [chem_titration_equiv_volume(c_acid, c_base, v_acid, i)]),
+        i: i + 1
+    ),
+    return(volumes)
+)$
+
+/* Get list of all pKa values for plotting reference lines */
+chem_titration_pKa_values(acid) := chem_acidbase_pKa_list(acid)$
+
+/* Get all pKa values for a polyprotic acid as a list
+   Returns list like [pKa1, pKa2, pKa3] for triprotic acid
+   The acid string should be the fully protonated form */
+chem_acidbase_pKa_list(acid) := block([pKa_values, current_acid, current_pKa, current_base, nH],
+    pKa_values: [],
+    current_acid: acid,
+    nH: chem_acidbase_nH(acid),
+    
+    /* If nH is null, acid not found - return empty list */
+    if is(nH = null) then return([]),
+    
+    /* Collect all pKa values by following the deprotonation chain */
+    while not is(current_acid = "") and not is(current_acid = null) do (
+        current_pKa: chem_acidbase_pKa(current_acid),
+        if is(current_pKa = null) then return(pKa_values),
+        pKa_values: append(pKa_values, [current_pKa]),
+        current_base: chem_acidbase_conjugate_base(current_acid),
+        if is(current_base = "") or is(current_base = null) then return(pKa_values),
+        /* The conjugate base becomes the next acid */
+        current_acid: current_base
+    ),
+    
+    return(pKa_values)
+)$
+
+/* Get the number of protons for an acid (from database nH field of fully protonated form) */
+chem_acidbase_num_protons(acid) := block([nH],
+    nH: chem_acidbase_nH(acid),
+    if is(nH = null) then 1 else nH
 )$
