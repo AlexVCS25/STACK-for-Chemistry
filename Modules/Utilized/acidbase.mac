@@ -326,7 +326,7 @@ _alpha_fractions(H, Ka_list) := block([n, terms, D, alphas, prod, idx],
     ),
     
     /* Avoid division by zero */
-    if is(D < 1e-100) then D: 1e-100,
+    if is(D < 1e-15) then D: 1e-15,
     
     /* Calculate alpha_i = (Ka1*Ka2*...*Ka_i) * H^(n-i) / D */
     alphas: [],
