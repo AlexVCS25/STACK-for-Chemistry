@@ -392,28 +392,16 @@ chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
     return(pH)
 )$
 
-/* Generate titration curve data with custom end volume
-   acid: acid formula
-   c_acid: acid concentration (M)
-   c_base: base concentration (M)
-   v_acid: volume of acid (mL)
-   n_points: number of data points
-   v_max: maximum volume to plot (mL) - if 0, uses automatic calculation */
-chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
-    [num_protons, v_final_equiv, data, v, pH, idx, delta_v, v_end],
+/* Generate titration curve data - use fewer points by default */
+chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
+    [num_protons, v_final_equiv, v_max, data, v, pH, idx, delta_v],
     
     num_protons: length(chem_acidbase_pKa_list(acid)),
     if is(num_protons = 0) then num_protons: 1,
     
-    /* Use custom v_max if provided, otherwise calculate automatically */
-    if is(v_max > 0) then (
-        v_end: float(v_max)
-    ) else (
-        v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
-        v_end: float(v_final_equiv * 1.2)
-    ),
-    
-    delta_v: float(v_end / (n_points - 1)),
+    v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
+    v_max: float(v_final_equiv * 1.2),
+    delta_v: float(v_max / (n_points - 1)),
     
     data: [],
     idx: 0,
@@ -427,10 +415,6 @@ chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max) :=
     
     return(data)
 )$
-
-/* Original function now calls the new one with v_max = 0 (automatic) */
-chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := 
-    chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, 0)$
 
 /* Convert titration data to JSXGraph-compatible JavaScript array string 
    Rounds values to 3 decimal places for cleaner output */
