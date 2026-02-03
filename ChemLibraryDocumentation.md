@@ -3,7 +3,7 @@
 ## Table of Contents
 1. [Installation](#installation)
 2. [Module Dependencies](#module-dependencies)
-3. [Forbidden Maxima Functions](#forbidden-maxima-functions)
+3. [Titration Curve Plotting](#titration-curve-plotting)
 4. [Periodic Table Module](#periodic-table-module)
    - [PSE Data Retrieving Functions](#pse-data-retrieving-functions)
    - [PSE Navigation Functions](#pse-navigation-functions)
@@ -39,19 +39,19 @@ To use the chemistry library in your STACK question, include the following lines
 
 ```maxima
 /* Load periodic table module */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
 
 /* Load acid-base chemistry module */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
 
 /* Load thermodynamic tables module */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
 
 /* Load reactions module */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
 
 /* Load nuclide database module */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/nuclidetable.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
 ```
 
 You can load modules independently or together as needed. See [Module Dependencies](#module-dependencies) below for information on which modules depend on others.
@@ -121,11 +121,11 @@ For complete chemistry functionality including reaction thermodynamics and H-cou
 
 ```maxima
 /* Load in recommended order: */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");  /* Requires pse.mac for chem_count_H() */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");  /* Requires reactions.mac for *_by_name functions */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/nuclidetable.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");  /* Requires pse.mac for chem_count_H() */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");  /* Requires reactions.mac for *_by_name functions */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/nuclidetable.mac");
 ```
 
 #### Option 2: Acid-Base with H-Counting
@@ -134,8 +134,8 @@ To use acid-base functions including hydrogen counting:
 
 ```maxima
 /* Load pse.mac first - acidbase.mac needs chem_parse_formula() */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
 
 /* Now you can use: */
 h_count: chem_count_H("H2SO4");  /* Returns 2 */
@@ -147,7 +147,7 @@ For acid-base data without hydrogen counting:
 
 ```maxima
 /* Only load acidbase.mac */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
 
 /* These functions work without pse.mac: */
 pka: chem_acidbase_data("HCl", "pKa");
@@ -163,8 +163,8 @@ To calculate thermodynamic properties for named reactions:
 
 ```maxima
 /* Load reactions.mac first - thermodynamictables.mac calls its functions */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/reactions.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/thermodynamictables.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/reactions.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/thermodynamictables.mac");
 
 /* Now you can use functions like: */
 delta_h: chem_reaction_enthalpy_by_name("CombustionMethane");
@@ -292,6 +292,348 @@ When developing new functions, avoid:
 - Functions that read/write files
 - Functions that execute external commands
 - Functions that evaluate arbitrary strings
+
+---
+
+## Titration Curve Plotting
+
+The acid-base module includes powerful functions for calculating and plotting titration curves of mono- and polyprotic acids.
+
+### Available Functions
+
+| Function | Description |
+|----------|-------------|
+| `chem_titration_pH(acid, c_acid, c_base, v_acid, v_base)` | Calculate pH at any point |
+| `chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points)` | Generate curve data (auto v_max) |
+| `chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max)` | Generate curve data (custom v_max) |
+| `chem_titration_xdata(data)` | Extract x-values (volumes) from curve data |
+| `chem_titration_ydata(data)` | Extract y-values (pH) from curve data |
+| `chem_titration_equiv_volume(c_acid, c_base, v_acid, i)` | Get i-th equivalence volume |
+| `chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid)` | Get all equivalence volumes |
+| `chem_titration_equiv_pH(acid, c_acid, c_base, v_acid, i)` | Get pH at i-th equivalence point |
+| `chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid, i)` | Get pH at i-th half-equivalence point |
+| `chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max)` | Get all plot data in one call |
+| `chem_acidbase_pKa_list(acid)` | Get list of all pKa values for polyprotic acid |
+
+### Template: Titration Curve Question
+
+Copy and paste this template into your STACK question.
+
+#### Question Variables
+
+```maxima
+/* ========== LOAD MODULES ========== */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+
+/* ========== TITRATION PARAMETERS ========== */
+acid: "CH3COOH";      /* Change this to any acid in database */
+c_acid: 0.1;          /* Acid concentration (M) */
+c_base: 0.1;          /* Base concentration (M) */
+v_acid: 25.0;         /* Volume of acid solution (mL) */
+
+/* ========== PLOT SETTINGS ========== */
+v_plot_max: 40;       /* Maximum x-axis value (mL) */
+n_points: 100;        /* Number of data points (more = smoother curve) */
+
+/* ========== GENERATE PLOT DATA ========== */
+/* Method 1: Get all data in one call */
+plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
+xdata: plot_data[1];
+ydata: plot_data[2];
+v_pushoff: plot_data[3];
+equiv_points: plot_data[4];
+pKa_list: plot_data[5];
+
+/* ========== EXTRACT KEY VALUES ========== */
+/* For monoprotic acids: */
+v_equiv: first(equiv_points)[1];
+pH_equiv: first(equiv_points)[2];
+pKa_value: first(pKa_list);
+
+/* For polyprotic acids, access additional equivalence points: */
+/* v_equiv_2: second(equiv_points)[1]; */
+/* pH_equiv_2: second(equiv_points)[2]; */
+/* pKa_2: second(pKa_list); */
+
+/* ========== DISPLAY FORMATTING ========== */
+acid_display: chem_display(acid);
+```
+
+#### Question Text
+
+```html
+\(\require{mhchem}\)
+
+<p>Titrationskurve von {@acid_display@} ({@c_acid@} M, {@v_acid@} mL) mit NaOH ({@c_base@} M)</p>
+
+[[jsxgraph width="600px" height="450px"]]
+var board = JXG.JSXGraph.initBoard(divid, {
+    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}, -1],
+    axis: true, 
+    showCopyright: false,
+    defaultAxes: {
+        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
+        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
+    }
+});
+
+/* Draw titration curve */
+board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
+
+/* Mark equivalence point */
+board.create('point', [{#v_equiv#}, {#pH_equiv#}], {name: 'EP', size: 3, color: 'red', label: {offset: [10, 10], fontSize: 11}});
+
+/* pKa reference line */
+board.create('line', [[0, {#pKa_value#}], [{#v_plot_max#}, {#pKa_value#}]], {strokeColor: 'gray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});
+board.create('text', [{#v_plot_max#}-5, {#pKa_value#}+0.5, 'pKa = {#pKa_value#}'], {fontSize: 10, color: 'gray'});
+
+/* pH 7 reference line */
+board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});
+[[/jsxgraph]]
+
+<p>Äquivalenzvolumen: {@v_equiv@} mL</p>
+<p>pKa: {@pKa_value@}</p>
+```
+
+### Example: Phosphoric Acid (Triprotic)
+
+#### Question Variables
+
+```maxima
+/* Load modules */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+
+/* Titration parameters for H3PO4 */
+acid: "H3PO4";
+c_acid: 0.1;
+c_base: 0.1;
+v_acid: 25.0;
+
+/* Plot settings - need larger range for triprotic acid */
+v_plot_max: 100;
+n_points: 150;
+
+/* Get all plot data */
+plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
+xdata: plot_data[1];
+ydata: plot_data[2];
+v_pushoff: plot_data[3];
+equiv_points: plot_data[4];
+pKa_list: plot_data[5];
+
+/* Extract all three equivalence points */
+v_equiv_1: first(equiv_points)[1];
+pH_equiv_1: first(equiv_points)[2];
+v_equiv_2: second(equiv_points)[1];
+pH_equiv_2: second(equiv_points)[2];
+v_equiv_3: third(equiv_points)[1];
+pH_equiv_3: third(equiv_points)[2];
+
+/* Extract all three pKa values */
+pKa_1: first(pKa_list);
+pKa_2: second(pKa_list);
+pKa_3: third(pKa_list);
+
+/* Display */
+acid_display: chem_display(acid);
+```
+
+#### Question Text
+
+```html
+\(\require{mhchem}\)
+
+<p>Titrationskurve von {@acid_display@} (triprotische Säure)</p>
+
+[[jsxgraph width="650px" height="500px"]]
+var board = JXG.JSXGraph.initBoard(divid, {
+    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}+5, -1],
+    axis: true, 
+    showCopyright: false,
+    defaultAxes: {
+        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
+        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
+    }
+});
+
+/* Draw titration curve */
+board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
+
+/* Mark all three equivalence points */
+board.create('point', [{#v_equiv_1#}, {#pH_equiv_1#}], {name: 'EP1', size: 3, color: 'red'});
+board.create('point', [{#v_equiv_2#}, {#pH_equiv_2#}], {name: 'EP2', size: 3, color: 'red'});
+board.create('point', [{#v_equiv_3#}, {#pH_equiv_3#}], {name: 'EP3', size: 3, color: 'red'});
+
+/* pKa reference lines */
+board.create('line', [[0, {#pKa_1#}], [{#v_plot_max#}, {#pKa_1#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
+board.create('text', [{#v_plot_max#}+1, {#pKa_1#}, 'pKa1={#pKa_1#}'], {fontSize: 9, color: 'gray'});
+
+board.create('line', [[0, {#pKa_2#}], [{#v_plot_max#}, {#pKa_2#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
+board.create('text', [{#v_plot_max#}+1, {#pKa_2#}, 'pKa2={#pKa_2#}'], {fontSize: 9, color: 'gray'});
+
+board.create('line', [[0, {#pKa_3#}], [{#v_plot_max#}, {#pKa_3#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
+board.create('text', [{#v_plot_max#}+1, {#pKa_3#}, 'pKa3={#pKa_3#}'], {fontSize: 9, color: 'gray'});
+
+/* pH 7 reference line */
+board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {strokeColor: 'lightgray', dash: 3, straightFirst: false, straightLast: false});
+[[/jsxgraph]]
+
+<p><strong>Äquivalenzpunkte:</strong></p>
+<ul>
+<li>EP1: {@v_equiv_1@} mL (pH = {@pH_equiv_1@})</li>
+<li>EP2: {@v_equiv_2@} mL (pH = {@pH_equiv_2@})</li>
+<li>EP3: {@v_equiv_3@} mL (pH = {@pH_equiv_3@})</li>
+</ul>
+
+<p><strong>pKa-Werte:</strong> pKa1 = {@pKa_1@}, pKa2 = {@pKa_2@}, pKa3 = {@pKa_3@}</p>
+```
+
+### Available Acids for Titration
+
+The following acids are available in the database for titration curves:
+
+| Formula | Type | pKa values |
+|---------|------|------------|
+| `"HCl"` | Strong monoprotic | -7.0 |
+| `"HNO3"` | Strong monoprotic | -1.0 |
+| `"CH3COOH"` | Weak monoprotic | 4.76 |
+| `"HCOOH"` | Weak monoprotic | 3.75 |
+| `"HF"` | Weak monoprotic | 3.17 |
+| `"HCN"` | Weak monoprotic | 9.21 |
+| `"NH4+"` | Weak monoprotic | 9.25 |
+| `"H2SO4"` | Strong/weak diprotic | -2.0, 1.92 |
+| `"H2CO3"` | Weak diprotic | 6.35, 10.33 |
+| `"H2S"` | Weak diprotic | 7.00, 12.89 |
+| `"H2C2O4"` | Weak diprotic | 1.25, 4.27 |
+| `"H3PO4"` | Weak triprotic | 2.12, 7.21, 12.32 |
+
+### Complete Example: Titration Curve Question with Input Fields
+
+This is a complete, copy-paste ready example for a STACK question with student input fields.
+
+#### Question Variables
+
+```maxima
+/* Load the modules */
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
+
+/* Set up the titration parameters */
+acid: "CH3COOH";
+c_acid: 0.1;
+c_base: 0.1;
+v_acid: 25.0;
+v_plot_max: 40;
+n_points: 100;
+
+/* Get all plot data in one call */
+plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
+xdata: plot_data[1];
+ydata: plot_data[2];
+v_pushoff: plot_data[3];
+equiv_points: plot_data[4];
+pKa_list: plot_data[5];
+
+/* Extract key values */
+v_equiv: first(equiv_points)[1];
+pH_equiv: first(equiv_points)[2];
+pKa_value: first(pKa_list);
+
+/* Display formula */
+acid_display: chem_display(acid);
+
+/* Answers */
+ta_equiv_vol: v_equiv;
+ta_pKa: pKa_value;
+```
+
+#### Question Text
+
+```html
+\(\require{mhchem}\)
+
+<p>Die folgende Abbildung zeigt die Titrationskurve von {@v_acid@} mL einer {@c_acid@} M Lösung von {@acid_display@} mit {@c_base@} M NaOH.</p>
+
+[[jsxgraph width="600px" height="450px"]]
+var board = JXG.JSXGraph.initBoard(divid, {
+    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}, -1],
+    axis: true, 
+    showCopyright: false,
+    defaultAxes: {
+        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
+        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
+    }
+});
+
+/* Draw titration curve */
+board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
+
+/* Mark equivalence point */
+board.create('point', [{#v_equiv#}, {#pH_equiv#}], {
+    name: 'Äquivalenzpunkt', 
+    size: 3, 
+    color: 'red',
+    label: {offset: [10, 10], fontSize: 11}
+});
+
+/* pKa reference line */
+board.create('line', [[0, {#pKa_value#}], [{#v_plot_max#}, {#pKa_value#}]], {
+    strokeColor: 'gray', strokeWidth: 1, dash: 2,
+    straightFirst: false, straightLast: false
+});
+board.create('text', [{#v_plot_max#}-5, {#pKa_value#}+0.5, 'pKa = {#pKa_value#}'], {fontSize: 10, color: 'gray'});
+
+/* pH 7 reference line */
+board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {
+    strokeColor: 'lightgray', strokeWidth: 1, dash: 3,
+    straightFirst: false, straightLast: false
+});
+[[/jsxgraph]]
+
+<p><strong>Fragen:</strong></p>
+<p>1. Wie gross ist das Äquivalenzvolumen (in mL)? [[input:ans1]] [[validation:ans1]]</p>
+<p>2. Wie gross ist der pKa-Wert der Säure? [[input:ans2]] [[validation:ans2]]</p>
+```
+
+#### Input Configuration
+
+**Input: ans1**
+- **Type:** Numerical
+- **Model answer:** `ta_equiv_vol`
+
+**Input: ans2**
+- **Type:** Numerical  
+- **Model answer:** `ta_pKa`
+
+#### Potential Response Trees
+
+**PRT: prt1 (for ans1)**
+- Answer test: `NumAbsolute`
+- SAns: `ans1`, TAns: `ta_equiv_vol`
+- Test options: `0.5`
+
+**PRT: prt2 (for ans2)**
+- Answer test: `NumAbsolute`
+- SAns: `ans2`, TAns: `ta_pKa`
+- Test options: `0.1`
+
+#### General Feedback
+
+```html
+<p><strong>Lösung:</strong></p>
+<ul>
+<li>Das Äquivalenzvolumen beträgt {@ta_equiv_vol@} mL.</li>
+<li>Der pKa-Wert von {@acid_display@} ist {@ta_pKa@}.</li>
+</ul>
+```
+
+#### Question Note
+
+```
+Acid: {@acid@}, pKa: {@pKa_value@}, V_equiv: {@v_equiv@} mL
+```
 
 ---
 
@@ -2004,10 +2346,10 @@ Um die Chemie-Bibliothek in Ihrer STACK-Frage zu verwenden, fügen Sie folgende 
 
 ```maxima
 /* Periodensystem-Modul laden */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/pse.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
 
 /* Säure-Base-Chemie-Modul laden */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/acidbase.mac");
+stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
 ```
 
 Sie können beide Module unabhängig voneinander oder zusammen laden.
