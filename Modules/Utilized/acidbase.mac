@@ -416,37 +416,7 @@ _charge_balance_with_derivative(H, CT, CB, Ka_list, Kw) := block(
     return([float(f), float(df)])
 )$
 
-/* Solve for pH using bisection - OPTIMIZED with fewer iterations */
-_solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, iter],
-    Kw: 1.0e-14,
-    
-    H_lo: 1e-14,
-    H_hi: 1.0,
-    
-    f_lo: _charge_balance(H_lo, CT, CB, Ka_list, Kw),
-    f_hi: _charge_balance(H_hi, CT, CB, Ka_list, Kw),
-    
-    /* Only 40 iterations - sufficient for ~12 decimal places */
-    iter: 0,
-    while iter < 40 do (
-        H_mid: (H_lo + H_hi) / 2.0,
-        f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
-        
-        if is(abs(f_mid) < 1e-10) then return(float(-log(H_mid) / log(10))),
-        
-        if is(f_mid * f_hi < 0) then (
-            H_lo: H_mid
-        ) else (
-            H_hi: H_mid
-        ),
-        
-        iter: iter + 1
-    ),
-    
-    return(float(-log(H_mid) / log(10)))
-)$
-
-/* Hybrid solver: Bisektion for initial bracketing, then Newton-Raphson for speed
+/* Hybrid solver: Bisection for initial bracketing, then Newton-Raphson for speed
    Much faster and more accurate than pure bisection */
 _solve_pH(CT, CB, Ka_list) := block(
     [Kw, H_lo, H_hi, H, f, df, f_data, iter, converged, H_new],
@@ -456,9 +426,9 @@ _solve_pH(CT, CB, Ka_list) := block(
     H_lo: 1e-14,
     H_hi: 1.0,
     
-    /* Start with a few bisection steps to get into the right region */
+    /* Start with 15 bisection steps to get into the right region */
     iter: 0,
-    while iter < 10 do (
+    while iter < 15 do (
         H: (H_lo + H_hi) / 2.0,
         f: _charge_balance(H, CT, CB, Ka_list, Kw),
         
@@ -474,13 +444,13 @@ _solve_pH(CT, CB, Ka_list) := block(
     converged: false,
     iter: 0,
     
-    while iter < 20 and not converged do (
+    while iter < 30 and not converged do (
         f_data: _charge_balance_with_derivative(H, CT, CB, Ka_list, Kw),
         f: first(f_data),
         df: second(f_data),
         
         /* Check convergence */
-        if is(abs(f) < 1e-12) then (
+        if is(abs(f) < 1e-14) then (
             converged: true
         ) else (
             /* Newton step with safeguard */
