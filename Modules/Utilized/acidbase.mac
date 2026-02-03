@@ -352,16 +352,18 @@ _solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, i
     /* 60 bisection iterations */
     iter: 0,
     while iter < 60 do (
-        H_mid: (H_lo + H_hi) / 2.0,
+        H_mid: float((H_lo + H_hi) / 2.0),
         f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
         
-        /* Standard bisection: choose the half that brackets the root */
-        if is(f_lo * f_mid < 0) then (
-            H_hi: H_mid,
-            f_hi: f_mid
-        ) else (
+        /* Use sign comparison that works reliably with floats */
+        if is(f_lo > 0) = is(f_mid > 0) then (
+            /* f_lo and f_mid have the same sign, root is in upper half */
             H_lo: H_mid,
             f_lo: f_mid
+        ) else (
+            /* f_lo and f_mid have opposite signs, root is in lower half */
+            H_hi: H_mid,
+            f_hi: f_mid
         ),
         
         iter: iter + 1
