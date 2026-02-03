@@ -549,41 +549,41 @@ chem_acidbase_num_protons(acid) := block([nH],
      xdata: list of x values (volumes)
      ydata: list of y values (pH)
      v_max: maximum x-axis value
-     options: optional list of [key, value] pairs for customization
-              Supported options:
-              - ["show_grid", true/false]
-              - ["curve_color", "blue"]
-              - ["curve_width", 2]
-              - ["equiv_points", [[v1, pH1], [v2, pH2], ...]]
-              - ["pKa_lines", [pKa1, pKa2, ...]]
-              - ["title", "string"]
+     v_pushoff: left boundary offset (typically negative, e.g., -v_equiv/20)
    Returns: JavaScript code string to be inserted with {# #} */
-
-chem_jsxgraph_titration_code(xdata, ydata, v_max) := block([code],
+chem_jsxgraph_titration_code(xdata, ydata, v_max, v_pushoff) := block([code],
     code: sconcat(
         "var board = JXG.JSXGraph.initBoard(divid, {",
-        "boundingbox: [-3, 15, ", string(v_max + 5), ", -1], ",
+        "boundingbox: [", string(v_pushoff), ", 15, ", string(v_max), ", -1], ",
         "axis: true, ",
-        "showCopyright: false",
+        "showCopyright: false, ",
+        "defaultAxes: {",
+        "x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}}, ",
+        "y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}",
+        "}",
         "});",
         "var xData = ", string(xdata), ";",
         "var yData = ", string(ydata), ";",
         "board.create('curve', [xData, yData], {strokeColor: 'blue', strokeWidth: 2});",
-        "board.create('line', [[0, 7], [", string(v_max), ", 7]], {strokeColor: 'lightgray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});"
+        "board.create('line', [[0, 7], [", string(v_max), ", 7]], {strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});"
     ),
     code
 )$
 
 /* Extended version with equivalence points and pKa lines */
-chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list) := block(
+chem_jsxgraph_titration_code_full(xdata, ydata, v_max, v_pushoff, equiv_points, pKa_list) := block(
     [code, i, ep, pka],
     
-    /* Base code */
+    /* Base code with axis labels */
     code: sconcat(
         "var board = JXG.JSXGraph.initBoard(divid, {",
-        "boundingbox: [-3, 15, ", string(v_max + 5), ", -1], ",
+        "boundingbox: [", string(v_pushoff), ", 15, ", string(v_max), ", -1], ",
         "axis: true, ",
-        "showCopyright: false",
+        "showCopyright: false, ",
+        "defaultAxes: {",
+        "x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}}, ",
+        "y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}",
+        "}",
         "});",
         "var xData = ", string(xdata), ";",
         "var yData = ", string(ydata), ";",
@@ -593,7 +593,7 @@ chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list) :
     /* Add pH 7 line */
     code: sconcat(code,
         "board.create('line', [[0, 7], [", string(v_max), ", 7]], ",
-        "{strokeColor: 'lightgray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});"
+        "{strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});"
     ),
     
     /* Add equivalence points */
@@ -602,7 +602,7 @@ chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list) :
             ep: equiv_points[i],
             code: sconcat(code,
                 "board.create('point', [", string(float(first(ep))), ", ", string(float(second(ep))), "], ",
-                "{name: 'ÄP", string(i), "', size: 3, color: 'red', label: {offset: [10, 10], fontSize: 10}});"
+                "{name: 'EP", string(i), "', size: 3, color: 'red', label: {offset: [10, 10], fontSize: 11}});"
             )
         )
     ),
@@ -614,7 +614,7 @@ chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list) :
             code: sconcat(code,
                 "board.create('line', [[0, ", string(float(pka)), "], [", string(v_max), ", ", string(float(pka)), "]], ",
                 "{strokeColor: 'gray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});",
-                "board.create('text', [", string(v_max + 1), ", ", string(float(pka)), ", 'pKa", string(i), "=", string(float(pka)), "'], {fontSize: 9, color: 'gray'});"
+                "board.create('text', [", string(v_max + 1), ", ", string(float(pka)), ", 'pKa", string(i), " = ", string(float(pka)), "'], {fontSize: 10, color: 'gray'});"
             )
         )
     ),
@@ -622,9 +622,10 @@ chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list) :
     code
 )$
 
-/* Convenience function: Generate everything from acid name */
+/* Convenience function: Generate everything from acid name
+   Returns JavaScript code string for complete titration plot */
 chem_jsxgraph_titration(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
-    [curve_data, xdata, ydata, pKa_list, equiv_vols, equiv_points, i, v_eq, pH_eq],
+    [curve_data, xdata, ydata, pKa_list, equiv_vols, equiv_points, i, v_eq, pH_eq, v_pushoff],
     
     /* Generate curve data */
     curve_data: chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max),
@@ -643,6 +644,12 @@ chem_jsxgraph_titration(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
         equiv_points: append(equiv_points, [[v_eq, pH_eq]])
     ),
     
+    /* Calculate left boundary offset */
+    if length(equiv_vols) > 0 then
+        v_pushoff: -float(first(equiv_vols) / 20)
+    else
+        v_pushoff: -1,
+    
     /* Generate code */
-    chem_jsxgraph_titration_code_full(xdata, ydata, v_max, equiv_points, pKa_list)
+    chem_jsxgraph_titration_code_full(xdata, ydata, v_max, v_pushoff, equiv_points, pKa_list)
 )$
