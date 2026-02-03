@@ -392,7 +392,7 @@ chem_titration_pH(acid, c_acid, c_base, v_acid, v_base) := block(
     return(pH)
 )$
 
-/* Generate titration curve data - use fewer points by default */
+/* Generate titration curve data with automatic end volume */
 chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     [num_protons, v_final_equiv, v_max, data, v, pH, idx, delta_v],
     
@@ -400,8 +400,39 @@ chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points) := block(
     if is(num_protons = 0) then num_protons: 1,
     
     v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
-    v_max: float(v_final_equiv * 1.2),
+    v_max: float(v_final_equiv * 1.3),
     delta_v: float(v_max / (n_points - 1)),
+    
+    data: [],
+    idx: 0,
+    
+    while idx < n_points do (
+        v: float(idx * delta_v),
+        pH: chem_titration_pH(acid, c_acid, c_base, v_acid, v),
+        if not is(pH = false) then data: append(data, [[v, pH]]),
+        idx: idx + 1
+    ),
+    
+    return(data)
+)$
+
+/* Generate titration curve data with custom end volume
+   v_max: maximum volume to plot (mL) - if 0 or negative, uses automatic calculation */
+chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
+    [num_protons, v_final_equiv, v_end, data, v, pH, idx, delta_v],
+    
+    num_protons: length(chem_acidbase_pKa_list(acid)),
+    if is(num_protons = 0) then num_protons: 1,
+    
+    /* Use custom v_max if positive, otherwise calculate automatically */
+    if is(v_max > 0) then (
+        v_end: float(v_max)
+    ) else (
+        v_final_equiv: float((num_protons * c_acid * v_acid) / c_base),
+        v_end: float(v_final_equiv * 1.3)
+    ),
+    
+    delta_v: float(v_end / (n_points - 1)),
     
     data: [],
     idx: 0,
