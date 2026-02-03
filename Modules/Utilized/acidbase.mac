@@ -324,6 +324,54 @@ _alpha_fractions(H, Ka_list) := block([n, D, alphas, prod, idx, Hn],
     return(alphas)
 )$
 
+/* Calculate derivative of alpha fractions with respect to H
+   Returns d(alphas)/dH for Newton-Raphson optimization */
+_alpha_fractions_derivative(H, Ka_list) := block([n, D, dD, alphas, dalphas, prod, idx, Hn],
+    n: length(Ka_list),
+    Hn: float(H^n),
+    
+    /* Build denominator D and its derivative dD/dH */
+    D: Hn,
+    dD: n * float(H^(n-1)),
+    prod: 1.0,
+    idx: 1,
+    while idx <= n do (
+        prod: prod * Ka_list[idx],
+        D: D + prod * float(H^(n - idx)),
+        if is(n - idx > 0) then 
+            dD: dD + prod * (n - idx) * float(H^(n - idx - 1))
+        else
+            dD: dD,
+        idx: idx + 1
+    ),
+    
+    if is(D < 1e-50) then D: 1e-50,
+    
+    /* Calculate alphas and their derivatives using quotient rule */
+    /* d/dH [f/D] = (f'*D - f*D') / D^2 */
+    alphas: [],
+    dalphas: [],
+    prod: 1.0,
+    idx: 0,
+    while idx <= n do (
+        if is(idx > 0) then prod: prod * Ka_list[idx],
+        block([f, df, alpha, dalpha],
+            f: prod * float(H^(n - idx)),
+            if is(n - idx > 0) then 
+                df: prod * (n - idx) * float(H^(n - idx - 1))
+            else
+                df: 0,
+            alpha: f / D,
+            dalpha: (df * D - f * dD) / (D * D),
+            alphas: append(alphas, [alpha]),
+            dalphas: append(dalphas, [dalpha])
+        ),
+        idx: idx + 1
+    ),
+    
+    return([alphas, dalphas])
+)$
+
 /* Charge balance equation - OPTIMIZED */
 _charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, neg_charge, idx, n],
     alphas: _alpha_fractions(H, Ka_list),
@@ -337,6 +385,35 @@ _charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, neg_charge, idx, n],
     ),
     
     return(float(H + CB - Kw/H - CT * neg_charge))
+)$
+
+/* Charge balance equation and its derivative for Newton-Raphson
+   Returns [f(H), f'(H)] */
+_charge_balance_with_derivative(H, CT, CB, Ka_list, Kw) := block(
+    [alpha_data, alphas, dalphas, neg_charge, dneg_charge, idx, n, f, df],
+    
+    alpha_data: _alpha_fractions_derivative(H, Ka_list),
+    alphas: first(alpha_data),
+    dalphas: second(alpha_data),
+    n: length(Ka_list),
+    
+    /* Sum of i * alpha_i and its derivative */
+    neg_charge: 0.0,
+    dneg_charge: 0.0,
+    idx: 1,
+    while idx <= n do (
+        neg_charge: neg_charge + idx * alphas[idx + 1],
+        dneg_charge: dneg_charge + idx * dalphas[idx + 1],
+        idx: idx + 1
+    ),
+    
+    /* f(H) = H + CB - Kw/H - CT * neg_charge */
+    f: H + CB - Kw/H - CT * neg_charge,
+    
+    /* f'(H) = 1 + Kw/H^2 - CT * dneg_charge */
+    df: 1 + Kw/(H*H) - CT * dneg_charge,
+    
+    return([float(f), float(df)])
 )$
 
 /* Solve for pH using bisection - OPTIMIZED with fewer iterations */
@@ -367,6 +444,63 @@ _solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, i
     ),
     
     return(float(-log(H_mid) / log(10)))
+)$
+
+/* Hybrid solver: Bisektion for initial bracketing, then Newton-Raphson for speed
+   Much faster and more accurate than pure bisection */
+_solve_pH(CT, CB, Ka_list) := block(
+    [Kw, H_lo, H_hi, H, f, df, f_data, iter, converged, H_new],
+    Kw: 1.0e-14,
+    
+    /* Initial bracket: pH 0 to 14 */
+    H_lo: 1e-14,
+    H_hi: 1.0,
+    
+    /* Start with a few bisection steps to get into the right region */
+    iter: 0,
+    while iter < 10 do (
+        H: (H_lo + H_hi) / 2.0,
+        f: _charge_balance(H, CT, CB, Ka_list, Kw),
+        
+        if is(f * _charge_balance(H_hi, CT, CB, Ka_list, Kw) < 0) then
+            H_lo: H
+        else
+            H_hi: H,
+        iter: iter + 1
+    ),
+    
+    /* Now use Newton-Raphson for fast convergence */
+    H: (H_lo + H_hi) / 2.0,
+    converged: false,
+    iter: 0,
+    
+    while iter < 20 and not converged do (
+        f_data: _charge_balance_with_derivative(H, CT, CB, Ka_list, Kw),
+        f: first(f_data),
+        df: second(f_data),
+        
+        /* Check convergence */
+        if is(abs(f) < 1e-12) then (
+            converged: true
+        ) else (
+            /* Newton step with safeguard */
+            if is(abs(df) > 1e-30) then (
+                H_new: H - f/df,
+                /* Keep within bounds */
+                if is(H_new < H_lo) or is(H_new > H_hi) then
+                    H_new: (H_lo + H_hi) / 2.0,
+                /* Update bounds based on sign of f */
+                if is(f > 0) then H_lo: H else H_hi: H,
+                H: H_new
+            ) else (
+                /* Fallback to bisection if derivative too small */
+                H: (H_lo + H_hi) / 2.0
+            )
+        ),
+        iter: iter + 1
+    ),
+    
+    return(float(-log(H) / log(10)))
 )$
 
 /* Calculate pH at a given point during titration */
