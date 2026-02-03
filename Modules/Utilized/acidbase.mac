@@ -339,7 +339,7 @@ _charge_balance(H, CT, CB, Ka_list, Kw) := block([alphas, neg_charge, idx, n],
     return(float(H + CB - Kw/H - CT * neg_charge))
 )$
 
-/* Solve for pH using bisection - OPTIMIZED with fewer iterations */
+/* Solve for pH using bisection - 60 iterations for high precision */
 _solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, iter],
     Kw: 1.0e-14,
     
@@ -349,18 +349,19 @@ _solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, i
     f_lo: _charge_balance(H_lo, CT, CB, Ka_list, Kw),
     f_hi: _charge_balance(H_hi, CT, CB, Ka_list, Kw),
     
-    /* Only 40 iterations - sufficient for ~12 decimal places */
+    /* 60 bisection iterations */
     iter: 0,
     while iter < 60 do (
         H_mid: (H_lo + H_hi) / 2.0,
         f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
         
-        if is(abs(f_mid) < 1e-10) then return(float(-log(H_mid) / log(10))),
-        
-        if is(f_mid * f_hi < 0) then (
-            H_lo: H_mid
+        /* Standard bisection: choose the half that brackets the root */
+        if is(f_lo * f_mid < 0) then (
+            H_hi: H_mid,
+            f_hi: f_mid
         ) else (
-            H_hi: H_mid
+            H_lo: H_mid,
+            f_lo: f_mid
         ),
         
         iter: iter + 1
