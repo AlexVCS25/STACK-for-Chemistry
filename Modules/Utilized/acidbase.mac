@@ -538,6 +538,9 @@ chem_acidbase_num_protons(acid) := block([nH],
     if is(nH = null) then 1 else nH
 )$
 
+/* filepath: /home/alexander/eth_it/STACK-for-Chemistry/Modules/Utilized/acidbase.mac */
+/* ...existing code... */
+
 /****************************************************************/
 /*                                                              */
 /*  JSXGraph Plot Generation Functions                          */
