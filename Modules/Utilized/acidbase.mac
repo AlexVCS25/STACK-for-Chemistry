@@ -539,7 +539,6 @@ chem_acidbase_num_protons(acid) := block([nH],
 )$
 
 /* filepath: /home/alexander/eth_it/STACK-for-Chemistry/Modules/Utilized/acidbase.mac */
-/* ...existing code... */
 
 /****************************************************************/
 /*                                                              */
@@ -655,4 +654,68 @@ chem_jsxgraph_titration(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
     
     /* Generate code */
     chem_jsxgraph_titration_code_full(xdata, ydata, v_max, v_pushoff, equiv_points, pKa_list)
+)$
+
+/****************************************************************/
+/*                                                              */
+/*  JSXGraph Helper Functions                                   */
+/*  Prepare all data needed for plotting in Question Text       */
+/*                                                              */
+/****************************************************************/
+
+/* Calculate all data needed for a titration plot in one call.
+   Returns a list that can be unpacked in Question Variables:
+   [xdata, ydata, v_pushoff, equiv_points_list, pKa_list]
+   
+   Usage in Question Variables:
+     plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max);
+     xdata: plot_data[1];
+     ydata: plot_data[2];
+     v_pushoff: plot_data[3];
+     equiv_points: plot_data[4];
+     pKa_list: plot_data[5];
+*/
+chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max) := block(
+    [curve_data, xdata, ydata, pKa_list, equiv_vols, equiv_points, i, v_eq, pH_eq, v_pushoff],
+    
+    /* Generate curve data */
+    curve_data: chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max),
+    xdata: chem_titration_xdata(curve_data),
+    ydata: chem_titration_ydata(curve_data),
+    
+    /* Get pKa values */
+    pKa_list: chem_acidbase_pKa_list(acid),
+    
+    /* Calculate equivalence points as list of [v, pH] pairs */
+    equiv_vols: chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid),
+    equiv_points: [],
+    for i: 1 thru length(equiv_vols) do (
+        v_eq: equiv_vols[i],
+        pH_eq: chem_titration_pH(acid, c_acid, c_base, v_acid, v_eq),
+        equiv_points: append(equiv_points, [[v_eq, pH_eq]])
+    ),
+    
+    /* Calculate left boundary offset */
+    if length(equiv_vols) > 0 then
+        v_pushoff: float(-first(equiv_vols) / 20)
+    else
+        v_pushoff: -1.0,
+    
+    [xdata, ydata, v_pushoff, equiv_points, pKa_list]
+)$
+
+/* Get equivalence points as flat lists for easier JSXGraph use
+   Returns [v_list, pH_list] where both are simple lists */
+chem_titration_equiv_data(acid, c_acid, c_base, v_acid) := block(
+    [equiv_vols, v_list, pH_list, i, v_eq, pH_eq],
+    equiv_vols: chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid),
+    v_list: [],
+    pH_list: [],
+    for i: 1 thru length(equiv_vols) do (
+        v_eq: equiv_vols[i],
+        pH_eq: chem_titration_pH(acid, c_acid, c_base, v_acid, v_eq),
+        v_list: append(v_list, [v_eq]),
+        pH_list: append(pH_list, [pH_eq])
+    ),
+    [v_list, pH_list]
 )$
