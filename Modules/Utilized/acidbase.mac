@@ -351,7 +351,7 @@ _solve_pH(CT, CB, Ka_list) := block([Kw, H_lo, H_hi, H_mid, f_lo, f_hi, f_mid, i
     
     /* 60 bisection iterations */
     iter: 0,
-    while iter < 30 do (
+    while iter < 50 do (
         H_mid: float((H_lo + H_hi) / 2.0),
         f_mid: _charge_balance(H_mid, CT, CB, Ka_list, Kw),
         
