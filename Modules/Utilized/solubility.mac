@@ -11,6 +11,12 @@
 
     Ksp is always computed from pKsp: Ksp = 10^(-pKsp)
     This avoids rounding errors from storing both values.
+
+    CRC Handbook of Chemistry and Physics — Table of solubility product constants
+    NIST Standard Reference Database — Critically evaluated stability constants
+    Lange's Handbook of Chemistry — Solubility product table
+    Atkins' Physical Chemistry or Zumdahl's Chemistry textbook appendices
+    IUPAC-NIST Solubility Data Series
 */
 
 %_SOLUBILITY_DB: [
