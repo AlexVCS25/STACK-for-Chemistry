@@ -182,39 +182,9 @@ chem_reaction_products(reaction_name) := block([rxn],
     return(second(rxn))
 )$
 
-/* Returns a balanced equation string for a reaction */
+/* Returns a LaTeX-formatted balanced equation using \ce{},
+   so the question text only needs \({@...@}\) without manual \ce wrapping. */
 chem_reaction_equation(reaction_name) := block([reactants, products, rxn_str],
-    reactants: chem_reaction_reactants(reaction_name),
-    products: chem_reaction_products(reaction_name),
-    
-    if is(reactants = false) or is(products = false) then return(false),
-    
-    /* Build reactants string */
-    rxn_str: "",
-    for i:1 thru length(reactants) do (
-        if third(reactants[i]) > 1 then
-            rxn_str: sconcat(rxn_str, third(reactants[i]), " "),
-        rxn_str: sconcat(rxn_str, first(reactants[i]), "(", second(reactants[i]), ")"),
-        if i < length(reactants) then
-            rxn_str: sconcat(rxn_str, " + ")
-    ),
-    
-    rxn_str: sconcat(rxn_str, " -> "),
-    
-    /* Build products string */
-    for i:1 thru length(products) do (
-        if third(products[i]) > 1 then
-            rxn_str: sconcat(rxn_str, third(products[i]), " "),
-        rxn_str: sconcat(rxn_str, first(products[i]), "(", second(products[i]), ")"),
-        if i < length(products) then
-            rxn_str: sconcat(rxn_str, " + ")
-    ),
-    
-    return(rxn_str)
-)$
-
-/* Returns a LaTeX-formatted balanced equation using \ce{} */
-chem_reaction_equation_latex(reaction_name) := block([reactants, products, rxn_str],
     reactants: chem_reaction_reactants(reaction_name),
     products: chem_reaction_products(reaction_name),
     
