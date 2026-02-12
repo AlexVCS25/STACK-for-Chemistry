@@ -1436,22 +1436,22 @@ entry: chem_sol_entry("PbCl2");
 **Example:**
 ```maxima
 expr: chem_sol_Ksp_expression("AgCl");
-/* Returns "[Ag^+] \\cdot [Cl^-]" */
+/* Returns "[\\ce{Ag^+}] \\cdot [\\ce{Cl^-}]" */
 
 expr: chem_sol_Ksp_expression("PbCl2");
-/* Returns "[Pb^{2+}] \\cdot [Cl^-]^2" */
+/* Returns "[\\ce{Pb^{2+}}] \\cdot [\\ce{Cl^-}]^2" */
 
 expr: chem_sol_Ksp_expression("Ag2CrO4");
-/* Returns "[Ag^+]^2 \\cdot [CrO4^{2-}]" */
+/* Returns "[\\ce{Ag^+}]^2 \\cdot [\\ce{CrO4^{2-}}]" */
 
 expr: chem_sol_Ksp_expression("Ca3(PO4)2");
-/* Returns "[Ca^{2+}]^3 \\cdot [PO4^{3-}]^2" */
+/* Returns "[\\ce{Ca^{2+}}] \\cdot [\\ce{PO4^{3-}}]" */
 ```
 
 **Usage in Question Text:**
 ```latex
 \(\require{mhchem}\)
-<p>\( K_{sp} = {@chem_sol_Ksp_expression(salt)@} \)</p>
+<p>\( K_{\mathrm{sp}} = {@chem_sol_Ksp_expression(salt)@} \)</p>
 ```
 
 ---
@@ -1468,7 +1468,7 @@ expr: chem_sol_Ksp_expression("Ca3(PO4)2");
 **Example:**
 ```maxima
 expr: chem_sol_Ksp_activity_expression("AgCl");
-/* Returns "\\frac{a(Ag^+) \\cdot a(Cl^-)}{a(AgCl)}" */
+/* Returns "\\frac{a(\\ce{Ag^+}) \\cdot a(\\ce{Cl^-})}{a(\\ce{AgCl})}" */
 ```
 
 ---
@@ -1485,7 +1485,7 @@ expr: chem_sol_Ksp_activity_expression("AgCl");
 **Example:**
 ```maxima
 expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
-/* Returns "a(Pb^{2+}) \\cdot a(Cl^-)^2" */
+/* Returns "a(\\ce{Pb^{2+}}) \\cdot a(\\ce{Cl^-})^2" */
 ```
 
 ---
@@ -1732,33 +1732,35 @@ moderate: chem_sol_array_Ksp_range(1e-12, 1e-8);
 
 #### `chem_sol_dissolution_equation(salt)`
 
-**Description:** Generates the dissolution equation as a string in mhchem format.
+**Description:** Generates the dissolution equation as a LaTeX string with `\ce{...}` included, so the question text only needs `\({@...@}\)` without manual `\ce` wrapping.
 
 **Parameters:**
 - `salt` (string): Chemical formula of the salt
 
-**Returns:** String of the dissolution equation, or `""` if not found
+**Returns:** LaTeX string with `\ce{...}` wrapper, or `""` if not found
 
 **Example:**
 ```maxima
 eq: chem_sol_dissolution_equation("AgCl");
-/* Returns "AgCl -> Ag^+ + Cl^-" */
+/* Returns "\\ce{AgCl -> Ag^+ + Cl^-}" */
 
 eq: chem_sol_dissolution_equation("PbCl2");
-/* Returns "PbCl2 -> Pb^{2+} + 2 Cl^-" */
+/* Returns "\\ce{PbCl2 -> Pb^{2+} + 2 Cl^-}" */
 
 eq: chem_sol_dissolution_equation("Ag2CrO4");
-/* Returns "Ag2CrO4 -> 2 Ag^+ + CrO4^{2-}" */
+/* Returns "\\ce{Ag2CrO4 -> 2 Ag^+ + CrO4^{2-}}" */
 
 eq: chem_sol_dissolution_equation("Ca3(PO4)2");
-/* Returns "Ca3(PO4)2 -> 3 Ca^{2+} + 2 PO4^{3-}" */
+/* Returns "\\ce{Ca3(PO4)2 -> 3 Ca^{2+} + 2 PO4^{3-}}" */
 ```
 
 **Usage in Question Text:**
 ```latex
 \(\require{mhchem}\)
-<p>\(\ce{ {@chem_sol_dissolution_equation(salt)@} }\)</p>
+<p>\({@chem_sol_dissolution_equation(salt)@}\)</p>
 ```
+
+**Note:** No manual `\ce{...}` wrapping needed — the function output already contains it.
 
 ---
 
@@ -1816,10 +1818,10 @@ The solubility database contains the following salt categories:
 | `chem_sol_anion_array()` | All unique anions | List of anion strings |
 | `chem_sol_array_sorted_Ksp()` | Salts sorted by Ksp | Ascending order |
 | `chem_sol_array_Ksp_range(min, max)` | Salts in Ksp range | Filter by Ksp |
-| `chem_sol_dissolution_equation(salt)` | Dissolution equation | `"AgCl -> Ag^+ + Cl^-"` |
-| `chem_sol_Ksp_expression(salt)` | Ksp in brackets | `"[Ag^+] \\cdot [Cl^-]"` |
-| `chem_sol_Ksp_activity_expression(salt)` | Full activity expr. | With `a(solid)` denominator |
-| `chem_sol_Ksp_activity_expression_simplified(salt)` | Simplified activity | Without denominator |
+| `chem_sol_dissolution_equation(salt)` | Dissolution equation (with `\ce{}`) | `"\\ce{AgCl -> Ag^+ + Cl^-}"` |
+| `chem_sol_Ksp_expression(salt)` | Ksp in brackets (with `\ce{}`) | `"[\\ce{Ag^+}] \\cdot [\\ce{Cl^-}]"` |
+| `chem_sol_Ksp_activity_expression(salt)` | Full activity expr. (with `\ce{}`) | With `a(\\ce{solid})` denominator |
+| `chem_sol_Ksp_activity_expression_simplified(salt)` | Simplified activity (with `\ce{}`) | Without denominator |
 
 ---
 
@@ -2044,19 +2046,26 @@ rxn: chem_reaction_data("CombustionMethane");
 
 #### `chem_reaction_equation(reaction_name)`
 
-**Description:** Returns a text representation of the balanced equation.
+**Description:** Returns a LaTeX-formatted balanced equation using `\ce{...}`, so the question text only needs `\({@...@}\)` without manual `\ce` wrapping.
+
+**Parameters:**
+- `reaction_name` (string): Name of the reaction
+
+**Returns:** LaTeX string with `\ce{...}` wrapper, or `false` if not found
 
 **Example:**
 ```maxima
 eqn: chem_reaction_equation("CombustionMethane");
-/* Returns "CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)" */
+/* Returns "\\ce{CH4(g) + 2 O2(g) -> CO2(g) + 2 H2O(l)}" */
 ```
 
----
+**Usage in Question Text:**
+```latex
+\(\require{mhchem}\)
+<p>\({@chem_reaction_equation("CombustionMethane")@}\)</p>
+```
 
-#### `chem_reaction_equation_latex(reaction_name)`
-
-**Description:** Returns a LaTeX-formatted equation using `\ce{...}`.
+**Note:** No manual `\ce{...}` wrapping needed — the function output already contains it.
 
 ---
 
@@ -2279,8 +2288,8 @@ salt_display: chem_display(salt);
 ```latex
 \(\require{mhchem}\)
 <p>Consider the salt {@salt_display@}.</p>
-<p>Dissolution: \(\ce{ {@eq@} }\)</p>
-<p>\( K_{sp} = {@expr@} = {@ksp@} \)</p>
+<p>Dissolution: \({@eq@}\)</p>
+<p>\( K_{\mathrm{sp}} = {@expr@} = {@ksp@} \)</p>
 <p>The molar solubility is {@s@} mol/L.</p>
 ```
 
@@ -2305,7 +2314,7 @@ s_common: chem_sol_molar_solubility_common_ion(salt, 0.1, "anion");
 ### Example 8: Thermodynamic Calculation for Random Combustion
 ```maxima
 rxn: rand(chem_reaction_combustion_array());
-equation: chem_reaction_equation_latex(rxn);
+equation: chem_reaction_equation(rxn);
 delta_h: chem_reaction_enthalpy_by_name(rxn);
 delta_s: chem_reaction_entropy_by_name(rxn);
 delta_g: chem_reaction_gibbs_by_name(rxn);
