@@ -260,6 +260,51 @@ chem_acidbase_array() := chem_acid_array()$
 
 /****************************************************************/
 /*                                                              */
+/*  Equilibrium Expression Functions                            */
+/*                                                              */
+/****************************************************************/
+
+/* Generate Ka expression in bracket notation (mhchem-compatible).
+   E.g., for CH3COOH: "[H^+] \\cdot [CH3COO-] / [CH3COOH]"
+   Uses the conjugate base from the database. */
+chem_acidbase_Ka_expression(acid) := block([idx, base_formula],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then return(""),
+    base_formula: %_ACIDBASE_DATA[idx + 3],
+    sconcat("\\frac{[H^+] \\cdot [", base_formula, "]}{[", acid, "]}")
+)$
+
+/* Generate Ka expression in activity notation.
+   E.g., for CH3COOH: "\\frac{a(H^+) \\cdot a(CH3COO-)}{a(CH3COOH)}" */
+chem_acidbase_Ka_activity_expression(acid) := block([idx, base_formula],
+    idx: _acidbase_find_acid(acid),
+    if is(idx = 0) then return(""),
+    base_formula: %_ACIDBASE_DATA[idx + 3],
+    sconcat("\\frac{a(H^+) \\cdot a(", base_formula, ")}{a(", acid, ")}")
+)$
+
+/* Generate Kb expression in bracket notation for a base.
+   E.g., for NH3: "\\frac{[NH4^+] \\cdot [OH^-]}{[NH3]}" */
+chem_acidbase_Kb_expression(base) := block([idx, acid_formula],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then return(""),
+    acid_formula: %_ACIDBASE_DATA[idx],
+    sconcat("\\frac{[", acid_formula, "] \\cdot [OH^-]}{[", base, "]}")
+)$
+
+/* Generate Kb expression in activity notation for a base.
+   E.g., for NH3: "\\frac{a(NH4^+) \\cdot a(OH^-)}{a(NH3)}" */
+chem_acidbase_Kb_activity_expression(base) := block([idx, acid_formula],
+    idx: _acidbase_find_base(base),
+    if is(idx = 0) then return(""),
+    acid_formula: %_ACIDBASE_DATA[idx],
+    sconcat("\\frac{a(", acid_formula, ") \\cdot a(OH^-)}{a(", base, ")}")
+)$
+
+/* filepath: /home/alexander/eth_it/STACK-for-Chemistry/Modules/Utilized/acidbase.mac */
+
+/****************************************************************/
+/*                                                              */
 /*  Titration Curve Functions for Polyprotic Acids              */
 /*  Using Alpha Fractions and Charge Balance                    */
 /*                                                              */

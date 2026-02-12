@@ -353,3 +353,60 @@ chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an]
 
     sconcat(salt, " -> ", rhs_cat, " + ", rhs_an)
 )$
+
+/****************************************************************/
+/*                                                              */
+/*  Equilibrium Expression Functions                            */
+/*                                                              */
+/****************************************************************/
+
+/* Generate Ksp expression in bracket notation (mhchem-compatible).
+   E.g., for CaCl2: "[Ca^{2+}][Cl^-]^2"
+   E.g., for Ag2CrO4: "[Ag^+]^2[CrO4^{2-}]" */
+chem_sol_Ksp_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[3], p: v[4], an: v[5], q: v[6],
+
+    if is(p = 1) then cat_part: sconcat("[", cat, "]")
+    else cat_part: sconcat("[", cat, "]^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("[", an, "]")
+    else an_part: sconcat("[", an, "]^", string(q)),
+
+    sconcat(cat_part, " \\cdot ", an_part)
+)$
+
+/* Generate Ksp expression in activity notation.
+   E.g., for CaCl2: "a(Ca^{2+}) \\cdot a(Cl^-)^2"
+   Note: activity of a pure solid is 1 by convention, so the
+   denominator a(salt) = 1 is omitted. We provide the full
+   expression including denominator for pedagogical purposes. */
+chem_sol_Ksp_activity_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[3], p: v[4], an: v[5], q: v[6],
+
+    if is(p = 1) then cat_part: sconcat("a(", cat, ")")
+    else cat_part: sconcat("a(", cat, ")^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("a(", an, ")")
+    else an_part: sconcat("a(", an, ")^", string(q)),
+
+    sconcat("\\frac{", cat_part, " \\cdot ", an_part, "}{a(", salt, ")}")
+)$
+
+/* Simplified activity expression (denominator = 1 for pure solid) */
+chem_sol_Ksp_activity_expression_simplified(salt) := block([v, cat, an, p, q, cat_part, an_part],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[3], p: v[4], an: v[5], q: v[6],
+
+    if is(p = 1) then cat_part: sconcat("a(", cat, ")")
+    else cat_part: sconcat("a(", cat, ")^", string(p)),
+
+    if is(q = 1) then an_part: sconcat("a(", an, ")")
+    else an_part: sconcat("a(", an, ")^", string(q)),
+
+    sconcat(cat_part, " \\cdot ", an_part)
+)$

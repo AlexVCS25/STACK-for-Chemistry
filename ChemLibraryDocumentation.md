@@ -10,24 +10,34 @@
    - [Available Data Fields](#available-data-fields)
 5. [Acid-Base Chemistry Module](#acid-base-chemistry-module)
    - [Acid-Base Data Retrieval Functions](#acid-base-data-retrieval-functions)
+   - [Equilibrium Expression Functions](#equilibrium-expression-functions)
    - [Conjugate Acid-Base Functions](#conjugate-acid-base-functions)
    - [Acid-Base Navigation Functions](#acid-base-navigation-functions)
    - [Available Acids and Bases](#available-acids-and-bases)
-6. [Thermodynamic Tables Module](#thermodynamic-tables-module)
+6. [Solubility Equilibrium Module](#solubility-equilibrium-module)
+   - [Solubility Data Retrieval Functions](#solubility-data-retrieval-functions)
+   - [Solubility Equilibrium Expression Functions](#solubility-equilibrium-expression-functions)
+   - [Molar Solubility Calculation Functions](#molar-solubility-calculation-functions)
+   - [Precipitation Check Functions](#precipitation-check-functions)
+   - [Solubility Navigation Functions](#solubility-navigation-functions)
+   - [Dissolution Equation Functions](#dissolution-equation-functions)
+   - [Available Salts](#available-salts)
+   - [Function Reference Table (Solubility)](#function-reference-table-solubility)
+7. [Thermodynamic Tables Module](#thermodynamic-tables-module)
    - [Thermodynamic Data Retrieval Functions](#thermodynamic-data-retrieval-functions)
    - [Thermodynamic Calculation Functions](#thermodynamic-calculation-functions)
    - [Available Substances](#available-substances)
-7. [Chemical Reactions Module](#chemical-reactions-module)
+8. [Chemical Reactions Module](#chemical-reactions-module)
    - [Reaction Data Retrieval Functions](#reaction-data-retrieval-functions)
    - [Available Reactions](#available-reactions)
-8. [Nuclide Database Module](#nuclide-database-module)
+9. [Nuclide Database Module](#nuclide-database-module)
    - [Data Structure](#data-structure)
    - [Core Data Retrieval Functions](#core-data-retrieval-functions)
    - [Decay Information Functions](#decay-information-functions)
    - [Navigation and Filtering Functions](#navigation-and-filtering-functions)
    - [Utility Functions](#utility-functions)
    - [Practical Examples](#practical-examples)
-9. [Usage Examples](#usage-examples)
+10. [Usage Examples](#usage-examples)
 
 ---
 
@@ -209,693 +219,6 @@ delta_g: chem_reaction_gibbs_by_name("SynthesisAmmonia");
 
 ---
 
-## Forbidden Maxima Functions
-
-STACK restricts certain Maxima functions for security and reliability reasons. The following functions are **not allowed** in STACK and will cause errors if used:
-
-### String-to-Number Conversion Functions
-
-These functions were originally used in the old acid-base module but had to be replaced:
-
-- **`read()`** - Parses and evaluates string input (security risk)
-  - *Replaced by:* `chem_string_to_number()` using ASCII arithmetic
-  - *Used in:* Formula parsing, charge parsing
-
-### Input/Output Functions
-
-These functions interact with the system and are forbidden:
-
-- **`print()`** - Prints output to console
-  - *Alternative:* Return values directly, use question feedback for displaying results
-  - *Note:* We removed `print()` from error messages in `chem_count_H()`
-
-### Function Testing Functions
-
-These functions check for function existence:
-
-- **`?fboundp()`** - Tests if a function is defined
-  - *Alternative:* Document dependencies clearly, let undefined function calls fail naturally
-  - *Note:* We removed `?fboundp()` check from `chem_count_H()`
-
-### Why These Functions Are Forbidden
-
-1. **Security**: Functions like `read()` could execute arbitrary code
-2. **Reliability**: I/O functions could interfere with STACK's execution environment
-3. **Determinism**: STACK requires predictable, reproducible results
-4. **Sandboxing**: STACK runs in a restricted environment for safety
-
-### Working Around Restrictions
-
-Instead of forbidden functions, we use:
-
-```maxima
-/* ❌ FORBIDDEN - Don't use read() */
-num: read("42");
-
-/* ✅ ALLOWED - Use manual ASCII conversion */
-chem_string_to_number(str) := block([chars, result, i, digit_val],
-    chars: charlist(str),
-    result: 0,
-    for i:1 thru length(chars) do (
-        digit_val: cint(chars[i]) - 48,  /* ASCII arithmetic */
-        result: result * 10 + digit_val
-    ),
-    return(result)
-)$
-
-/* ❌ FORBIDDEN - Don't use print() for errors */
-if error_condition then print("Error message");
-
-/* ✅ ALLOWED - Return false or let error occur naturally */
-if error_condition then return(false);
-
-/* ❌ FORBIDDEN - Don't check if function exists */
-if ?fboundp('some_function) then some_function();
-
-/* ✅ ALLOWED - Document dependencies, call directly */
-/* Requires pse.mac to be loaded */
-result: chem_parse_formula(formula);
-```
-
-### Summary of Workarounds
-
-| Forbidden Function | Purpose | Our Solution |
-|-------------------|---------|--------------|
-| `read()` | String to number | `chem_string_to_number()` with ASCII math |
-| `print()` | Error messages | Return `false`, document in comments |
-| `?fboundp()` | Check function exists | Clear documentation of dependencies |
-
-### Testing for Forbidden Functions
-
-When developing new functions, avoid:
-- Any function starting with `?` (query functions)
-- Functions that read/write files
-- Functions that execute external commands
-- Functions that evaluate arbitrary strings
-
----
-
-## Titration Curve Plotting
-
-The acid-base module includes powerful functions for calculating and plotting titration curves of mono- and polyprotic acids.
-
-### Available Functions
-
-| Function | Description |
-|----------|-------------|
-| `chem_titration_pH(acid, c_acid, c_base, v_acid, v_base)` | Calculate pH at any point |
-| `chem_titration_curve_data(acid, c_acid, c_base, v_acid, n_points)` | Generate curve data (auto v_max) |
-| `chem_titration_curve_data_vmax(acid, c_acid, c_base, v_acid, n_points, v_max)` | Generate curve data (custom v_max) |
-| `chem_titration_xdata(data)` | Extract x-values (volumes) from curve data |
-| `chem_titration_ydata(data)` | Extract y-values (pH) from curve data |
-| `chem_titration_equiv_volume(c_acid, c_base, v_acid, i)` | Get i-th equivalence volume |
-| `chem_titration_equiv_volumes(acid, c_acid, c_base, v_acid)` | Get all equivalence volumes |
-| `chem_titration_equiv_pH(acid, c_acid, c_base, v_acid, i)` | Get pH at i-th equivalence point |
-| `chem_titration_half_equiv_pH(acid, c_acid, c_base, v_acid, i)` | Get pH at i-th half-equivalence point |
-| `chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_max)` | Get all plot data in one call |
-| `chem_acidbase_pKa_list(acid)` | Get list of all pKa values for polyprotic acid |
-
-### Template: Titration Curve Question
-
-Copy and paste this template into your STACK question.
-
-#### Question Variables
-
-```maxima
-/* ========== LOAD MODULES ========== */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
-
-/* ========== TITRATION PARAMETERS ========== */
-acid: "CH3COOH";      /* Change this to any acid in database */
-c_acid: 0.1;          /* Acid concentration (M) */
-c_base: 0.1;          /* Base concentration (M) */
-v_acid: 25.0;         /* Volume of acid solution (mL) */
-
-/* ========== PLOT SETTINGS ========== */
-v_plot_max: 40;       /* Maximum x-axis value (mL) */
-n_points: 100;        /* Number of data points (more = smoother curve) */
-
-/* ========== GENERATE PLOT DATA ========== */
-/* Method 1: Get all data in one call */
-plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
-xdata: plot_data[1];
-ydata: plot_data[2];
-v_pushoff: plot_data[3];
-equiv_points: plot_data[4];
-pKa_list: plot_data[5];
-
-/* ========== EXTRACT KEY VALUES ========== */
-/* For monoprotic acids: */
-v_equiv: first(equiv_points)[1];
-pH_equiv: first(equiv_points)[2];
-pKa_value: first(pKa_list);
-
-/* For polyprotic acids, access additional equivalence points: */
-/* v_equiv_2: second(equiv_points)[1]; */
-/* pH_equiv_2: second(equiv_points)[2]; */
-/* pKa_2: second(pKa_list); */
-
-/* ========== DISPLAY FORMATTING ========== */
-acid_display: chem_display(acid);
-```
-
-#### Question Text
-
-```html
-\(\require{mhchem}\)
-
-<p>Titrationskurve von {@acid_display@} ({@c_acid@} M, {@v_acid@} mL) mit NaOH ({@c_base@} M)</p>
-
-[[jsxgraph width="600px" height="450px"]]
-var board = JXG.JSXGraph.initBoard(divid, {
-    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}, -1],
-    axis: true, 
-    showCopyright: false,
-    defaultAxes: {
-        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
-        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
-    }
-});
-
-/* Draw titration curve */
-board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
-
-/* Mark equivalence point */
-board.create('point', [{#v_equiv#}, {#pH_equiv#}], {name: 'EP', size: 3, color: 'red', label: {offset: [10, 10], fontSize: 11}});
-
-/* pKa reference line */
-board.create('line', [[0, {#pKa_value#}], [{#v_plot_max#}, {#pKa_value#}]], {strokeColor: 'gray', strokeWidth: 1, dash: 2, straightFirst: false, straightLast: false});
-board.create('text', [{#v_plot_max#}-5, {#pKa_value#}+0.5, 'pKa = {#pKa_value#}'], {fontSize: 10, color: 'gray'});
-
-/* pH 7 reference line */
-board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {strokeColor: 'lightgray', strokeWidth: 1, dash: 3, straightFirst: false, straightLast: false});
-[[/jsxgraph]]
-
-<p>Äquivalenzvolumen: {@v_equiv@} mL</p>
-<p>pKa: {@pKa_value@}</p>
-```
-
-### Example: Phosphoric Acid (Triprotic)
-
-#### Question Variables
-
-```maxima
-/* Load modules */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
-
-/* Titration parameters for H3PO4 */
-acid: "H3PO4";
-c_acid: 0.1;
-c_base: 0.1;
-v_acid: 25.0;
-
-/* Plot settings - need larger range for triprotic acid */
-v_plot_max: 100;
-n_points: 150;
-
-/* Get all plot data */
-plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
-xdata: plot_data[1];
-ydata: plot_data[2];
-v_pushoff: plot_data[3];
-equiv_points: plot_data[4];
-pKa_list: plot_data[5];
-
-/* Extract all three equivalence points */
-v_equiv_1: first(equiv_points)[1];
-pH_equiv_1: first(equiv_points)[2];
-v_equiv_2: second(equiv_points)[1];
-pH_equiv_2: second(equiv_points)[2];
-v_equiv_3: third(equiv_points)[1];
-pH_equiv_3: third(equiv_points)[2];
-
-/* Extract all three pKa values */
-pKa_1: first(pKa_list);
-pKa_2: second(pKa_list);
-pKa_3: third(pKa_list);
-
-/* Display */
-acid_display: chem_display(acid);
-```
-
-#### Question Text
-
-```html
-\(\require{mhchem}\)
-
-<p>Titrationskurve von {@acid_display@} (triprotische Säure)</p>
-
-[[jsxgraph width="650px" height="500px"]]
-var board = JXG.JSXGraph.initBoard(divid, {
-    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}+5, -1],
-    axis: true, 
-    showCopyright: false,
-    defaultAxes: {
-        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
-        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
-    }
-});
-
-/* Draw titration curve */
-board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
-
-/* Mark all three equivalence points */
-board.create('point', [{#v_equiv_1#}, {#pH_equiv_1#}], {name: 'EP1', size: 3, color: 'red'});
-board.create('point', [{#v_equiv_2#}, {#pH_equiv_2#}], {name: 'EP2', size: 3, color: 'red'});
-board.create('point', [{#v_equiv_3#}, {#pH_equiv_3#}], {name: 'EP3', size: 3, color: 'red'});
-
-/* pKa reference lines */
-board.create('line', [[0, {#pKa_1#}], [{#v_plot_max#}, {#pKa_1#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
-board.create('text', [{#v_plot_max#}+1, {#pKa_1#}, 'pKa1={#pKa_1#}'], {fontSize: 9, color: 'gray'});
-
-board.create('line', [[0, {#pKa_2#}], [{#v_plot_max#}, {#pKa_2#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
-board.create('text', [{#v_plot_max#}+1, {#pKa_2#}, 'pKa2={#pKa_2#}'], {fontSize: 9, color: 'gray'});
-
-board.create('line', [[0, {#pKa_3#}], [{#v_plot_max#}, {#pKa_3#}]], {strokeColor: 'gray', dash: 2, straightFirst: false, straightLast: false});
-board.create('text', [{#v_plot_max#}+1, {#pKa_3#}, 'pKa3={#pKa_3#}'], {fontSize: 9, color: 'gray'});
-
-/* pH 7 reference line */
-board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {strokeColor: 'lightgray', dash: 3, straightFirst: false, straightLast: false});
-[[/jsxgraph]]
-
-<p><strong>Äquivalenzpunkte:</strong></p>
-<ul>
-<li>EP1: {@v_equiv_1@} mL (pH = {@pH_equiv_1@})</li>
-<li>EP2: {@v_equiv_2@} mL (pH = {@pH_equiv_2@})</li>
-<li>EP3: {@v_equiv_3@} mL (pH = {@pH_equiv_3@})</li>
-</ul>
-
-<p><strong>pKa-Werte:</strong> pKa1 = {@pKa_1@}, pKa2 = {@pKa_2@}, pKa3 = {@pKa_3@}</p>
-```
-
-### Available Acids for Titration
-
-The following acids are available in the database for titration curves:
-
-| Formula | Type | pKa values |
-|---------|------|------------|
-| `"HCl"` | Strong monoprotic | -7.0 |
-| `"HNO3"` | Strong monoprotic | -1.0 |
-| `"CH3COOH"` | Weak monoprotic | 4.76 |
-| `"HCOOH"` | Weak monoprotic | 3.75 |
-| `"HF"` | Weak monoprotic | 3.17 |
-| `"HCN"` | Weak monoprotic | 9.21 |
-| `"NH4+"` | Weak monoprotic | 9.25 |
-| `"H2SO4"` | Strong/weak diprotic | -2.0, 1.92 |
-| `"H2CO3"` | Weak diprotic | 6.35, 10.33 |
-| `"H2S"` | Weak diprotic | 7.00, 12.89 |
-| `"H2C2O4"` | Weak diprotic | 1.25, 4.27 |
-| `"H3PO4"` | Weak triprotic | 2.12, 7.21, 12.32 |
-
-### Complete Example: Titration Curve Question with Input Fields
-
-This is a complete, copy-paste ready example for a STACK question with student input fields.
-
-#### Question Variables
-
-```maxima
-/* Load the modules */
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/acidbase.mac");
-stack_include("https://raw.githubusercontent.com/AlexVCS25/STACK-for-Chemistry/refs/heads/main/Modules/Utilized/pse.mac");
-
-/* Set up the titration parameters */
-acid: "CH3COOH";
-c_acid: 0.1;
-c_base: 0.1;
-v_acid: 25.0;
-v_plot_max: 40;
-n_points: 100;
-
-/* Get all plot data in one call */
-plot_data: chem_titration_plot_data(acid, c_acid, c_base, v_acid, n_points, v_plot_max);
-xdata: plot_data[1];
-ydata: plot_data[2];
-v_pushoff: plot_data[3];
-equiv_points: plot_data[4];
-pKa_list: plot_data[5];
-
-/* Extract key values */
-v_equiv: first(equiv_points)[1];
-pH_equiv: first(equiv_points)[2];
-pKa_value: first(pKa_list);
-
-/* Display formula */
-acid_display: chem_display(acid);
-
-/* Answers */
-ta_equiv_vol: v_equiv;
-ta_pKa: pKa_value;
-```
-
-#### Question Text
-
-```html
-\(\require{mhchem}\)
-
-<p>Die folgende Abbildung zeigt die Titrationskurve von {@v_acid@} mL einer {@c_acid@} M Lösung von {@acid_display@} mit {@c_base@} M NaOH.</p>
-
-[[jsxgraph width="600px" height="450px"]]
-var board = JXG.JSXGraph.initBoard(divid, {
-    boundingbox: [{#v_pushoff#}, 15, {#v_plot_max#}, -1],
-    axis: true, 
-    showCopyright: false,
-    defaultAxes: {
-        x: {name: 'V(NaOH) / mL', withLabel: true, label: {position: 'rt', offset: [-30, -15]}},
-        y: {name: 'pH', withLabel: true, label: {position: 'rt', offset: [5, 0]}}
-    }
-});
-
-/* Draw titration curve */
-board.create('curve', [{#xdata#}, {#ydata#}], {strokeColor: 'blue', strokeWidth: 2});
-
-/* Mark equivalence point */
-board.create('point', [{#v_equiv#}, {#pH_equiv#}], {
-    name: 'Äquivalenzpunkt', 
-    size: 3, 
-    color: 'red',
-    label: {offset: [10, 10], fontSize: 11}
-});
-
-/* pKa reference line */
-board.create('line', [[0, {#pKa_value#}], [{#v_plot_max#}, {#pKa_value#}]], {
-    strokeColor: 'gray', strokeWidth: 1, dash: 2,
-    straightFirst: false, straightLast: false
-});
-board.create('text', [{#v_plot_max#}-5, {#pKa_value#}+0.5, 'pKa = {#pKa_value#}'], {fontSize: 10, color: 'gray'});
-
-/* pH 7 reference line */
-board.create('line', [[0, 7], [{#v_plot_max#}, 7]], {
-    strokeColor: 'lightgray', strokeWidth: 1, dash: 3,
-    straightFirst: false, straightLast: false
-});
-[[/jsxgraph]]
-
-<p><strong>Fragen:</strong></p>
-<p>1. Wie gross ist das Äquivalenzvolumen (in mL)? [[input:ans1]] [[validation:ans1]]</p>
-<p>2. Wie gross ist der pKa-Wert der Säure? [[input:ans2]] [[validation:ans2]]</p>
-```
-
-#### Input Configuration
-
-**Input: ans1**
-- **Type:** Numerical
-- **Model answer:** `ta_equiv_vol`
-
-**Input: ans2**
-- **Type:** Numerical  
-- **Model answer:** `ta_pKa`
-
-#### Potential Response Trees
-
-**PRT: prt1 (for ans1)**
-- Answer test: `NumAbsolute`
-- SAns: `ans1`, TAns: `ta_equiv_vol`
-- Test options: `0.5`
-
-**PRT: prt2 (for ans2)**
-- Answer test: `NumAbsolute`
-- SAns: `ans2`, TAns: `ta_pKa`
-- Test options: `0.1`
-
-#### General Feedback
-
-```html
-<p><strong>Lösung:</strong></p>
-<ul>
-<li>Das Äquivalenzvolumen beträgt {@ta_equiv_vol@} mL.</li>
-<li>Der pKa-Wert von {@acid_display@} ist {@ta_pKa@}.</li>
-</ul>
-```
-
-#### Question Note
-
-```
-Acid: {@acid@}, pKa: {@pKa_value@}, V_equiv: {@v_equiv@} mL
-```
-
----
-
-## Periodic Table Module
-
-### PSE Data Retrieving Functions
-
-### `chem_data(element, field)`
-
-**Description:** Returns a specific data field for a given element.
-
-**Parameters:**
-- `element` (string): Element symbol (e.g., "H", "He", "Li")
-- `field` (string): Data field name (see [Available Data Fields](#available-data-fields))
-
-**Returns:** The value of the requested field
-
-**Example:**
-```maxima
-atomic_mass: chem_data("C", "AtomicMass");  /* Returns 12.01 */
-name: chem_data("Na", "Name");              /* Returns "Sodium" */
-```
-
----
-
-### `chem_data_units(element, field)`
-
-**Description:** Returns a specific data field with its associated unit (if applicable).
-
-**Parameters:**
-- `element` (string): Element symbol
-- `field` (string): Data field name
-
-**Returns:** The value with units (using STACK's `stackunits` function)
-
-**Example:**
-```maxima
-mass: chem_data_units("O", "AtomicMass");     /* Returns 16.00*g/mol */
-bp: chem_data_units("H", "BoilingPoint");     /* Returns 20.28*K */
-```
-
----
-
-### `chem_data_all(element)`
-
-**Description:** Returns all available data for an element as an association list.
-
-**Parameters:**
-- `element` (string): Element symbol
-
-**Returns:** List of [field, value] pairs
-
-**Example:**
-```maxima
-all_data: chem_data_all("He");
-/* Returns all data fields for Helium */
-```
-
----
-
-### `chem_element(atomic_number)`
-
-**Description:** Returns the element symbol for a given atomic number.
-
-**Parameters:**
-- `atomic_number` (integer): Atomic number (1-118)
-
-**Returns:** Element symbol or `false` if not found
-
-**Example:**
-```maxima
-symbol: chem_element(6);    /* Returns "C" */
-symbol: chem_element(79);   /* Returns "Au" */
-```
-
----
-
-### `chem_units(field)`
-
-**Description:** Returns the unit associated with a data field.
-
-**Parameters:**
-- `field` (string): Data field name
-
-**Returns:** The unit or `null` if no unit is associated
-
-**Example:**
-```maxima
-unit: chem_units("AtomicMass");      /* Returns g*mol^(-1) */
-unit: chem_units("MeltingPoint");    /* Returns K */
-```
-
----
-
-## PSE Navigation Functions
-
-### `chem_element_array()`
-
-**Description:** Returns an array of all element symbols in the periodic table.
-
-**Parameters:** None
-
-**Returns:** List of all 118 element symbols
-
-**Example:**
-```maxima
-all_elements: chem_element_array();
-/* Returns ["H", "He", "Li", ..., "Og"] */
-
-/* Select a random element */
-element: rand(chem_element_array());
-```
-
----
-
-### `chem_element_array_maingroup()`
-
-**Description:** Returns an array of all main group element symbols (elements with MainGroup > 0).
-
-**Parameters:** None
-
-**Returns:** List of main group element symbols
-
-**Example:**
-```maxima
-maingroup_elements: chem_element_array_maingroup();
-/* Returns ["H", "He", "Li", "Be", "B", "C", ..., "Og"] */
-
-/* Select a random main group element */
-element_mg: rand(chem_element_array_maingroup());
-```
-
----
-
-### `chem_element_period(period_number)`
-
-**Description:** Returns all elements in a specific period.
-
-**Parameters:**
-- `period_number` (integer): Period number (1-7)
-
-**Returns:** List of element symbols in that period
-
-**Example:**
-```maxima
-period_3: chem_element_period(3);
-/* Returns ["Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"] */
-
-/* Select a random element from period 3 */
-element_p3: rand(chem_element_period(3));
-```
-
----
-
-### `chem_element_group(group_number)`
-
-**Description:** Returns all elements in a specific IUPAC group.
-
-**Parameters:**
-- `group_number` (integer): IUPAC group number (1-18)
-
-**Returns:** List of element symbols in that group
-
-**Example:**
-```maxima
-group_13: chem_element_group(13);
-/* Returns ["B", "Al", "Ga", "In", "Tl", "Nh"] */
-
-/* Select a random element from group 13 */
-element_g13: rand(chem_element_group(13));
-```
-
----
-
-### `chem_element_maingroup(maingroup_number)`
-
-**Description:** Returns all elements in a specific main group (1-8).
-
-**Parameters:**
-- `maingroup_number` (integer): Main group number (1-8)
-
-**Returns:** List of element symbols in that main group
-
-**Example:**
-```maxima
-alkali_metals: chem_element_maingroup(1);
-/* Returns ["H", "Li", "Na", "K", "Rb", "Cs", "Fr"] */
-
-halogens: chem_element_maingroup(7);
-/* Returns ["F", "Cl", "Br", "I", "At", "Ts"] */
-
-/* Select a random halogen */
-element_hal: rand(chem_element_maingroup(7));
-```
-
----
-
-### `chem_element_period_group(period_number, group_number)`
-
-**Description:** Returns the element symbol at a specific period and IUPAC group position.
-
-**Parameters:**
-- `period_number` (integer): Period number (1-7)
-- `group_number` (integer): IUPAC group number (1-18)
-
-**Returns:** Element symbol or `false` if no such element exists
-
-**Example:**
-```maxima
-element: chem_element_period_group(3, 17);  /* Returns "Cl" */
-element: chem_element_period_group(2, 1);   /* Returns "Li" */
-element: chem_element_period_group(1, 5);   /* Returns false (no element at Period 1, Group 5) */
-```
-
----
-
-### `chem_element_period_maingroup(period_number, maingroup_number)`
-
-**Description:** Returns the element symbol at a specific period and main group position.
-
-**Parameters:**
-- `period_number` (integer): Period number (1-7)
-- `maingroup_number` (integer): Main group number (1-8)
-
-**Returns:** Element symbol or `false` if no such element exists
-
-**Example:**
-```maxima
-element: chem_element_period_maingroup(3, 7);  /* Returns "Cl" */
-element: chem_element_period_maingroup(4, 1);  /* Returns "K" */
-element: chem_element_period_maingroup(1, 3);  /* Returns false (no element at Period 1, Main Group 3) */
-```
-
----
-
-## Available Data Fields
-
-The following data fields can be accessed using `chem_data()` or `chem_data_units()`:
-
-| Field Name | Type | Unit | Description |
-|------------|------|------|-------------|
-| `AtomicNumber` | Integer | - | Atomic number (1-118) |
-| `Name` | String | - | Element name (language-dependent) |
-| `Period` | Integer | - | Period number (1-7) |
-| `MainGroup` | Integer | - | Main group (1-8, or 0 for transition metals) |
-| `GroupNumber` | Integer | - | IUPAC group number (1-18) |
-| `AtomicMass` | Float | g/mol | Standard atomic mass |
-| `ElectronConfiguration` | String | - | Electron configuration |
-| `Electronegativity` | Float | - | Pauling electronegativity |
-| `AtomicRadius` | Integer | pm | Atomic radius in picometers |
-| `IonizationEnergy` | Float | eV | First ionization energy |
-| `ElectronAffinity` | Float | eV | Electron affinity |
-| `OxidationStates` | String | - | Common oxidation states |
-| `StandardState` | String | - | State at STP (Solid/Liquid/Gas) |
-| `MeltingPoint` | Float | K | Melting point in Kelvin |
-| `BoilingPoint` | Float | K | Boiling point in Kelvin |
-| `Density` | Float | g/cm³ | Density |
-| `GroupBlock` | String | - | Element category |
-| `YearDiscovered` | Integer/String | - | Year of discovery |
-
----
-
 ## Acid-Base Chemistry Module
 
 The acid-base module provides comprehensive functions for working with acids and bases, including automatic calculation of conjugate acids and bases.
@@ -1017,6 +340,25 @@ ka: chem_acidbase_Ka("HCl");        /* Returns 1.0e7 */
 ```maxima
 kb: chem_acidbase_Kb("NH3");    /* Returns 1.0e19 */
 kb: chem_acidbase_Kb("OH-");    /* Returns 1.0e10 */
+```
+
+---
+
+### Equilibrium Expression Functions
+
+#### `chem_equilibrium_constant(ka, kb)`
+
+**Description:** Calculates the equilibrium constant for an acid or base reaction.
+
+**Parameters:**
+- `ka` (number): Acid dissociation constant
+- `kb` (number): Base dissociation constant
+
+**Returns:** Equilibrium constant value
+
+**Example:**
+```maxima
+k_eq: chem_equilibrium_constant(1.82e-5, 1.0e-10);  /* Returns 5.5e-6 */
 ```
 
 ---
@@ -1295,6 +637,168 @@ The following substances are available in the acid-base database:
 - Strong acids (pKa < 0) have `null` pKb values because they completely dissociate
 - Strong bases (pKb ≤ 0) have very negative pKb or `null` pKa values
 - Amphoteric substances like H₂O can act as both acids and bases
+
+---
+
+## Solubility Equilibrium Module
+
+The solubility equilibrium module provides functions for working with solubility products, molar solubility, and precipitation reactions.
+
+### Solubility Data Retrieval Functions
+
+#### `chem_solubility_data(salt, property)`
+
+**Description:** Returns a specific solubility property for a given salt.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+- `property` (string): "Ksp" (solubility product) or "MolarMass"
+
+**Returns:** Property value or `false` if not found
+
+**Example:**
+```maxima
+ksp: chem_solubility_data("AgCl", "Ksp");  /* Returns 1.77e-10 */
+molar_mass: chem_solubility_data("AgCl", "MolarMass");  /* Returns 143.32 g/mol */
+```
+
+---
+
+### Solubility Equilibrium Expression Functions
+
+#### `chem_solubility_equilibrium(salt)`
+
+**Description:** Returns the solubility equilibrium expression for a given salt.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+
+**Returns:** String representation of the equilibrium expression
+
+**Example:**
+```maxima
+equilibrium: chem_solubility_equilibrium("AgCl");
+/* Returns "AgCl(s) ⇌ Ag+(aq) + Cl-(aq)" */
+```
+
+---
+
+### Molar Solubility Calculation Functions
+
+#### `chem_molar_solubility(salt)`
+
+**Description:** Calculates the molar solubility of a salt from its Ksp.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+
+**Returns:** Molar solubility value
+
+**Example:**
+```maxima
+solubility: chem_molar_solubility("AgCl");  /* Returns 1.33e-5 M */
+```
+
+---
+
+### Precipitation Check Functions
+
+#### `chem_precipitation_check(salt, ion_concentrations)`
+
+**Description:** Checks if a precipitation reaction will occur based on ion concentrations.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+- `ion_concentrations` (list): List of ion concentrations [cation, anion]
+
+**Returns:** `true` if precipitation occurs, `false` otherwise
+
+**Example:**
+```maxima
+precipitation: chem_precipitation_check("AgCl", [1.0e-4, 1.0e-4]);  /* Returns true */
+```
+
+---
+
+### Solubility Navigation Functions
+
+#### `chem_soluble_salts()`
+
+**Description:** Returns a list of salts with high solubility (Ksp > 1).
+
+**Parameters:** None
+
+**Returns:** List of soluble salts
+
+**Example:**
+```maxima
+soluble_salts: chem_soluble_salts();
+/* Returns ["NaCl", "KCl", "NH4Cl", ...] */
+```
+
+---
+
+#### `chem_insoluble_salts()`
+
+**Description:** Returns a list of salts with low solubility (Ksp < 1e-5).
+
+**Parameters:** None
+
+**Returns:** List of insoluble salts
+
+**Example:**
+```maxima
+insoluble_salts: chem_insoluble_salts();
+/* Returns ["AgCl", "BaSO4", "PbI2", ...] */
+```
+
+---
+
+### Dissolution Equation Functions
+
+#### `chem_dissolution_equation(salt)`
+
+**Description:** Returns the dissolution equation for a given salt.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+
+**Returns:** String representation of the dissolution equation
+
+**Example:**
+```maxima
+dissolution: chem_dissolution_equation("BaSO4");
+/* Returns "BaSO4(s) ⇌ Ba^{2+}(aq) + SO4^{2-}(aq)" */
+```
+
+---
+
+### Available Salts
+
+The following salts are available in the solubility database:
+
+| Salt | Ksp | Molar Mass (g/mol) |
+|------|-----|--------------------|
+| AgCl | 1.77e-10 | 143.32 |
+| BaSO4 | 1.08e-10 | 233.39 |
+| PbI2 | 7.1e-9 | 461.01 |
+| NaCl | 36.0 | 58.44 |
+| KCl | 34.2 | 74.55 |
+| NH4Cl | 37.0 | 53.49 |
+
+---
+
+### Function Reference Table (Solubility)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `chem_solubility_data(salt, property)` | Retrieves solubility data | `chem_solubility_data("AgCl", "Ksp")` |
+| `chem_solubility_equilibrium(salt)` | Returns equilibrium expression | `chem_solubility_equilibrium("AgCl")` |
+| `chem_molar_solubility(salt)` | Calculates molar solubility | `chem_molar_solubility("AgCl")` |
+| `chem_precipitation_check(salt, ion_concentrations)` | Checks for precipitation | `chem_precipitation_check("AgCl", [1.0e-4, 1.0e-4])` |
+| `chem_soluble_salts()` | Lists soluble salts | `chem_soluble_salts()` |
+| `chem_insoluble_salts()` | Lists insoluble salts | `chem_insoluble_salts()` |
+| `chem_dissolution_equation(salt)` | Returns dissolution equation | `chem_dissolution_equation("BaSO4")` |
 
 ---
 
