@@ -216,7 +216,7 @@ chem_sol_molar_solubility(salt) := block([v, Ksp, p, q],
     v: _sol_lookup(salt),
     if is(v = false) then return(null),
     Ksp: float(10^(-v[1])), p: v[3], q: v[5],
-    stackunits(float((Ksp / (p^p * q^q))^(1/(p + q))), mol*l^(-1))
+    stackunits(float((Ksp / (p^p * q^q))^(1/(p + q))), mol*L^(-1))
 )$
 
 /* Molar solubility with common-ion effect (bisection solver) */
