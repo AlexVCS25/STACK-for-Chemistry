@@ -85,7 +85,7 @@ salt2: if is(length(salts_by_cation) > 1) then rand(delete(salt, salts_by_cation
 s_common: chem_sol_molar_solubility_common_ion(salt, 0.01, "cation");
 
 /* Dissolution equation and Ksp expressions */
-diss_eq: chem_sol_dissolution_equation(salt);
+diss_eq: chem_sol_dissolution_equation_latex(salt);
 Ksp_expr: chem_sol_Ksp_expression(salt);
 Ksp_act: chem_sol_Ksp_activity_expression(salt);
 Ksp_act_s: chem_sol_Ksp_activity_expression_simplified(salt);
@@ -122,7 +122,7 @@ ta1: 10;
 
 <b>Basic accessors:</b>
 
-This is a randomly selected salt: \({@salt_display@}\) with a K<sub>sp</sub> of {@Ksp@} and a pK<sub>sp</sub> of {@pKsp@}.
+This is a randomly selected salt: \({@salt_display@}\) with a \(K_{\mathrm{sp}}\) of {@Ksp@} and a \(\mathrm{p}K_{\mathrm{sp}}\) of {@pKsp@}.
 
 Its cation is \({@cation_display@}\) (coefficient: {@cation_count@}) and its anion is \({@anion_display@}\) (coefficient: {@anion_count@}).
 
@@ -136,15 +136,15 @@ The molar solubility of \({@salt_display@}\) in pure water is {@s_molar@} mol/L.
 
 With a common-ion concentration of 0.01 mol/L (cation), the molar solubility is {@s_common@} mol/L.
 
-<b>Dissolution equation and K<sub>sp</sub> expressions:</b>
+<b>Dissolution equation and \(K_{\mathrm{sp}}\) expressions:</b>
 
-Dissolution equation: \(\ce{{@diss_eq@}}\)
+Dissolution equation: \({@diss_eq@}\)
 
-K<sub>sp</sub> bracket expression: \(K_{sp} = {@Ksp_expr@}\)
+\(K_{\mathrm{sp}}\) bracket expression: \(K_{\mathrm{sp}} = {@Ksp_expr@}\)
 
-K<sub>sp</sub> activity expression (full): \(K_{sp} = {@Ksp_act@}\)
+\(K_{\mathrm{sp}}\) activity expression (full): \(K_{\mathrm{sp}} = {@Ksp_act@}\)
 
-K<sub>sp</sub> activity expression (simplified): \(K_{sp} = {@Ksp_act_s@}\)
+\(K_{\mathrm{sp}}\) activity expression (simplified): \(K_{\mathrm{sp}} = {@Ksp_act_s@}\)
 
 <b>Precipitation check:</b>
 
@@ -162,9 +162,9 @@ All cations in the database: {@all_cations@}
 
 All anions in the database: {@all_anions@}
 
-First 5 salts sorted by K<sub>sp</sub> (ascending): {@sorted_salts_5@}
+First 5 salts sorted by \(K_{\mathrm{sp}}\) (ascending): {@sorted_salts_5@}
 
-Salts with K<sub>sp</sub> in [10<sup>−12</sup>, 10<sup>−6</sup>]: {@range_salts@}
+Salts with \(K_{\mathrm{sp}}\) in [10<sup>−12</sup>, 10<sup>−6</sup>]: {@range_salts@}
 
 <b>Second salt (same cation):</b>
 

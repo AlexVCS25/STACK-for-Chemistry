@@ -356,6 +356,14 @@ chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an]
     sconcat(salt, " -> ", rhs_cat, " + ", rhs_an)
 )$
 
+/* Returns a LaTeX-formatted dissolution equation using \ce{} 
+   so the question text only needs \({@...@}\) without manual \ce wrapping. */
+chem_sol_dissolution_equation_latex(salt) := block([eq],
+    eq: chem_sol_dissolution_equation(salt),
+    if is(eq = "") then return(""),
+    sconcat("\\ce{", eq, "}")
+)$
+
 /****************************************************************/
 /*                                                              */
 /*  Equilibrium Expression Functions                            */
