@@ -1273,11 +1273,13 @@ The following substances are available in the acid-base database:
 
 The solubility equilibrium module provides functions for working with solubility products (Ksp), molar solubility, precipitation reactions, and dissolution equilibria. The database uses a nested association list with the salt as the key.
 
+**Important:** The database stores only `pKsp` values. `Ksp` is always computed as `10^(-pKsp)` to avoid rounding errors from storing both values independently.
+
 ### Solubility Data Retrieval Functions
 
 #### `chem_sol_Ksp(salt)`
 
-**Description:** Returns the solubility product Ksp for a given salt.
+**Description:** Returns the solubility product Ksp for a given salt, computed from the stored pKsp as `Ksp = 10^(-pKsp)`.
 
 **Parameters:**
 - `salt` (string): Chemical formula of the salt
@@ -1401,6 +1403,25 @@ n: chem_sol_anion_count("Ca3(PO4)2");     /* Returns 2 */
 counts: chem_sol_ion_counts("Ag2CrO4");   /* Returns [2, 1] */
 counts: chem_sol_ion_counts("Ca3(PO4)2"); /* Returns [3, 2] */
 counts: chem_sol_ion_counts("PbCl2");     /* Returns [1, 2] */
+```
+
+---
+
+#### `chem_sol_total_ion_count(salt)`
+
+**Description:** Returns the total number of ions produced per formula unit (cation_count + anion_count).
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+
+**Returns:** Integer total ion count, or `null` if not found
+
+**Example:**
+```maxima
+n: chem_sol_total_ion_count("AgCl");          /* Returns 2 */
+n: chem_sol_total_ion_count("PbCl2");         /* Returns 3 */
+n: chem_sol_total_ion_count("Ca3(PO4)2");     /* Returns 5 */
+n: chem_sol_total_ion_count("Bi2S3");         /* Returns 5 */
 ```
 
 ---
@@ -1667,6 +1688,69 @@ carbonates: chem_sol_array_by_anion("CO3^{2-}");
 
 ---
 
+#### `chem_sol_array_by_cation_count(n)`
+
+**Description:** Returns all salts with a specific cation stoichiometric coefficient.
+
+**Parameters:**
+- `n` (integer): Desired cation count
+
+**Returns:** List of salt formula strings
+
+**Example:**
+```maxima
+salts_2cat: chem_sol_array_by_cation_count(2);
+/* Returns ["Ag2SO4", "Ag2CO3", "Cu2S", "Ag2S", "Ag2CrO4", "Ag2C2O4", ...] */
+
+salts_3cat: chem_sol_array_by_cation_count(3);
+/* Returns ["Ca3(PO4)2", "Ag3PO4", "Pb3(PO4)2", "Zn3(PO4)2"] */
+```
+
+---
+
+#### `chem_sol_array_by_anion_count(n)`
+
+**Description:** Returns all salts with a specific anion stoichiometric coefficient.
+
+**Parameters:**
+- `n` (integer): Desired anion count
+
+**Returns:** List of salt formula strings
+
+**Example:**
+```maxima
+salts_2an: chem_sol_array_by_anion_count(2);
+/* Returns ["PbCl2", "PbBr2", "PbI2", "PbF2", "CaF2", ..., "Zn(CN)2"] */
+
+salts_3an: chem_sol_array_by_anion_count(3);
+/* Returns ["Fe(OH)3", "Al(OH)3", "Cr(OH)3", "Bi2S3", "Ca3(PO4)2", ...] */
+```
+
+---
+
+#### `chem_sol_array_by_total_ions(n)`
+
+**Description:** Returns all salts producing a specific total number of ions per formula unit.
+
+**Parameters:**
+- `n` (integer): Desired total ion count (cation_count + anion_count)
+
+**Returns:** List of salt formula strings
+
+**Example:**
+```maxima
+salts_2: chem_sol_array_by_total_ions(2);
+/* Returns all 1:1 salts: ["AgCl", "AgBr", "AgI", "AgF", "CuCl", ...] */
+
+salts_3: chem_sol_array_by_total_ions(3);
+/* Returns all 1:2 and 2:1 salts: ["PbCl2", "CaF2", "Ag2SO4", ...] */
+
+salts_5: chem_sol_array_by_total_ions(5);
+/* Returns ["Ca3(PO4)2", "Pb3(PO4)2", "Zn3(PO4)2", "Bi2S3"] */
+```
+
+---
+
 #### `chem_sol_cation_array()`
 
 **Description:** Returns all unique cations in the database.
@@ -1798,13 +1882,14 @@ The solubility database contains the following salt categories:
 
 | Function | Description | Example |
 |----------|-------------|---------|
-| `chem_sol_Ksp(salt)` | Get Ksp | `chem_sol_Ksp("AgCl")` → `1.77e-10` |
+| `chem_sol_Ksp(salt)` | Get Ksp (computed from pKsp) | `chem_sol_Ksp("AgCl")` → `1.778e-10` |
 | `chem_sol_pKsp(salt)` | Get pKsp | `chem_sol_pKsp("AgCl")` → `9.75` |
 | `chem_sol_cation(salt)` | Get cation formula | `chem_sol_cation("CaF2")` → `"Ca^{2+}"` |
 | `chem_sol_cation_count(salt)` | Get cation coefficient | `chem_sol_cation_count("Ag2SO4")` → `2` |
 | `chem_sol_anion(salt)` | Get anion formula | `chem_sol_anion("BaSO4")` → `"SO4^{2-}"` |
 | `chem_sol_anion_count(salt)` | Get anion coefficient | `chem_sol_anion_count("PbCl2")` → `2` |
 | `chem_sol_ion_counts(salt)` | Get both counts | `chem_sol_ion_counts("Ag2CrO4")` → `[2, 1]` |
+| `chem_sol_total_ion_count(salt)` | Get total ion count | `chem_sol_total_ion_count("PbCl2")` → `3` |
 | `chem_sol_entry(salt)` | Get full entry | `chem_sol_entry("AgCl")` → `[...]` |
 | `chem_sol_molar_solubility(salt)` | Calculate solubility | `chem_sol_molar_solubility("AgCl")` → `1.33e-5` |
 | `chem_sol_molar_solubility_common_ion(...)` | Solubility with common ion | See above |
@@ -1814,6 +1899,9 @@ The solubility database contains the following salt categories:
 | `chem_sol_array()` | All salts | List of all salt names |
 | `chem_sol_array_by_cation(cat)` | Salts by cation | `chem_sol_array_by_cation("Ag^+")` |
 | `chem_sol_array_by_anion(an)` | Salts by anion | `chem_sol_array_by_anion("Cl^-")` |
+| `chem_sol_array_by_cation_count(n)` | Salts by cation count | `chem_sol_array_by_cation_count(2)` |
+| `chem_sol_array_by_anion_count(n)` | Salts by anion count | `chem_sol_array_by_anion_count(3)` |
+| `chem_sol_array_by_total_ions(n)` | Salts by total ions | `chem_sol_array_by_total_ions(5)` |
 | `chem_sol_cation_array()` | All unique cations | List of cation strings |
 | `chem_sol_anion_array()` | All unique anions | List of anion strings |
 | `chem_sol_array_sorted_Ksp()` | Salts sorted by Ksp | Ascending order |
@@ -2145,7 +2233,7 @@ nucl_data_all("^{14}C");
 Returns the atomic number (Z).
 
 #### `nucl_data_N(nuclide_id)`
-Returns the neutron number (N).
+Returns the neutron number.
 
 #### `nucl_mass_number(nuclide_id)`
 Returns the mass number (A = Z + N).

@@ -33,6 +33,17 @@
    - sorted_salts: salts sorted by Ksp ascending via chem_sol_array_sorted_Ksp()
    - range_salts: salts with Ksp in a given range via chem_sol_array_Ksp_range()
 
+   - salts_1cat: salts with 1 cation via chem_sol_array_by_cation_count(1)
+   - salts_2cat: salts with 2 cations via chem_sol_array_by_cation_count(2)
+   - salts_3cat: salts with 3 cations via chem_sol_array_by_cation_count(3)
+   - salts_1an: salts with 1 anion via chem_sol_array_by_anion_count(1)
+   - salts_2an: salts with 2 anions via chem_sol_array_by_anion_count(2)
+   - salts_3an: salts with 3 anions via chem_sol_array_by_anion_count(3)
+   - salts_2ions: salts producing 2 total ions via chem_sol_array_by_total_ions(2)
+   - salts_3ions: salts producing 3 total ions via chem_sol_array_by_total_ions(3)
+   - salts_5ions: salts producing 5 total ions via chem_sol_array_by_total_ions(5)
+   - total_ions: total ion count for a salt via chem_sol_total_ion_count(salt)
+
    Display variables:
    - salt_display, salt2_display, cation_display, anion_display
 
@@ -47,6 +58,8 @@
    - chem_sol_array_by_cation(), chem_sol_array_by_anion()
    - chem_sol_cation_array(), chem_sol_anion_array()
    - chem_sol_array_sorted_Ksp(), chem_sol_array_Ksp_range()
+   - chem_sol_array_by_cation_count(), chem_sol_array_by_anion_count(), chem_sol_array_by_total_ions()
+   - chem_sol_total_ion_count()
    - chem_molar_mass() (from pse.mac)
    - chem_display()
 */
@@ -102,6 +115,18 @@ all_anions: chem_sol_anion_array();
 sorted_salts: chem_sol_array_sorted_Ksp();
 sorted_salts_5: makelist(sorted_salts[i], i, 1, min(5, length(sorted_salts)));
 range_salts: chem_sol_array_Ksp_range(1.0e-12, 1.0e-6);
+
+/* Ion count navigation */
+salts_1cat: chem_sol_array_by_cation_count(1);
+salts_2cat: chem_sol_array_by_cation_count(2);
+salts_3cat: chem_sol_array_by_cation_count(3);
+salts_1an: chem_sol_array_by_anion_count(1);
+salts_2an: chem_sol_array_by_anion_count(2);
+salts_3an: chem_sol_array_by_anion_count(3);
+salts_2ions: chem_sol_array_by_total_ions(2);
+salts_3ions: chem_sol_array_by_total_ions(3);
+salts_5ions: chem_sol_array_by_total_ions(5);
+total_ions: chem_sol_total_ion_count(salt);
 
 /* Display variables */
 salt_display: chem_display(salt);
@@ -165,6 +190,28 @@ All anions in the database: {@all_anions@}
 First 5 salts sorted by \(K_{\mathrm{sp}}\) (ascending): {@sorted_salts_5@}
 
 Salts with \(K_{\mathrm{sp}}\) in [10<sup>−12</sup>, 10<sup>−6</sup>]: {@range_salts@}
+
+<b>Ion count navigation:</b>
+
+Total ions for \({@salt_display@}\): {@total_ions@}
+
+Salts with 1 cation: {@salts_1cat@}
+
+Salts with 2 cations: {@salts_2cat@}
+
+Salts with 3 cations: {@salts_3cat@}
+
+Salts with 1 anion: {@salts_1an@}
+
+Salts with 2 anions: {@salts_2an@}
+
+Salts with 3 anions: {@salts_3an@}
+
+Salts producing 2 total ions: {@salts_2ions@}
+
+Salts producing 3 total ions: {@salts_3ions@}
+
+Salts producing 5 total ions: {@salts_5ions@}
 
 <b>Second salt (same cation):</b>
 

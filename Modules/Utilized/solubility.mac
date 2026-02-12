@@ -7,132 +7,135 @@
 
     Database format: association list
       key = salt (string, mhchem-compatible)
-      value = [Ksp, pKsp, cation, cation_count, anion, anion_count]
+      value = [pKsp, cation, cation_count, anion, anion_count]
+
+    Ksp is always computed from pKsp: Ksp = 10^(-pKsp)
+    This avoids rounding errors from storing both values.
 */
 
 %_SOLUBILITY_DB: [
     /* --- Halides --- */
-    ["AgCl",      [1.77e-10, 9.75,  "Ag^+",      1, "Cl^-",  1]],
-    ["AgBr",      [5.35e-13, 12.27, "Ag^+",      1, "Br^-",  1]],
-    ["AgI",       [8.52e-17, 16.07, "Ag^+",      1, "I^-",   1]],
-    ["AgF",       [2.05e-1,  0.69,  "Ag^+",      1, "F^-",   1]],
-    ["CuCl",      [1.72e-7,  6.76,  "Cu^+",      1, "Cl^-",  1]],
-    ["PbCl2",     [1.70e-5,  4.77,  "Pb^{2+}",   1, "Cl^-",  2]],
-    ["PbBr2",     [6.60e-6,  5.18,  "Pb^{2+}",   1, "Br^-",  2]],
-    ["PbI2",      [9.80e-9,  8.01,  "Pb^{2+}",   1, "I^-",   2]],
-    ["PbF2",      [3.30e-8,  7.48,  "Pb^{2+}",   1, "F^-",   2]],
-    ["CaF2",      [3.45e-11, 10.46, "Ca^{2+}",   1, "F^-",   2]],
-    ["BaF2",      [1.84e-7,  6.74,  "Ba^{2+}",   1, "F^-",   2]],
-    ["MgF2",      [5.16e-11, 10.29, "Mg^{2+}",   1, "F^-",   2]],
-    ["SrF2",      [4.33e-9,  8.36,  "Sr^{2+}",   1, "F^-",   2]],
-    ["Hg2Cl2",    [1.43e-18, 17.84, "Hg2^{2+}",  1, "Cl^-",  2]],
-    ["Hg2Br2",    [6.40e-23, 22.19, "Hg2^{2+}",  1, "Br^-",  2]],
-    ["Hg2I2",     [5.20e-29, 28.28, "Hg2^{2+}",  1, "I^-",   2]],
-    ["TlCl",      [1.86e-4,  3.73,  "Tl^+",      1, "Cl^-",  1]],
+    ["AgCl",      [9.75,  "Ag^+",      1, "Cl^-",  1]],
+    ["AgBr",      [12.27, "Ag^+",      1, "Br^-",  1]],
+    ["AgI",       [16.07, "Ag^+",      1, "I^-",   1]],
+    ["AgF",       [0.69,  "Ag^+",      1, "F^-",   1]],
+    ["CuCl",      [6.76,  "Cu^+",      1, "Cl^-",  1]],
+    ["PbCl2",     [4.77,  "Pb^{2+}",   1, "Cl^-",  2]],
+    ["PbBr2",     [5.18,  "Pb^{2+}",   1, "Br^-",  2]],
+    ["PbI2",      [8.01,  "Pb^{2+}",   1, "I^-",   2]],
+    ["PbF2",      [7.48,  "Pb^{2+}",   1, "F^-",   2]],
+    ["CaF2",      [10.46, "Ca^{2+}",   1, "F^-",   2]],
+    ["BaF2",      [6.74,  "Ba^{2+}",   1, "F^-",   2]],
+    ["MgF2",      [10.29, "Mg^{2+}",   1, "F^-",   2]],
+    ["SrF2",      [8.36,  "Sr^{2+}",   1, "F^-",   2]],
+    ["Hg2Cl2",    [17.84, "Hg2^{2+}",  1, "Cl^-",  2]],
+    ["Hg2Br2",    [22.19, "Hg2^{2+}",  1, "Br^-",  2]],
+    ["Hg2I2",     [28.28, "Hg2^{2+}",  1, "I^-",   2]],
+    ["TlCl",      [3.73,  "Tl^+",      1, "Cl^-",  1]],
 
     /* --- Sulfates --- */
-    ["BaSO4",     [1.08e-10, 9.97,  "Ba^{2+}",   1, "SO4^{2-}", 1]],
-    ["CaSO4",     [4.93e-5,  4.31,  "Ca^{2+}",   1, "SO4^{2-}", 1]],
-    ["SrSO4",     [3.44e-7,  6.46,  "Sr^{2+}",   1, "SO4^{2-}", 1]],
-    ["PbSO4",     [2.53e-8,  7.60,  "Pb^{2+}",   1, "SO4^{2-}", 1]],
-    ["Ag2SO4",    [1.20e-5,  4.92,  "Ag^+",      2, "SO4^{2-}", 1]],
-    ["Hg2SO4",    [6.50e-7,  6.19,  "Hg2^{2+}",  1, "SO4^{2-}", 1]],
-    ["RaSO4",     [3.66e-11, 10.44, "Ra^{2+}",   1, "SO4^{2-}", 1]],
+    ["BaSO4",     [9.97,  "Ba^{2+}",   1, "SO4^{2-}", 1]],
+    ["CaSO4",     [4.31,  "Ca^{2+}",   1, "SO4^{2-}", 1]],
+    ["SrSO4",     [6.46,  "Sr^{2+}",   1, "SO4^{2-}", 1]],
+    ["PbSO4",     [7.60,  "Pb^{2+}",   1, "SO4^{2-}", 1]],
+    ["Ag2SO4",    [4.92,  "Ag^+",      2, "SO4^{2-}", 1]],
+    ["Hg2SO4",    [6.19,  "Hg2^{2+}",  1, "SO4^{2-}", 1]],
+    ["RaSO4",     [10.44, "Ra^{2+}",   1, "SO4^{2-}", 1]],
 
     /* --- Carbonates --- */
-    ["CaCO3",     [3.36e-9,  8.47,  "Ca^{2+}",   1, "CO3^{2-}", 1]],
-    ["BaCO3",     [2.58e-9,  8.59,  "Ba^{2+}",   1, "CO3^{2-}", 1]],
-    ["SrCO3",     [5.60e-10, 9.25,  "Sr^{2+}",   1, "CO3^{2-}", 1]],
-    ["MgCO3",     [6.82e-6,  5.17,  "Mg^{2+}",   1, "CO3^{2-}", 1]],
-    ["MnCO3",     [2.24e-11, 10.65, "Mn^{2+}",   1, "CO3^{2-}", 1]],
-    ["FeCO3",     [3.13e-11, 10.50, "Fe^{2+}",   1, "CO3^{2-}", 1]],
-    ["CoCO3",     [1.40e-13, 12.85, "Co^{2+}",   1, "CO3^{2-}", 1]],
-    ["NiCO3",     [1.42e-7,  6.85,  "Ni^{2+}",   1, "CO3^{2-}", 1]],
-    ["CuCO3",     [1.40e-10, 9.85,  "Cu^{2+}",   1, "CO3^{2-}", 1]],
-    ["ZnCO3",     [1.46e-10, 9.84,  "Zn^{2+}",   1, "CO3^{2-}", 1]],
-    ["Ag2CO3",    [8.46e-12, 11.07, "Ag^+",      2, "CO3^{2-}", 1]],
-    ["PbCO3",     [7.40e-14, 13.13, "Pb^{2+}",   1, "CO3^{2-}", 1]],
-    ["CdCO3",     [1.00e-12, 12.00, "Cd^{2+}",   1, "CO3^{2-}", 1]],
+    ["CaCO3",     [8.47,  "Ca^{2+}",   1, "CO3^{2-}", 1]],
+    ["BaCO3",     [8.59,  "Ba^{2+}",   1, "CO3^{2-}", 1]],
+    ["SrCO3",     [9.25,  "Sr^{2+}",   1, "CO3^{2-}", 1]],
+    ["MgCO3",     [5.17,  "Mg^{2+}",   1, "CO3^{2-}", 1]],
+    ["MnCO3",     [10.65, "Mn^{2+}",   1, "CO3^{2-}", 1]],
+    ["FeCO3",     [10.50, "Fe^{2+}",   1, "CO3^{2-}", 1]],
+    ["CoCO3",     [12.85, "Co^{2+}",   1, "CO3^{2-}", 1]],
+    ["NiCO3",     [6.85,  "Ni^{2+}",   1, "CO3^{2-}", 1]],
+    ["CuCO3",     [9.85,  "Cu^{2+}",   1, "CO3^{2-}", 1]],
+    ["ZnCO3",     [9.84,  "Zn^{2+}",   1, "CO3^{2-}", 1]],
+    ["Ag2CO3",    [11.07, "Ag^+",      2, "CO3^{2-}", 1]],
+    ["PbCO3",     [13.13, "Pb^{2+}",   1, "CO3^{2-}", 1]],
+    ["CdCO3",     [12.00, "Cd^{2+}",   1, "CO3^{2-}", 1]],
 
     /* --- Hydroxides --- */
-    ["Mg(OH)2",   [5.61e-12, 11.25, "Mg^{2+}",   1, "OH^-",  2]],
-    ["Ca(OH)2",   [4.68e-6,  5.33,  "Ca^{2+}",   1, "OH^-",  2]],
-    ["Ba(OH)2",   [5.00e-3,  2.30,  "Ba^{2+}",   1, "OH^-",  2]],
-    ["Sr(OH)2",   [6.40e-3,  2.19,  "Sr^{2+}",   1, "OH^-",  2]],
-    ["Fe(OH)2",   [4.87e-17, 16.31, "Fe^{2+}",   1, "OH^-",  2]],
-    ["Fe(OH)3",   [2.79e-39, 38.55, "Fe^{3+}",   1, "OH^-",  3]],
-    ["Al(OH)3",   [3.00e-34, 33.52, "Al^{3+}",   1, "OH^-",  3]],
-    ["Cu(OH)2",   [2.20e-20, 19.66, "Cu^{2+}",   1, "OH^-",  2]],
-    ["Zn(OH)2",   [3.00e-17, 16.52, "Zn^{2+}",   1, "OH^-",  2]],
-    ["Mn(OH)2",   [2.00e-13, 12.70, "Mn^{2+}",   1, "OH^-",  2]],
-    ["Ni(OH)2",   [5.48e-16, 15.26, "Ni^{2+}",   1, "OH^-",  2]],
-    ["Co(OH)2",   [5.92e-15, 14.23, "Co^{2+}",   1, "OH^-",  2]],
-    ["Cr(OH)3",   [6.30e-31, 30.20, "Cr^{3+}",   1, "OH^-",  3]],
-    ["Pb(OH)2",   [1.43e-20, 19.84, "Pb^{2+}",   1, "OH^-",  2]],
-    ["Cd(OH)2",   [7.20e-15, 14.14, "Cd^{2+}",   1, "OH^-",  2]],
-    ["Sn(OH)2",   [5.45e-27, 26.26, "Sn^{2+}",   1, "OH^-",  2]],
-    ["AgOH",      [2.00e-8,  7.70,  "Ag^+",      1, "OH^-",  1]],
+    ["Mg(OH)2",   [11.25, "Mg^{2+}",   1, "OH^-",  2]],
+    ["Ca(OH)2",   [5.33,  "Ca^{2+}",   1, "OH^-",  2]],
+    ["Ba(OH)2",   [2.30,  "Ba^{2+}",   1, "OH^-",  2]],
+    ["Sr(OH)2",   [2.19,  "Sr^{2+}",   1, "OH^-",  2]],
+    ["Fe(OH)2",   [16.31, "Fe^{2+}",   1, "OH^-",  2]],
+    ["Fe(OH)3",   [38.55, "Fe^{3+}",   1, "OH^-",  3]],
+    ["Al(OH)3",   [33.52, "Al^{3+}",   1, "OH^-",  3]],
+    ["Cu(OH)2",   [19.66, "Cu^{2+}",   1, "OH^-",  2]],
+    ["Zn(OH)2",   [16.52, "Zn^{2+}",   1, "OH^-",  2]],
+    ["Mn(OH)2",   [12.70, "Mn^{2+}",   1, "OH^-",  2]],
+    ["Ni(OH)2",   [15.26, "Ni^{2+}",   1, "OH^-",  2]],
+    ["Co(OH)2",   [14.23, "Co^{2+}",   1, "OH^-",  2]],
+    ["Cr(OH)3",   [30.20, "Cr^{3+}",   1, "OH^-",  3]],
+    ["Pb(OH)2",   [19.84, "Pb^{2+}",   1, "OH^-",  2]],
+    ["Cd(OH)2",   [14.14, "Cd^{2+}",   1, "OH^-",  2]],
+    ["Sn(OH)2",   [26.26, "Sn^{2+}",   1, "OH^-",  2]],
+    ["AgOH",      [7.70,  "Ag^+",      1, "OH^-",  1]],
 
     /* --- Sulfides --- */
-    ["CuS",       [1.27e-36, 35.90, "Cu^{2+}",   1, "S^{2-}",  1]],
-    ["Cu2S",      [2.50e-48, 47.60, "Cu^+",      2, "S^{2-}",  1]],
-    ["PbS",       [8.00e-28, 27.10, "Pb^{2+}",   1, "S^{2-}",  1]],
-    ["ZnS",       [2.00e-25, 24.70, "Zn^{2+}",   1, "S^{2-}",  1]],
-    ["CdS",       [8.00e-27, 26.10, "Cd^{2+}",   1, "S^{2-}",  1]],
-    ["FeS",       [8.00e-19, 18.10, "Fe^{2+}",   1, "S^{2-}",  1]],
-    ["NiS",       [1.07e-21, 20.97, "Ni^{2+}",   1, "S^{2-}",  1]],
-    ["CoS",       [5.00e-22, 21.30, "Co^{2+}",   1, "S^{2-}",  1]],
-    ["MnS",       [3.00e-14, 13.52, "Mn^{2+}",   1, "S^{2-}",  1]],
-    ["Ag2S",      [6.00e-51, 50.22, "Ag^+",      2, "S^{2-}",  1]],
-    ["HgS",       [1.60e-52, 51.80, "Hg^{2+}",   1, "S^{2-}",  1]],
-    ["Bi2S3",     [1.00e-97, 97.00, "Bi^{3+}",   2, "S^{2-}",  3]],
-    ["SnS",       [1.00e-26, 26.00, "Sn^{2+}",   1, "S^{2-}",  1]],
+    ["CuS",       [35.90, "Cu^{2+}",   1, "S^{2-}",  1]],
+    ["Cu2S",      [47.60, "Cu^+",      2, "S^{2-}",  1]],
+    ["PbS",       [27.10, "Pb^{2+}",   1, "S^{2-}",  1]],
+    ["ZnS",       [24.70, "Zn^{2+}",   1, "S^{2-}",  1]],
+    ["CdS",       [26.10, "Cd^{2+}",   1, "S^{2-}",  1]],
+    ["FeS",       [18.10, "Fe^{2+}",   1, "S^{2-}",  1]],
+    ["NiS",       [20.97, "Ni^{2+}",   1, "S^{2-}",  1]],
+    ["CoS",       [21.30, "Co^{2+}",   1, "S^{2-}",  1]],
+    ["MnS",       [13.52, "Mn^{2+}",   1, "S^{2-}",  1]],
+    ["Ag2S",      [50.22, "Ag^+",      2, "S^{2-}",  1]],
+    ["HgS",       [51.80, "Hg^{2+}",   1, "S^{2-}",  1]],
+    ["Bi2S3",     [97.00, "Bi^{3+}",   2, "S^{2-}",  3]],
+    ["SnS",       [26.00, "Sn^{2+}",   1, "S^{2-}",  1]],
 
     /* --- Phosphates --- */
-    ["Ca3(PO4)2", [2.07e-33, 32.68, "Ca^{2+}",   3, "PO4^{3-}", 2]],
-    ["Ag3PO4",    [8.89e-17, 16.05, "Ag^+",      3, "PO4^{3-}", 1]],
-    ["FePO4",     [9.91e-16, 15.00, "Fe^{3+}",   1, "PO4^{3-}", 1]],
-    ["AlPO4",     [9.84e-21, 20.01, "Al^{3+}",   1, "PO4^{3-}", 1]],
-    ["Pb3(PO4)2", [8.00e-43, 42.10, "Pb^{2+}",   3, "PO4^{3-}", 2]],
-    ["Zn3(PO4)2", [9.00e-33, 32.05, "Zn^{2+}",   3, "PO4^{3-}", 2]],
+    ["Ca3(PO4)2", [32.68, "Ca^{2+}",   3, "PO4^{3-}", 2]],
+    ["Ag3PO4",    [16.05, "Ag^+",      3, "PO4^{3-}", 1]],
+    ["FePO4",     [15.00, "Fe^{3+}",   1, "PO4^{3-}", 1]],
+    ["AlPO4",     [20.01, "Al^{3+}",   1, "PO4^{3-}", 1]],
+    ["Pb3(PO4)2", [42.10, "Pb^{2+}",   3, "PO4^{3-}", 2]],
+    ["Zn3(PO4)2", [32.05, "Zn^{2+}",   3, "PO4^{3-}", 2]],
 
     /* --- Chromates --- */
-    ["BaCrO4",    [1.17e-10, 9.93,  "Ba^{2+}",   1, "CrO4^{2-}", 1]],
-    ["PbCrO4",    [2.80e-13, 12.55, "Pb^{2+}",   1, "CrO4^{2-}", 1]],
-    ["Ag2CrO4",   [1.12e-12, 11.95, "Ag^+",      2, "CrO4^{2-}", 1]],
-    ["SrCrO4",    [2.20e-5,  4.66,  "Sr^{2+}",   1, "CrO4^{2-}", 1]],
-    ["CaCrO4",    [7.10e-4,  3.15,  "Ca^{2+}",   1, "CrO4^{2-}", 1]],
+    ["BaCrO4",    [9.93,  "Ba^{2+}",   1, "CrO4^{2-}", 1]],
+    ["PbCrO4",    [12.55, "Pb^{2+}",   1, "CrO4^{2-}", 1]],
+    ["Ag2CrO4",   [11.95, "Ag^+",      2, "CrO4^{2-}", 1]],
+    ["SrCrO4",    [4.66,  "Sr^{2+}",   1, "CrO4^{2-}", 1]],
+    ["CaCrO4",    [3.15,  "Ca^{2+}",   1, "CrO4^{2-}", 1]],
 
     /* --- Oxalates --- */
-    ["CaC2O4",    [2.32e-9,  8.63,  "Ca^{2+}",   1, "C2O4^{2-}", 1]],
-    ["BaC2O4",    [1.60e-7,  6.80,  "Ba^{2+}",   1, "C2O4^{2-}", 1]],
-    ["SrC2O4",    [4.00e-7,  6.40,  "Sr^{2+}",   1, "C2O4^{2-}", 1]],
-    ["MgC2O4",    [4.83e-6,  5.32,  "Mg^{2+}",   1, "C2O4^{2-}", 1]],
-    ["PbC2O4",    [4.80e-10, 9.32,  "Pb^{2+}",   1, "C2O4^{2-}", 1]],
-    ["Ag2C2O4",   [5.40e-12, 11.27, "Ag^+",      2, "C2O4^{2-}", 1]],
-    ["FeC2O4",    [3.20e-7,  6.49,  "Fe^{2+}",   1, "C2O4^{2-}", 1]],
+    ["CaC2O4",    [8.63,  "Ca^{2+}",   1, "C2O4^{2-}", 1]],
+    ["BaC2O4",    [6.80,  "Ba^{2+}",   1, "C2O4^{2-}", 1]],
+    ["SrC2O4",    [6.40,  "Sr^{2+}",   1, "C2O4^{2-}", 1]],
+    ["MgC2O4",    [5.32,  "Mg^{2+}",   1, "C2O4^{2-}", 1]],
+    ["PbC2O4",    [9.32,  "Pb^{2+}",   1, "C2O4^{2-}", 1]],
+    ["Ag2C2O4",   [11.27, "Ag^+",      2, "C2O4^{2-}", 1]],
+    ["FeC2O4",    [6.49,  "Fe^{2+}",   1, "C2O4^{2-}", 1]],
 
     /* --- Iodates --- */
-    ["Ca(IO3)2",  [6.47e-6,  5.19,  "Ca^{2+}",   1, "IO3^-",  2]],
-    ["Ba(IO3)2",  [4.01e-9,  8.40,  "Ba^{2+}",   1, "IO3^-",  2]],
-    ["Sr(IO3)2",  [1.14e-7,  6.94,  "Sr^{2+}",   1, "IO3^-",  2]],
-    ["Pb(IO3)2",  [3.69e-13, 12.43, "Pb^{2+}",   1, "IO3^-",  2]],
-    ["AgIO3",     [3.17e-8,  7.50,  "Ag^+",      1, "IO3^-",  1]],
+    ["Ca(IO3)2",  [5.19,  "Ca^{2+}",   1, "IO3^-",  2]],
+    ["Ba(IO3)2",  [8.40,  "Ba^{2+}",   1, "IO3^-",  2]],
+    ["Sr(IO3)2",  [6.94,  "Sr^{2+}",   1, "IO3^-",  2]],
+    ["Pb(IO3)2",  [12.43, "Pb^{2+}",   1, "IO3^-",  2]],
+    ["AgIO3",     [7.50,  "Ag^+",      1, "IO3^-",  1]],
 
     /* --- Cyanides --- */
-    ["AgCN",      [5.97e-17, 16.22, "Ag^+",      1, "CN^-",   1]],
-    ["Zn(CN)2",   [3.00e-16, 15.52, "Zn^{2+}",   1, "CN^-",   2]],
-    ["CuCN",      [3.47e-20, 19.46, "Cu^+",      1, "CN^-",   1]],
+    ["AgCN",      [16.22, "Ag^+",      1, "CN^-",   1]],
+    ["Zn(CN)2",   [15.52, "Zn^{2+}",   1, "CN^-",   2]],
+    ["CuCN",      [19.46, "Cu^+",      1, "CN^-",   1]],
 
     /* --- Thiocyanates --- */
-    ["AgSCN",     [1.03e-12, 11.99, "Ag^+",      1, "SCN^-",  1]],
-    ["CuSCN",     [1.77e-13, 12.75, "Cu^+",      1, "SCN^-",  1]],
+    ["AgSCN",     [11.99, "Ag^+",      1, "SCN^-",  1]],
+    ["CuSCN",     [12.75, "Cu^+",      1, "SCN^-",  1]],
 
     /* --- Miscellaneous --- */
-    ["BaSO3",     [8.00e-7,  6.10,  "Ba^{2+}",   1, "SO3^{2-}", 1]],
-    ["Ag2S2O3",   [1.20e-13, 12.92, "Ag^+",      2, "S2O3^{2-}", 1]],
-    ["PbSO3",     [3.00e-7,  6.52,  "Pb^{2+}",   1, "SO3^{2-}", 1]],
-    ["Ag2SO3",    [1.50e-14, 13.82, "Ag^+",      2, "SO3^{2-}", 1]]
+    ["BaSO3",     [6.10,  "Ba^{2+}",   1, "SO3^{2-}", 1]],
+    ["Ag2S2O3",   [12.92, "Ag^+",      2, "S2O3^{2-}", 1]],
+    ["PbSO3",     [6.52,  "Pb^{2+}",   1, "SO3^{2-}", 1]],
+    ["Ag2SO3",    [13.82, "Ag^+",      2, "SO3^{2-}", 1]]
 ]$
 
 /****************************************************************/
@@ -144,7 +147,7 @@
 /* Lookup value-list for a salt; returns false if not found */
 _sol_lookup(salt) := block([entry],
     entry: assoc(salt, %_SOLUBILITY_DB),
-    entry  /* returns the [Ksp,pKsp,cat,ncat,an,nan] list or false */
+    entry  /* returns the [pKsp,cat,ncat,an,nan] list or false */
 )$
 
 /****************************************************************/
@@ -153,46 +156,53 @@ _sol_lookup(salt) := block([entry],
 /*                                                              */
 /****************************************************************/
 
+/* Ksp is always computed from pKsp to avoid rounding errors */
 chem_sol_Ksp(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then null else v[1]
+    if is(v = false) then null else float(10^(-v[1]))
 )$
 
 chem_sol_pKsp(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then null else v[2]
+    if is(v = false) then null else v[1]
 )$
 
 chem_sol_cation(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then "" else v[3]
+    if is(v = false) then "" else v[2]
 )$
 
 chem_sol_cation_count(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then null else v[4]
+    if is(v = false) then null else v[3]
 )$
 
 chem_sol_anion(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then "" else v[5]
+    if is(v = false) then "" else v[4]
 )$
 
 chem_sol_anion_count(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then null else v[6]
+    if is(v = false) then null else v[5]
 )$
 
 chem_sol_ion_counts(salt) := block([v],
     v: _sol_lookup(salt),
-    if is(v = false) then null else [v[4], v[6]]
+    if is(v = false) then null else [v[3], v[5]]
+)$
+
+/* Total number of ions produced per formula unit */
+chem_sol_total_ion_count(salt) := block([v],
+    v: _sol_lookup(salt),
+    if is(v = false) then null else v[3] + v[5]
 )$
 
 /* Full entry: [salt, Ksp, pKsp, cation, n_cat, anion, n_an] */
 chem_sol_entry(salt) := block([v],
     v: _sol_lookup(salt),
     if is(v = false) then null
-    else append([salt], v)
+    else [salt, float(10^(-v[1])), v[1], v[2], v[3], v[4], v[5]]
 )$
 
 /****************************************************************/
@@ -205,7 +215,7 @@ chem_sol_entry(salt) := block([v],
 chem_sol_molar_solubility(salt) := block([v, Ksp, p, q],
     v: _sol_lookup(salt),
     if is(v = false) then return(null),
-    Ksp: v[1], p: v[4], q: v[6],
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
     float((Ksp / (p^p * q^q))^(1/(p + q)))
 )$
 
@@ -215,7 +225,7 @@ chem_sol_molar_solubility_common_ion(salt, c_common, common_ion) := block(
 
     v: _sol_lookup(salt),
     if is(v = false) then return(null),
-    Ksp: v[1], p: v[4], q: v[6],
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
 
     /* f(s) = ion-product(s) - Ksp */
     _sol_f(s) := block([cc, ca],
@@ -252,7 +262,7 @@ chem_sol_array() := map(first, %_SOLUBILITY_DB)$
 chem_sol_array_by_cation(cation) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[3] = cation) then
+        if is(second(entry)[2] = cation) then
             result: append(result, [first(entry)])
     ),
     result
@@ -262,7 +272,7 @@ chem_sol_array_by_cation(cation) := block([result],
 chem_sol_array_by_anion(anion) := block([result],
     result: [],
     for entry in %_SOLUBILITY_DB do (
-        if is(second(entry)[5] = anion) then
+        if is(second(entry)[4] = anion) then
             result: append(result, [first(entry)])
     ),
     result
@@ -272,7 +282,7 @@ chem_sol_array_by_anion(anion) := block([result],
 chem_sol_cation_array() := block([result, cat],
     result: [],
     for entry in %_SOLUBILITY_DB do (
-        cat: second(entry)[3],
+        cat: second(entry)[2],
         if not member(cat, result) then result: append(result, [cat])
     ),
     result
@@ -282,16 +292,17 @@ chem_sol_cation_array() := block([result, cat],
 chem_sol_anion_array() := block([result, an],
     result: [],
     for entry in %_SOLUBILITY_DB do (
-        an: second(entry)[5],
+        an: second(entry)[4],
         if not member(an, result) then result: append(result, [an])
     ),
     result
 )$
 
-/* Salts sorted by Ksp ascending */
+/* Salts sorted by Ksp ascending (computed from pKsp descending) */
 chem_sol_array_sorted_Ksp() := block([pairs, sorted_pairs],
     pairs: map(lambda([e], [first(e), second(e)[1]]), %_SOLUBILITY_DB),
-    sorted_pairs: sort(pairs, lambda([a, b], is(second(a) < second(b)))),
+    /* Higher pKsp = lower Ksp, so sort pKsp descending for Ksp ascending */
+    sorted_pairs: sort(pairs, lambda([a, b], is(second(a) > second(b)))),
     map(first, sorted_pairs)
 )$
 
@@ -299,8 +310,38 @@ chem_sol_array_sorted_Ksp() := block([pairs, sorted_pairs],
 chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp],
     result: [],
     for entry in %_SOLUBILITY_DB do (
-        Ksp: second(entry)[1],
+        Ksp: float(10^(-second(entry)[1])),
         if is(Ksp >= Ksp_min) and is(Ksp <= Ksp_max) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific cation stoichiometric coefficient */
+chem_sol_array_by_cation_count(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[3] = n) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific anion stoichiometric coefficient */
+chem_sol_array_by_anion_count(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[5] = n) then
+            result: append(result, [first(entry)])
+    ),
+    result
+)$
+
+/* Salts with a specific total number of ions (cation_count + anion_count) */
+chem_sol_array_by_total_ions(n) := block([result],
+    result: [],
+    for entry in %_SOLUBILITY_DB do (
+        if is(second(entry)[3] + second(entry)[5] = n) then
             result: append(result, [first(entry)])
     ),
     result
@@ -315,7 +356,7 @@ chem_sol_array_Ksp_range(Ksp_min, Ksp_max) := block([result, Ksp],
 chem_sol_ion_product(c_cation, c_anion, salt) := block([v, p, q],
     v: _sol_lookup(salt),
     if is(v = false) then return(null),
-    p: v[4], q: v[6],
+    p: v[3], q: v[5],
     float(c_cation^p * c_anion^q)
 )$
 
@@ -331,7 +372,7 @@ chem_sol_precipitation_check(c_cation, c_anion, salt) := block([Q, Ksp],
 chem_sol_max_concentration(c_known, salt, ion_type) := block([v, Ksp, p, q],
     v: _sol_lookup(salt),
     if is(v = false) then return(null),
-    Ksp: v[1], p: v[4], q: v[6],
+    Ksp: float(10^(-v[1])), p: v[3], q: v[5],
     if is(ion_type = "cation") then float((Ksp / c_known^q)^(1/p))
     else if is(ion_type = "anion") then float((Ksp / c_known^p)^(1/q))
     else null
@@ -348,7 +389,7 @@ chem_sol_max_concentration(c_known, salt, ion_type) := block([v, Ksp, p, q],
 chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an],
     v: _sol_lookup(salt),
     if is(v = false) then return(""),
-    cat: v[3], p: v[4], an: v[5], q: v[6],
+    cat: v[2], p: v[3], an: v[4], q: v[5],
 
     if is(p = 1) then rhs_cat: cat else rhs_cat: sconcat(string(p), " ", cat),
     if is(q = 1) then rhs_an: an  else rhs_an:  sconcat(string(q), " ", an),
@@ -362,12 +403,11 @@ chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an]
 /*                                                              */
 /****************************************************************/
 
-/* Generate Ksp expression in bracket notation with mhchem rendering.
-   E.g., for PbCl2: "[\ce{Pb^{2+}}][\ce{Cl^-}]^2" */
+/* Generate Ksp expression in bracket notation with mhchem rendering. */
 chem_sol_Ksp_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
     v: _sol_lookup(salt),
     if is(v = false) then return(""),
-    cat: v[3], p: v[4], an: v[5], q: v[6],
+    cat: v[2], p: v[3], an: v[4], q: v[5],
 
     if is(p = 1) then cat_part: sconcat("[\\ce{", cat, "}]")
     else cat_part: sconcat("[\\ce{", cat, "}]^", string(p)),
@@ -383,7 +423,7 @@ chem_sol_Ksp_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
 chem_sol_Ksp_activity_expression(salt) := block([v, cat, an, p, q, cat_part, an_part],
     v: _sol_lookup(salt),
     if is(v = false) then return(""),
-    cat: v[3], p: v[4], an: v[5], q: v[6],
+    cat: v[2], p: v[3], an: v[4], q: v[5],
 
     if is(p = 1) then cat_part: sconcat("a(\\ce{", cat, "})")
     else cat_part: sconcat("a(\\ce{", cat, "})^", string(p)),
@@ -398,7 +438,7 @@ chem_sol_Ksp_activity_expression(salt) := block([v, cat, an, p, q, cat_part, an_
 chem_sol_Ksp_activity_expression_simplified(salt) := block([v, cat, an, p, q, cat_part, an_part],
     v: _sol_lookup(salt),
     if is(v = false) then return(""),
-    cat: v[3], p: v[4], an: v[5], q: v[6],
+    cat: v[2], p: v[3], an: v[4], q: v[5],
 
     if is(p = 1) then cat_part: sconcat("a(\\ce{", cat, "})")
     else cat_part: sconcat("a(\\ce{", cat, "})^", string(p)),
