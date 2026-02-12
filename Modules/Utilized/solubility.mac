@@ -211,6 +211,57 @@ chem_sol_entry(salt) := block([v],
 /*                                                              */
 /****************************************************************/
 
+/* Generate LaTeX expression for the molar solubility formula.
+   For M_p X_q: s = (Ksp / (p^p * q^q))^(1/(p+q))
+   Shows the algebraic derivation with ion concentrations. */
+chem_sol_solubility_expression(salt) := block([v, cat, an, p, q, cat_conc, an_conc, ksp_expanded, denom, exponent],
+    v: _sol_lookup(salt),
+    if is(v = false) then return(""),
+    cat: v[2], p: v[3], an: v[4], q: v[5],
+
+    /* Build [cation] = p*s part */
+    if is(p = 1) then cat_conc: "s"
+    else cat_conc: sconcat(string(p), " \\cdot s"),
+
+    /* Build [anion] = q*s part */
+    if is(q = 1) then an_conc: "s"
+    else an_conc: sconcat(string(q), " \\cdot s"),
+
+    /* Build Ksp = (p*s)^p * (q*s)^q expanded form */
+    if is(p = 1) then (
+        if is(q = 1) then
+            ksp_expanded: "s \\cdot s"
+        else
+            ksp_expanded: sconcat("s \\cdot (", an_conc, ")^{", string(q), "}")
+    ) else (
+        if is(q = 1) then
+            ksp_expanded: sconcat("(", cat_conc, ")^{", string(p), "} \\cdot s")
+        else
+            ksp_expanded: sconcat("(", cat_conc, ")^{", string(p), "} \\cdot (", an_conc, ")^{", string(q), "}")
+    ),
+
+    /* Build denominator p^p * q^q */
+    if is(p = 1) and is(q = 1) then
+        denom: ""
+    else if is(p = 1) then
+        denom: sconcat(string(q), "^{", string(q), "}")
+    else if is(q = 1) then
+        denom: sconcat(string(p), "^{", string(p), "}")
+    else
+        denom: sconcat(string(p), "^{", string(p), "} \\cdot ", string(q), "^{", string(q), "}"),
+
+    /* Build exponent 1/(p+q) */
+    exponent: sconcat("\\frac{1}{", string(p + q), "}"),
+
+    /* Build final expression: s = (Ksp / (p^p * q^q))^(1/(p+q)) */
+    if is(p = 1) and is(q = 1) then
+        sconcat("s = \\sqrt{K_{\\mathrm{sp}}}")
+    else if sequal(denom, "") then
+        sconcat("s = \\left( K_{\\mathrm{sp}} \\right)^{", exponent, "}")
+    else
+        sconcat("s = \\left( \\frac{K_{\\mathrm{sp}}}{", denom, "} \\right)^{", exponent, "}")
+)$
+
 /* s = (Ksp / (p^p * q^q))^(1/(p+q))  for M_p X_q */
 chem_sol_molar_solubility(salt) := block([v, Ksp, p, q],
     v: _sol_lookup(salt),

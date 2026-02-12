@@ -1511,7 +1511,59 @@ expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
 
 ---
 
+#### `chem_sol_solubility_expression(salt)`
+
+**Description:** Generates a LaTeX expression for the molar solubility formula derived from Ksp. For a salt M_p X_q, returns `s = (Ksp / (p^p · q^q))^{1/(p+q)}` with the actual stoichiometric coefficients.
+
+**Parameters:**
+- `salt` (string): Chemical formula of the salt
+
+**Returns:** LaTeX string, or `""` if not found
+
+**Example:**
+```maxima
+expr: chem_sol_solubility_expression("AgCl");
+/* Returns "s = \\sqrt{K_{\\mathrm{sp}}}" (1:1 salt) */
+
+expr: chem_sol_solubility_expression("PbCl2");
+/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{2^{2}} \\right)^{\\frac{1}{3}}" (1:2 salt) */
+
+expr: chem_sol_solubility_expression("Ag2CrO4");
+/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{2^{2}} \\right)^{\\frac{1}{3}}" (2:1 salt) */
+
+expr: chem_sol_solubility_expression("Ca3(PO4)2");
+/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{3^{3} \\cdot 2^{2}} \\right)^{\\frac{1}{5}}" (3:2 salt) */
+```
+
+**Usage in Question Text:**
+```latex
+\(\require{mhchem}\)
+<p>For \({@salt_display@}\): \({@chem_sol_solubility_expression(salt)@}\)</p>
+```
+
+---
+
 ### Molar Solubility Calculation Functions
+
+#### `chem_molar_mass(formula)`
+
+**Description:** Calculates the molar mass of a molecule from its chemical formula string. Returns the result with units (g/mol).
+
+**Parameters:**
+- `formula` (string): Chemical formula (e.g., `"H2SO4"`, `"Ca(OH)2"`)
+
+**Returns:** Molar mass with units via `stackunits(value, g*mol^(-1))`, or `false` if an element is not found
+
+**Example:**
+```maxima
+mass: chem_molar_mass("H2O");       /* Returns stackunits(18.02, g*mol^(-1)) */
+mass: chem_molar_mass("H2SO4");     /* Returns stackunits(98.09, g*mol^(-1)) */
+mass: chem_molar_mass("NaCl");      /* Returns stackunits(58.44, g*mol^(-1)) */
+```
+
+**Note:** This function parses the formula by detecting uppercase letters (element start), optional lowercase letters (second character), and digits (count). It does **not** handle parentheses like `(OH)2` — use the expanded formula `O2H2` instead, or input the element counts directly.
+
+---
 
 #### `chem_sol_molar_solubility(salt)`
 
@@ -1910,6 +1962,7 @@ The solubility database contains the following salt categories:
 | `chem_sol_Ksp_expression(salt)` | Ksp in brackets (with `\ce{}`) | `"[\\ce{Ag^+}] \\cdot [\\ce{Cl^-}]"` |
 | `chem_sol_Ksp_activity_expression(salt)` | Full activity expr. (with `\ce{}`) | With `a(\\ce{solid})` denominator |
 | `chem_sol_Ksp_activity_expression_simplified(salt)` | Simplified activity (with `\ce{}`) | Without denominator |
+| `chem_sol_solubility_expression(salt)` | Solubility formula | `"s = \\sqrt{K_{\\mathrm{sp}}}"` for 1:1 salts |
 
 ---
 

@@ -21,6 +21,7 @@
    - Ksp_expr: Ksp bracket expression via chem_sol_Ksp_expression(salt)
    - Ksp_act: Ksp activity expression (full) via chem_sol_Ksp_activity_expression(salt)
    - Ksp_act_s: Ksp activity expression (simplified) via chem_sol_Ksp_activity_expression_simplified(salt)
+   - sol_expr: solubility expression via chem_sol_solubility_expression(salt)
 
    - Q_test: ion product via chem_sol_ion_product()
    - precip_check: precipitation check result via chem_sol_precipitation_check()
@@ -102,6 +103,7 @@ diss_eq: chem_sol_dissolution_equation(salt);
 Ksp_expr: chem_sol_Ksp_expression(salt);
 Ksp_act: chem_sol_Ksp_activity_expression(salt);
 Ksp_act_s: chem_sol_Ksp_activity_expression_simplified(salt);
+sol_expr: chem_sol_solubility_expression(salt);
 
 /* Precipitation check (use arbitrary concentrations) */
 Q_test: chem_sol_ion_product(0.001, 0.001, salt);
@@ -170,6 +172,8 @@ Dissolution equation: \({@diss_eq@}\)
 \(K_{\mathrm{sp}}\) activity expression (full): \(K_{\mathrm{sp}} = {@Ksp_act@}\)
 
 \(K_{\mathrm{sp}}\) activity expression (simplified): \(K_{\mathrm{sp}} = {@Ksp_act_s@}\)
+
+Solubility expression: \({@sol_expr@}\)
 
 <b>Precipitation check:</b>
 
