@@ -259,7 +259,7 @@ chem_sol_solubility_expression(salt) := block([v, cat, an, p, q, cat_conc, an_co
     else if sequal(denom, "") then
         sconcat("s = \\left( K_{\\mathrm{sp}} \\right)^{", exponent, "}")
     else
-        sconcat("s = \\left( \\frac{K_{\\mathrm{sp}}}{", denom, "} \\right)^{", exponent, "}")
+        sconcat("\\left( \\frac{K_{\\mathrm{sp}}}{", denom, "} \\right)^{", exponent, "}")
 )$
 
 /* s = (Ksp / (p^p * q^q))^(1/(p+q))  for M_p X_q */
