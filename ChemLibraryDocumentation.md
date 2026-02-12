@@ -1521,18 +1521,18 @@ expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
 **Parameters:**
 - `salt` (string): Chemical formula of the salt
 
-**Returns:** Molar solubility in mol/L (float), or `null` if not found
+**Returns:** Molar solubility with units via `stackunits(value, mol*l^(-1))`, or `null` if not found
 
 **Example:**
 ```maxima
 s: chem_sol_molar_solubility("AgCl");
-/* Returns ≈ 1.33e-5 (for Ksp = 1.77e-10, 1:1 salt) */
+/* Returns stackunits(1.33e-5, mol*l^(-1)) */
 
 s: chem_sol_molar_solubility("PbCl2");
-/* Returns ≈ 1.62e-2 (for Ksp = 1.70e-5, 1:2 salt) */
+/* Returns stackunits(1.62e-2, mol*l^(-1)) */
 
 s: chem_sol_molar_solubility("Ag2CrO4");
-/* Returns ≈ 6.54e-5 (for Ksp = 1.12e-12, 2:1 salt) */
+/* Returns stackunits(6.54e-5, mol*l^(-1)) */
 ```
 
 ---
@@ -1546,13 +1546,13 @@ s: chem_sol_molar_solubility("Ag2CrO4");
 - `c_common` (number): Concentration of the common ion already in solution (mol/L)
 - `common_ion` (string): `"cation"` or `"anion"` — which ion is the common ion
 
-**Returns:** Molar solubility in mol/L (float), or `null` if not found
+**Returns:** Molar solubility with units via `stackunits(value, mol*l^(-1))`, or `null` if not found
 
 **Example:**
 ```maxima
 /* Solubility of AgCl in 0.1 M NaCl solution (common Cl⁻) */
 s: chem_sol_molar_solubility_common_ion("AgCl", 0.1, "anion");
-/* Returns ≈ 1.77e-9 (much less than pure water solubility) */
+/* Returns stackunits(1.77e-9, mol*l^(-1)) */
 
 /* Solubility of PbCl2 in 0.5 M Pb(NO3)2 (common Pb²⁺) */
 s: chem_sol_molar_solubility_common_ion("PbCl2", 0.5, "cation");
@@ -1891,8 +1891,8 @@ The solubility database contains the following salt categories:
 | `chem_sol_ion_counts(salt)` | Get both counts | `chem_sol_ion_counts("Ag2CrO4")` → `[2, 1]` |
 | `chem_sol_total_ion_count(salt)` | Get total ion count | `chem_sol_total_ion_count("PbCl2")` → `3` |
 | `chem_sol_entry(salt)` | Get full entry | `chem_sol_entry("AgCl")` → `[...]` |
-| `chem_sol_molar_solubility(salt)` | Calculate solubility | `chem_sol_molar_solubility("AgCl")` → `1.33e-5` |
-| `chem_sol_molar_solubility_common_ion(...)` | Solubility with common ion | See above |
+| `chem_sol_molar_solubility(salt)` | Calculate solubility (with units) | `chem_sol_molar_solubility("AgCl")` → `stackunits(1.33e-5, mol*l^(-1))` |
+| `chem_sol_molar_solubility_common_ion(...)` | Solubility with common ion (with units) | See above |
 | `chem_sol_ion_product(cc, ca, salt)` | Calculate Q | `chem_sol_ion_product(1e-3, 1e-3, "AgCl")` |
 | `chem_sol_precipitation_check(cc, ca, salt)` | Check precipitation | Returns `"precipitates"` etc. |
 | `chem_sol_max_concentration(c, salt, type)` | Max ion concentration | See above |

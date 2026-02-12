@@ -157,9 +157,9 @@ Full database entry: {@full_entry@}
 
 <b>Molar solubility:</b>
 
-The molar solubility of \({@salt_display@}\) in pure water is {@s_molar@} mol/L.
+The molar solubility of \({@salt_display@}\) in pure water is {@s_molar@}.
 
-With a common-ion concentration of 0.01 mol/L (cation), the molar solubility is {@s_common@} mol/L.
+With a common-ion concentration of 0.01 mol/L (cation), the molar solubility is {@s_common@}.
 
 <b>Dissolution equation and \(K_{\mathrm{sp}}\) expressions:</b>
 
