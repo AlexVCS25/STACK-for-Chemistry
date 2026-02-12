@@ -1521,7 +1521,7 @@ expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
 **Parameters:**
 - `salt` (string): Chemical formula of the salt
 
-**Returns:** Molar solubility with units via `stackunits(value, mol*l^(-1))`, or `null` if not found
+**Returns:** Molar solubility with units via `stackunits(value, mol*L^(-1))`, or `null` if not found
 
 **Example:**
 ```maxima
