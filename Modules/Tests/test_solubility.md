@@ -85,7 +85,7 @@ salt2: if is(length(salts_by_cation) > 1) then rand(delete(salt, salts_by_cation
 s_common: chem_sol_molar_solubility_common_ion(salt, 0.01, "cation");
 
 /* Dissolution equation and Ksp expressions */
-diss_eq: chem_sol_dissolution_equation_latex(salt);
+diss_eq: chem_sol_dissolution_equation(salt);
 Ksp_expr: chem_sol_Ksp_expression(salt);
 Ksp_act: chem_sol_Ksp_activity_expression(salt);
 Ksp_act_s: chem_sol_Ksp_activity_expression_simplified(salt);

@@ -343,8 +343,8 @@ chem_sol_max_concentration(c_known, salt, ion_type) := block([v, Ksp, p, q],
 /*                                                              */
 /****************************************************************/
 
-/* The entire output is already intended to be placed inside \ce{} 
-   in the question text, so we keep it plain mhchem-compatible. */
+/* Returns a LaTeX-formatted dissolution equation with \ce{} included,
+   so the question text only needs \({@...@}\) without manual \ce wrapping. */
 chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an],
     v: _sol_lookup(salt),
     if is(v = false) then return(""),
@@ -353,15 +353,7 @@ chem_sol_dissolution_equation(salt) := block([v, cat, an, p, q, rhs_cat, rhs_an]
     if is(p = 1) then rhs_cat: cat else rhs_cat: sconcat(string(p), " ", cat),
     if is(q = 1) then rhs_an: an  else rhs_an:  sconcat(string(q), " ", an),
 
-    sconcat(salt, " -> ", rhs_cat, " + ", rhs_an)
-)$
-
-/* Returns a LaTeX-formatted dissolution equation using \ce{} 
-   so the question text only needs \({@...@}\) without manual \ce wrapping. */
-chem_sol_dissolution_equation_latex(salt) := block([eq],
-    eq: chem_sol_dissolution_equation(salt),
-    if is(eq = "") then return(""),
-    sconcat("\\ce{", eq, "}")
+    sconcat("\\ce{", salt, " -> ", rhs_cat, " + ", rhs_an, "}")
 )$
 
 /****************************************************************/
