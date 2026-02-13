@@ -233,7 +233,7 @@ chem_sol_solubility_expression(salt) := block([v, cat, an, p, q, denom_val, expo
 
     /* Build final expression: s = (Ksp / (p^p * q^q))^(1/(p+q)) */
     if is(p = 1) and is(q = 1) then
-        sconcat("s = \\sqrt{K_{\\mathrm{sp}}}")
+        sconcat("\\sqrt{K_{\\mathrm{sp}}}")
     else if is(denom_val = 1) then
         sconcat("\\left( K_{\\mathrm{sp}} \\right)^{", exponent, "}")
     else
