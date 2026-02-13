@@ -1513,7 +1513,7 @@ expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
 
 #### `chem_sol_solubility_expression(salt)`
 
-**Description:** Generates a LaTeX expression for the molar solubility formula derived from Ksp. For a salt M_p X_q, returns `s = (Ksp / (p^p · q^q))^{1/(p+q)}` with the actual stoichiometric coefficients.
+**Description:** Generates a LaTeX expression for the molar solubility formula derived from Ksp. For a salt M_p X_q, returns `(Ksp / (p^p · q^q))^{1/(p+q)}` with the denominator computed as a single number.
 
 **Parameters:**
 - `salt` (string): Chemical formula of the salt
@@ -1523,16 +1523,16 @@ expr: chem_sol_Ksp_activity_expression_simplified("PbCl2");
 **Example:**
 ```maxima
 expr: chem_sol_solubility_expression("AgCl");
-/* Returns "s = \\sqrt{K_{\\mathrm{sp}}}" (1:1 salt) */
+/* Returns "\\sqrt{K_{\\mathrm{sp}}}" (1:1 salt, denom=1) */
 
 expr: chem_sol_solubility_expression("PbCl2");
-/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{2^{2}} \\right)^{\\frac{1}{3}}" (1:2 salt) */
+/* Returns "\\left( \\frac{K_{\\mathrm{sp}}}{4} \\right)^{\\frac{1}{3}}" (1:2 salt, denom=1*4=4) */
 
 expr: chem_sol_solubility_expression("Ag2CrO4");
-/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{2^{2}} \\right)^{\\frac{1}{3}}" (2:1 salt) */
+/* Returns "\\left( \\frac{K_{\\mathrm{sp}}}{4} \\right)^{\\frac{1}{3}}" (2:1 salt, denom=4*1=4) */
 
 expr: chem_sol_solubility_expression("Ca3(PO4)2");
-/* Returns "s = \\left( \\frac{K_{\\mathrm{sp}}}{3^{3} \\cdot 2^{2}} \\right)^{\\frac{1}{5}}" (3:2 salt) */
+/* Returns "\\left( \\frac{K_{\\mathrm{sp}}}{108} \\right)^{\\frac{1}{5}}" (3:2 salt, denom=27*4=108) */
 ```
 
 **Usage in Question Text:**
